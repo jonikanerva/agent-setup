@@ -3,10 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.0.0",
   "engines": {
-    "node": ">=22.0.0",
-    "pnpm": ">=9.0.0"
+    "node": ">=24.0.0",
+    "pnpm": ">=10.0.0"
   },
   "workspaces": [
     "apps/*",
@@ -23,13 +23,13 @@
     "test-all": "pnpm format:check && pnpm type-check && pnpm lint && pnpm build && pnpm test"
   },
   "devDependencies": {
-    "@types/node": "^22",
+    "@types/node": "^24",
     "@typescript-eslint/eslint-plugin": "^8",
     "@typescript-eslint/parser": "^8",
-    "eslint": "^9",
+    "eslint": "^10",
     "prettier": "^3",
-    "typescript": "^5.6",
+    "typescript": "^5.9",
     "vite": "^7",
-    "vitest": "^3"
+    "vitest": "^4"
   }
 }

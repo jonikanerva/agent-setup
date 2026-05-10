@@ -6,10 +6,10 @@
 
 ## 1. Language & Runtime
 
-- **Primary language:** TypeScript 5.6
+- **Primary language:** TypeScript 5.9
 - **Strictness mode:** `"strict": true`, `"noUncheckedIndexedAccess": true`, `"exactOptionalPropertyTypes": true`, `"noImplicitOverride": true`, `"verbatimModuleSyntax": true`. ESLint with `@typescript-eslint/strict-type-checked`.
-- **Target runtime:** Node.js 22 LTS
-- **Minimum runtime version:** Node 22.0 (no back-deployment to Node 20 / 18)
+- **Target runtime:** Node.js 24
+- **Minimum runtime version:** Node 24.0 (no back-deployment to Node 22 / 20)
 - **Package manager:** pnpm (workspaces)
 - **Lockfile:** `pnpm-lock.yaml`
 
@@ -27,11 +27,11 @@
 | Data fetching (frontend) | TanStack Query | |
 | Validation | Zod | Boundary validation for every external input (HTTP, env, persisted state) |
 | Persistence | declared per project — common defaults: SQLite via Drizzle, IndexedDB via idb, none | |
-| Testing | Vitest 3 (unit + integration) | Playwright optional for end-to-end |
+| Testing | Vitest 4 (unit + integration) | Playwright optional for end-to-end |
 | Logging | pino | structured, JSON-friendly |
 | Telemetry | none by default | Add only with explicit `STACK.md` approval |
 | Formatting | Prettier 3 | |
-| Linting | ESLint 9 with @typescript-eslint flat config | |
+| Linting | ESLint 10 with @typescript-eslint flat config | |
 
 ---
 
@@ -81,15 +81,15 @@ Default answer to "should we add a library?" is **no**. The lists below are inte
 | `hono` | `^4.6` | Backend HTTP framework — the project's chosen default | (default) | (template) |
 | `react` | `^19` | Frontend UI framework | (default) | (template) |
 | `vite` | `^7` | Frontend build tool | (default) | (template) |
-| `vitest` | `^3` | Test runner | (default) | (template) |
+| `vitest` | `^4` | Test runner | (default) | (template) |
 | `zod` | `^3.23` | Boundary validation for every external input | (default) | (template) |
 | `pino` | `^9` | Structured logging | (default) | (template) |
 | `@tanstack/react-query` | `^5` | Frontend data fetching cache | (default) | (template) |
 | `@tanstack/react-router` | `^1` | Frontend routing | (default) | (template) |
-| `eslint` | `^9` | Linter | (default) | (template) |
+| `eslint` | `^10` | Linter | (default) | (template) |
 | `@typescript-eslint/*` | `^8` | TS-aware lint rules | (default) | (template) |
 | `prettier` | `^3` | Formatter | (default) | (template) |
-| `typescript` | `^5.6` | Language | (default) | (template) |
+| `typescript` | `^5.9` | Language | (default) | (template) |
 
 ---
 
