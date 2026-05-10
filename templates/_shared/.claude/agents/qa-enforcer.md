@@ -16,7 +16,7 @@ For every PR / branch you review, all of these must be true:
 3. **`$FORMAT_CMD`** is idempotent. Re-run it; it must produce zero diff.
 4. **`$VERIFY_CMD`** is green and warning-free (lint → build → tests as composed by `STACK.md`). Capture the tail of the output as evidence.
 5. **`ROADMAP.md` is updated** — the relevant milestone row transitioned to `Done` (or `In progress` for an open PR), the PR link is filled in, and any new strategic decision or technical risk has a Change log entry.
-6. **PR description** quotes the four `VISION.md` decision-filter answers, lists the `AGENTS.md` and `STACK.md` sections involved, and names the new states handled.
+6. **PR description** quotes the four `VISION.md` decision-filter answers, lists the `AGENTS.md` and `STACK.md` sections involved, and names the new states handled. *Trivial PRs* (per `CLAUDE.md → Git workflow → Trivial PR exception`) may fill these three blocks with a single `N/A — trivial change, no behavioral surface affected.` line; verify the change actually qualifies (no behavioral surface, no new state, no new dependency, no new persistence, no privacy-relevant log line). Otherwise the verbatim quote is mandatory.
 
 ## §15 definition-of-done checklist
 

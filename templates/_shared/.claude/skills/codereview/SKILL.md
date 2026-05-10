@@ -1,8 +1,10 @@
 ---
 name: codereview
-description: Review all changes on the current branch against main
+description: Review all changes on the current branch against main as an isolated subagent. Posts a PASS/FAIL audit comment to the PR.
 context: fork
+agent: general-purpose
 user-invocable: true
+allowed-tools: Read, Grep, Glob, Bash, WebFetch
 ---
 
 Review all changes on the current branch against `main`. **This skill runs as an isolated subagent** — do not rely on any prior conversation context. Derive all understanding from the PR diff, description, and the project's governance files only.

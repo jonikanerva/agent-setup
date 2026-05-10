@@ -44,6 +44,13 @@
       "Bash(git push origin HEAD:main:*)",
       "Bash(git push origin +:*)",
       "Bash(rm -rf:*)",
+      "Bash(rm -fr:*)",
+      "Bash(rm -r -f:*)",
+      "Bash(rm -f -r:*)",
+      "Bash(rm --recursive:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -fd:*)",
+      "Bash(git clean -fdx:*)",
       "Bash(gh api repos/*/merges:*)"
     ]
   },
@@ -54,7 +61,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cmd=$(jq -r \".tool_input.command\"); if echo \"$cmd\" | grep -qE \"git push.*(origin +main|origin +HEAD:main|--force|(^| )-f( |$))\"; then echo \"BLOCKED: destructive push. Never push to main or force-push. Create a PR instead.\" >&2; exit 2; fi'"
+            "command": "bash -c 'cmd=$(jq -r \".tool_input.command\"); if echo \"$cmd\" | grep -qE \"git push([[:space:]]|$).*(origin[[:space:]]+main([[:space:]]|$)|origin[[:space:]]+HEAD:main([[:space:]]|$)|--force([[:space:]]|$)|(^|[[:space:]])-f([[:space:]]|$))\"; then echo \"BLOCKED: destructive push. Never push to main or force-push. Create a PR instead.\" >&2; exit 2; fi'"
           }
         ]
       }

@@ -13,10 +13,12 @@ help: ## Show this help.
 	@printf "Targets:\n"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[0;32m%-12s\033[0m %s\n", $$1, $$2}'
 
+MERGE_SETTINGS := jq -s '.[0] * {permissions: {allow: ((.[0].permissions.allow + (.[1].permissions.allow // [])) | unique), deny: ((.[0].permissions.deny + (.[1].permissions.deny // [])) | unique)}, hooks: ((.[0].hooks // {}) * (.[1].hooks // {}))}'
+
 swift: _ensure-empty ## Generate scaffold for a strict Swift 6 / SwiftUI / Xcode project.
 	@cp -R $(SHARED)/. $(TARGET)/
 	@cp -R templates/swift-ios/. $(TARGET)/
-	@jq -s '.[0] * {permissions: {allow: ((.[0].permissions.allow + .[1].permissions.allow) | unique), deny: .[0].permissions.deny}}' $(TARGET)/.claude/settings.json $(TARGET)/settings.append.json > $(TARGET)/.claude/settings.json.tmp && mv $(TARGET)/.claude/settings.json.tmp $(TARGET)/.claude/settings.json
+	@$(MERGE_SETTINGS) $(TARGET)/.claude/settings.json $(TARGET)/settings.append.json > $(TARGET)/.claude/settings.json.tmp && mv $(TARGET)/.claude/settings.json.tmp $(TARGET)/.claude/settings.json
 	@cat $(TARGET)/gitignore.append >> $(TARGET)/.gitignore
 	@rm $(TARGET)/settings.append.json $(TARGET)/gitignore.append
 	@$(MAKE) --no-print-directory _instructions
@@ -24,7 +26,7 @@ swift: _ensure-empty ## Generate scaffold for a strict Swift 6 / SwiftUI / Xcode
 ts: _ensure-empty ## Generate scaffold for a strict TypeScript / Node / Hono / React / Vite / Vitest project.
 	@cp -R $(SHARED)/. $(TARGET)/
 	@cp -R templates/ts-node-react/. $(TARGET)/
-	@jq -s '.[0] * {permissions: {allow: ((.[0].permissions.allow + .[1].permissions.allow) | unique), deny: .[0].permissions.deny}}' $(TARGET)/.claude/settings.json $(TARGET)/settings.append.json > $(TARGET)/.claude/settings.json.tmp && mv $(TARGET)/.claude/settings.json.tmp $(TARGET)/.claude/settings.json
+	@$(MERGE_SETTINGS) $(TARGET)/.claude/settings.json $(TARGET)/settings.append.json > $(TARGET)/.claude/settings.json.tmp && mv $(TARGET)/.claude/settings.json.tmp $(TARGET)/.claude/settings.json
 	@cat $(TARGET)/gitignore.append >> $(TARGET)/.gitignore
 	@rm $(TARGET)/settings.append.json $(TARGET)/gitignore.append
 	@$(MAKE) --no-print-directory _instructions

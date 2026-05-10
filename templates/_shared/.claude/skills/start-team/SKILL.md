@@ -24,8 +24,6 @@ Run these checks. If any one fails, stop the run and tell the user (in Finnish) 
 4. `git remote get-url origin` returns a GitHub URL.
 5. `gh auth status` succeeds.
 6. The `$VERIFY_CMD` declared in `STACK.md` is runnable (try `--help` or a dry-run; do not fail the pre-flight if the runnable produces non-zero on `--help`, only if the command-not-found shell error fires).
-7. Claude Code version is `2.1.32` or later (`claude --version`). Agent teams require this.
-8. `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set (already set by `.claude/settings.json` → `env`).
 
 ## Step 1: Bootstrap or refresh ROADMAP.md
 
@@ -50,6 +48,13 @@ Spawn the five teammates with the explicit subagent types:
 - `ux-guardian` (read-only; runs the `VISION.md` decision filter on each milestone scope).
 
 Do **not** spawn `devils-advocate` by default — it is on-demand only. Token budget and coordination overhead are not worth the diminishing return of a sixth voice on every milestone.
+
+**Conditional devils-advocate spawn**: if `arch` or `ux` returns a report whose final line is `Recommended next step: devils-advocate`, you may spawn `devils-advocate` once between Step 4 (architect design) and Step 5 (lead-dev `/implement`). Hand it the milestone scope, the `arch` / `ux` report that triggered the recommendation, and the relevant `VISION.md` / `STACK.md` context. Take its verdict (`PROCEED` / `PROCEED WITH SCOPE CUTS` / `REWORK`) into the milestone:
+- `PROCEED` → continue to Step 5 unchanged.
+- `PROCEED WITH SCOPE CUTS` → tell `pm` to record the cuts in `ROADMAP.md → Strategic decisions` and update the milestone scope, then continue.
+- `REWORK` → tell `pm` to mark the milestone `Blocked` with the devils-advocate findings in the change log; continue to the next milestone.
+
+Do not spawn `devils-advocate` more than once per milestone, and do not call `AskUserQuestion` — the autonomous flow stays autonomous.
 
 When spawning, name each teammate by its role (e.g. `pm`, `arch`, `dev`, `qa`, `ux`) so you can reference them by name later.
 
