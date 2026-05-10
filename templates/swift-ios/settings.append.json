@@ -1,0 +1,11 @@
+{
+  "_comment": "Merge these arrays into .claude/settings.json after copying this profile. The 'permissions.allow' entries here append to the base allow list.",
+  "permissions": {
+    "allow": [
+      "Bash(make:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(xcrun:*)",
+      "WebFetch(domain:developer.apple.com)"
+    ]
+  }
+}

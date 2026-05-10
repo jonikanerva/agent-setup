@@ -1,0 +1,40 @@
+# Append to .gitignore when applying this profile.
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build artefacts
+dist/
+build/
+out/
+.next/
+.turbo/
+.vite/
+*.tsbuildinfo
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Env files (NEVER commit secrets)
+.env
+.env.local
+.env.*.local
+
+# IDE / editor noise
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log

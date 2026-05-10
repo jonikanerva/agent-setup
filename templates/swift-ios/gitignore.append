@@ -1,0 +1,33 @@
+# Append to .gitignore when applying this profile.
+
+# Xcode user data
+xcuserdata/
+*.xcuserdatad/
+*.xcuserstate
+
+# Build artefacts
+build/
+DerivedData/
+*.xcarchive/
+*.ipa
+*.app
+*.dSYM.zip
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.pins
+*.xcodeproj/xcuserdata/
+
+# CocoaPods (not used by default — kept here for safety if migrated)
+Pods/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# macOS noise
+.DS_Store

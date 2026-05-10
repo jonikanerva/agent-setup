@@ -1,0 +1,30 @@
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Editor / IDE noise
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code state
+.claude/teams/
+.claude/tasks/
+.claude/debug/
+.claude/projects/
+
+# Local-only secrets and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Logs
+*.log
+logs/
+
+# Profile-specific entries are merged in by the chosen profile's
+# `gitignore.append`. See profiles/<name>/gitignore.append.
