@@ -33,12 +33,22 @@
       "WebFetch(domain:api.github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:docs.claude.com)",
+      "WebFetch(domain:docs.github.com)",
+      "WebFetch(domain:owasp.org)",
+      "WebFetch(domain:cheatsheetseries.owasp.org)",
+      "WebFetch(domain:cwe.mitre.org)",
+      "WebFetch(domain:csrc.nist.gov)",
+      "WebFetch(domain:slsa.dev)",
+      "WebFetch(domain:openssf.org)",
+      "WebFetch(domain:12factor.net)",
+      "WebFetch(domain:opentelemetry.io)",
+      "WebFetch(domain:w3.org)",
+      "WebFetch(domain:www.w3.org)",
       "Skill(start-team)",
       "Skill(implement)",
       "Skill(codereview)"
     ],
     "deny": [
-      "Bash(git push --force:*)",
       "Bash(git push -f:*)",
       "Bash(git push origin main:*)",
       "Bash(git push origin HEAD:main:*)",
@@ -61,7 +71,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cmd=$(jq -r \".tool_input.command\"); if echo \"$cmd\" | grep -qE \"git push([[:space:]]|$).*(origin[[:space:]]+main([[:space:]]|$)|origin[[:space:]]+HEAD:main([[:space:]]|$)|--force([[:space:]]|$)|(^|[[:space:]])-f([[:space:]]|$))\"; then echo \"BLOCKED: destructive push. Never push to main or force-push. Create a PR instead.\" >&2; exit 2; fi'"
+            "command": "bash -c 'cmd=$(jq -r \".tool_input.command\"); if echo \"$cmd\" | grep -qE \"git[[:space:]]+push([^[:alnum:]_-]|$)\" && echo \"$cmd\" | grep -qE \"(^|[^[:alnum:]_-])(--force|-f)([^[:alnum:]_-]|$)|origin[[:space:]]+(main|HEAD:main)([^[:alnum:]_/-]|$)\"; then echo \"BLOCKED: destructive push. Never push to main or force-push. Use --force-with-lease if absolutely required; create a PR otherwise.\" >&2; exit 2; fi'"
           }
         ]
       }
@@ -80,7 +90,9 @@
   },
   "sandbox": {
     "filesystem": {
-      "allowWrite": ["~/.gnupg"]
+      "allowWrite": [
+        "~/.gnupg"
+      ]
     }
   },
   "env": {

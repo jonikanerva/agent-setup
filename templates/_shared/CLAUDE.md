@@ -29,7 +29,7 @@ The _only_ exception is Claude's spoken replies back to the user in the chat win
 
 Run before every commit and PR — all must pass:
 
-```
+```sh
 $VERIFY_CMD
 ```
 
@@ -39,6 +39,7 @@ $VERIFY_CMD
 
 - Use `/implement <task>` for the feature-branch workflow.
 - Conventional Commits: `<type>(<scope>): <summary>`.
+- Every commit authored by an agent ends with a `Co-Authored-By: <agent display name> <noreply@anthropic.com>` trailer (one trailer per agent that contributed to that commit). Human commits do not need the trailer.
 - Branch names: `feat/<topic>`, `fix/<topic>`, `chore/<topic>`, `docs/<topic>` (max 50 chars, lowercase, hyphens only).
 - **Always merge to `main` with a merge commit — never squash.** The PR keeps its full commit history as the audit trail. This is enforced in the GitHub repo settings.
 - Every PR description covers _why_ and _what_, the relevant `AGENTS.md` sections, and the `VISION.md → Decision Filter` outcome. The PR is the permanent audit trail.
@@ -50,7 +51,7 @@ $VERIFY_CMD
 
 - `/start-team` — autonomous orchestration entry point. Spawns the five-teammate agent team and drives the milestone chain to completion. Use this when the user wants the application built end-to-end with no further prompts.
 - `/implement <task>` — feature branch → change → `$VERIFY_CMD` → commit → push → PR. Enforces the `VISION.md` decision filter and the `AGENTS.md §14` workflow rules. The `lead-dev` teammate calls this once per milestone.
-- `/codereview` — isolated subagent review of the current branch against `main`, zero-tolerance checklist, posts a PR comment as the audit-trail entry with a plain-text PASS or FAIL verdict. The `qa-enforcer` teammate calls this after each `/implement` finishes.
+- `/codereview` — isolated subagent review of the current branch against `main`. It applies the project governance files first, then risk-based review lenses for correctness, architecture, concurrency, security, privacy, reliability, performance, tests, supply chain, and operability. It posts a plain-text PASS or FAIL PR comment as the audit-trail entry. Every FAIL finding must include evidence, impact, violated local rule, minimum fix, and verification; external standards such as OWASP, CWE, NIST SSDF, SLSA, 12-Factor, ISO/IEC 25010, OpenTelemetry, or OWASP LLM Top 10 are cited only when materially relevant. The `qa-enforcer` teammate calls this after each `/implement` finishes.
 
 ## Roadmap
 
