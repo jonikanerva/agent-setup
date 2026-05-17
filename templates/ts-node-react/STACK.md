@@ -6,9 +6,9 @@
 
 ## 1. Language & Runtime
 
-- **Primary language:** TypeScript 5.9
+- **Primary language:** TypeScript 6.0
 - **Strictness mode:** `"strict": true`, `"noUncheckedIndexedAccess": true`, `"exactOptionalPropertyTypes": true`, `"noImplicitOverride": true`, `"verbatimModuleSyntax": true`. ESLint with `@typescript-eslint/strict-type-checked`.
-- **Target runtime:** Node.js 24
+- **Target runtime:** Node.js 24 (Krypton — active LTS, latest 24.15.0)
 - **Minimum runtime version:** Node 24.0 (no back-deployment to Node 22 / 20)
 - **Package manager:** pnpm (workspaces)
 - **Lockfile:** `pnpm-lock.yaml`
@@ -21,7 +21,7 @@
 | ------- | ------------------- | ----- |
 | Backend HTTP framework | Hono | Edge-runtime-friendly, web-standards-aligned |
 | Frontend UI | React 19 | Function components only |
-| Build tool | Vite 7 | For `apps/web` |
+| Build tool | Vite 8 | For `apps/web` |
 | State / observation | React built-ins (`useState`, `useReducer`) + signals where appropriate | No Redux / MobX by default |
 | Routing | TanStack Router (frontend) / Hono router (backend) | |
 | Data fetching (frontend) | TanStack Query | |
@@ -78,18 +78,18 @@ Default answer to "should we add a library?" is **no**. The lists below are inte
 
 | Dependency | Version | Why it earns its place | Approver | Date |
 | ---------- | ------- | ---------------------- | -------- | ---- |
-| `hono` | `^4.6` | Backend HTTP framework — the project's chosen default | (default) | (template) |
+| `hono` | `^4.12` | Backend HTTP framework — the project's chosen default | (default) | (template) |
 | `react` | `^19` | Frontend UI framework | (default) | (template) |
-| `vite` | `^7` | Frontend build tool | (default) | (template) |
+| `vite` | `^8` | Frontend build tool | (default) | (template) |
 | `vitest` | `^4` | Test runner | (default) | (template) |
-| `zod` | `^3.23` | Boundary validation for every external input | (default) | (template) |
-| `pino` | `^9` | Structured logging | (default) | (template) |
+| `zod` | `^4` | Boundary validation for every external input | (default) | (template) |
+| `pino` | `^10` | Structured logging | (default) | (template) |
 | `@tanstack/react-query` | `^5` | Frontend data fetching cache | (default) | (template) |
 | `@tanstack/react-router` | `^1` | Frontend routing | (default) | (template) |
 | `eslint` | `^10` | Linter | (default) | (template) |
 | `@typescript-eslint/*` | `^8` | TS-aware lint rules | (default) | (template) |
 | `prettier` | `^3` | Formatter | (default) | (template) |
-| `typescript` | `^5.9` | Language | (default) | (template) |
+| `typescript` | `^6.0` | Language | (default) | (template) |
 
 ---
 

@@ -18,7 +18,7 @@ Once `VISION.md` is filled, run `/project-manager <prompt>`.
 | Profile   | Stack                                                                                      |
 | --------- | ------------------------------------------------------------------------------------------ |
 | **swift** | Strict Swift 6 + SwiftUI + Xcode 26+, `make`-driven (`make test-all`)                      |
-| **ts**    | Strict TypeScript 5.6 + Node 22 LTS + Hono + React 19 + Vite 7 + Vitest 3, pnpm workspaces                      |
+| **ts**    | Strict TypeScript 6 + Node 24 LTS + Hono 4 + React 19 + Vite 8 + Vitest 4, pnpm 11 workspaces |
 
 Both ship with the language version, runtime version, build commands, performance budgets, approved-dependencies list, and stack-specific reject-list pre-filled in `STACK.md`.
 
