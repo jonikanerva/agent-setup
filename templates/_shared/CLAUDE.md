@@ -9,9 +9,9 @@
 
 ## Autonomy
 
-This project runs on the autonomous "default agent stack" pattern. When the user asks Claude to build the product (or sends a one-line prompt like "build it" / "go" once `VISION.md` and `STACK.md` are filled), invoke the `/start-team` skill. It spins up a five-teammate agent team (`project-manager`, `architect`, `lead-dev`, `qa-enforcer`, `ux-guardian`) and drives the milestone chain to completion without further prompts.
+This project runs on the autonomous "default agent stack" pattern. Invoke the `/project-manager` skill — it is the team-lead entry point. The skill runs in two phases: an interactive Phase A where it interprets your prompt, asks any genuinely ambiguous clarifying questions, and waits for explicit plan approval; and an autonomous Phase B where it spawns the four-teammate agent team (`architect`, `lead-dev`, `qa-enforcer`, `ux-guardian`) and drives the work to completion without further prompts. The PM role itself lives in the skill — the lead is the PM in agent-teams mode.
 
-The autonomy fallback rule from `AGENTS.md §14.1` applies everywhere: when a decision is ambiguous, pick the smallest-surface, most-conservative interpretation that satisfies the `VISION.md` decision filter, document it in `ROADMAP.md → Strategic decisions`, and proceed. Do not call `AskUserQuestion`. The only exception is direct edits to `VISION.md` or `AGENTS.md` themselves — those require an explicit user request.
+The autonomy fallback rule from `AGENTS.md §14.1` applies in Phase B: when a decision is ambiguous, pick the smallest-surface, most-conservative interpretation that satisfies the `VISION.md` decision filter, document it in `ROADMAP.md → Strategic decisions`, and proceed. Do not call `AskUserQuestion` in Phase B. The only exceptions are (1) Phase A of the `/project-manager` skill, which is interactive by design, and (2) direct edits to `VISION.md` or `AGENTS.md`, which always require an explicit user request.
 
 ## Language
 
@@ -49,7 +49,7 @@ $VERIFY_CMD
 
 ## Skills
 
-- `/start-team` — autonomous orchestration entry point. Spawns the five-teammate agent team and drives the milestone chain to completion. Use this when the user wants the application built end-to-end with no further prompts.
+- `/project-manager <prompt>` — orchestration entry point. Free-form prompt; the skill classifies it into a mode (autonomous-build, single milestone, bootstrap, audit, PR review, investigation, custom), clarifies if needed, proposes a plan, and only spawns the team after explicit user approval. The skill itself owns `ROADMAP.md` stewardship (status, Strategic decisions, Risk register, Change log).
 - `/implement <task>` — feature branch → change → `$VERIFY_CMD` → commit → push → PR. Enforces the `VISION.md` decision filter and the `AGENTS.md §14` workflow rules. The `lead-dev` teammate calls this once per milestone.
 - `/codereview` — isolated subagent review of the current branch against `main`. It applies the project governance files first, then risk-based review lenses for correctness, architecture, concurrency, security, privacy, reliability, performance, tests, supply chain, and operability. It posts a plain-text PASS or FAIL PR comment as the audit-trail entry. Every FAIL finding must include evidence, impact, violated local rule, minimum fix, and verification; external standards such as OWASP, CWE, NIST SSDF, SLSA, 12-Factor, ISO/IEC 25010, OpenTelemetry, or OWASP LLM Top 10 are cited only when materially relevant. The `qa-enforcer` teammate calls this after each `/implement` finishes.
 

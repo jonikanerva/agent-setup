@@ -47,4 +47,4 @@ _instructions:
 	@printf "\n\033[0;32m✓ Scaffold ready in ./$(TARGET)/\033[0m\n\n"
 	@printf "Move it into your project:\n\n"
 	@printf "  \033[0;33mmv $(TARGET)/* $(TARGET)/.* /path/to/your-project/\033[0m\n\n"
-	@printf "Then in your project fill \033[0;33mVISION.md\033[0m and run \033[0;33mclaude\033[0m → \033[0;33m/start-team\033[0m.\n\n"
+	@printf "Then in your project fill \033[0;33mVISION.md\033[0m and run \033[0;33mclaude\033[0m → \033[0;33m/project-manager\033[0m.\n\n"

@@ -129,7 +129,7 @@ Tell the user in Finnish (the only Finnish artifact — everything written to th
 - Summary of what was implemented.
 - Verification results (all passing).
 - PR URL.
-- Suggest that the user run `/codereview` when ready for review (or note that `/start-team` will do it automatically).
+- Suggest that the user run `/codereview` when ready for review (or note that `/project-manager` will dispatch `qa-enforcer` automatically when running in `autonomous-build` or `milestone` mode).
 
 ## Rules
 

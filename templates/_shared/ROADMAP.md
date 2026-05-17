@@ -1,6 +1,6 @@
 # Roadmap
 
-> **Template — populated automatically by the `project-manager` agent during `/start-team`.**
+> **Template — populated automatically by the `/project-manager` skill on its first run against this repo (`bootstrap` mode).**
 > Do not delete historical entries; the change log is an append-only audit trail.
 >
 > Read order for any agent picking up a milestone: `VISION.md` → `AGENTS.md` → `STACK.md` → this file. Each milestone scope below should be self-contained enough to execute from this file alone.
@@ -50,7 +50,7 @@ Statuses: `Todo` · `In progress` · `Done` · `Blocked` · `Needs human`.
 
 ## Milestone scopes
 
-*One subsection per milestone. Each subsection lists: scope (in / out), files to add, files to remove, verification steps, and any open questions. The `project-manager` agent generates these from `VISION.md` and `STACK.md`; the `lead-dev` agent uses them as the implementation contract.*
+*One subsection per milestone. Each subsection lists: scope (in / out), files to add, files to remove, verification steps, and any open questions. The `/project-manager` skill generates these from `VISION.md` and `STACK.md` in `bootstrap` mode; the `lead-dev` teammate uses them as the implementation contract.*
 
 ### `<M0 — title>`
 

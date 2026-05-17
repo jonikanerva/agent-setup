@@ -1,6 +1,6 @@
 # Product Vision
 
-> **Template — replace this entire file before running `/start-team`.**
+> **Template — replace this entire file before running `/project-manager`.**
 > This document is the single source of truth for what the product *is* and what it is *not*. Every agent reads it on every milestone. Be specific. Be opinionated. Cut everything that does not belong.
 >
 > Sections marked **REQUIRED** must be filled. Sections marked **OPTIONAL** can be removed if not applicable.

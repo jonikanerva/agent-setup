@@ -9,7 +9,7 @@ A pre-wired template for **Claude Code** that gives a new project:
 - A per-stack tech configuration (`STACK.md`) preloaded with sane strict-mode defaults.
 - An Agent Team.
 
-The team runs autonomously: once `VISION.md` is filled and `/start-team` is called. Team plans milestones, opens PRs, runs code reviews on each PR, and only stops when the work is done — no `AskUserQuestion` prompts in the loop.
+Once `VISION.md` is filled, call `/project-manager <prompt>`. The skill interprets your prompt, proposes a plan, and — after your approval — spawns the agent team to execute. From spawn onwards the team runs autonomously (no `AskUserQuestion` in the loop): plans milestones, opens PRs, runs code reviews, and only stops when the work is done or a milestone needs human attention.
 
 ---
 
