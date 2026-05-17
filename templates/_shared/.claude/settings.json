@@ -89,6 +89,7 @@
     ]
   },
   "sandbox": {
+    "excludedCommands": ["open"],
     "filesystem": {
       "allowWrite": [
         "~/.gnupg"

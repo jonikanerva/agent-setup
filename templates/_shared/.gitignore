@@ -13,6 +13,7 @@ Thumbs.db
 .claude/tasks/
 .claude/debug/
 .claude/projects/
+.claude/settings.local.json
 
 # Local-only secrets and credentials
 .env
