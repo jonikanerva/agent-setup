@@ -58,7 +58,7 @@ State explicitly which layer the change belongs to:
 
 ## Autonomy fallback
 
-When the design space is genuinely ambiguous (e.g. two equally framework-native shapes, none clearly better), pick the smaller-surface option and note in the report that this was an `AGENTS.md §14.1` choice — the `lead-dev` will record it in `ROADMAP.md → Strategic decisions` when it implements.
+When the design space is genuinely ambiguous (e.g. two equally framework-native shapes, none clearly better), pick the smaller-surface option and note in the report that this was an `AGENTS.md §14.1` choice — the `lead-dev` will record the rationale in the PR description, and add a row to `ROADMAP.md → Strategic decisions in force` if the choice introduces a binding constraint for future work.
 
 Do not call `AskUserQuestion`.
 

@@ -1,7 +1,7 @@
 # Roadmap
 
 > **Template — populated automatically by the `/project-manager` skill on its first run against this repo (`bootstrap` mode).**
-> Do not delete historical entries; the change log is an append-only audit trail.
+> Forward-looking only. The audit trail of *what happened and why* is git history + PR descriptions + merge-commit chains (`CLAUDE.md → Git workflow` enforces merge-not-squash). This file plans what is coming next.
 >
 > Read order for any agent picking up a milestone: `VISION.md` → `AGENTS.md` → `STACK.md` → this file. Each milestone scope below should be self-contained enough to execute from this file alone.
 
@@ -17,34 +17,21 @@ Statuses: `Todo` · `In progress` · `Done` · `Blocked` · `Needs human`.
 
 ---
 
-## Strategic decisions
+## Strategic decisions in force
 
-*Append-only. Each entry: dated bullet, what changed, why. When a decision is superseded, **add** a new bullet that references and overrides it — never delete the original.*
+*Active architectural and product constraints that bind future work — ADR-style. Each entry is a rule that applies **now**, not a log of how we got here. When a decision is superseded, **rewrite or remove** the entry; the git history of this file preserves the prior state. The originating PR (linked when relevant) carries the full rationale.*
 
-- `<YYYY-MM-DD>` — `<decision>`. Reason: `<rationale>`.
+- `<active constraint>`. Why it binds future work: `<rationale>`. PR: `<link if applicable>`.
 
 ---
 
-## Risk register
+## Open risks
 
-*Open risks blocking the launch. Each entry: short title, the failing condition, the mitigation, and the milestone where it is most likely to manifest. Closed risks move to the change log on the date of closure (do not delete).*
+*Risks currently threatening a milestone. When a risk is mitigated or no longer relevant, **delete the row** — the PR or commit that resolved it is the audit trail.*
 
 | Risk | Failing condition | Mitigation | Milestone |
 | ---- | ----------------- | ---------- | --------- |
 | `<title>` | `<what would have to be true to break it>` | `<the planned mitigation>` | `<M…>` |
-
----
-
-## Change log
-
-*Append-only, dated, audit-grade. The single source of truth for "what happened on this branch and why". Agents add an entry whenever:*
-
-- *a milestone status row transitions*,
-- *a strategic decision is recorded above*,
-- *a risk is opened, mitigated, or closed*,
-- *an autonomy-fallback default is taken per `AGENTS.md §14.1`*.
-
-- `<YYYY-MM-DD>` — `<event>`.
 
 ---
 

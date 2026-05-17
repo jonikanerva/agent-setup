@@ -11,7 +11,7 @@
 
 This project runs on the autonomous "default agent stack" pattern. Invoke the `/project-manager` skill — it is the team-lead entry point. The skill runs in two phases: an interactive Phase A where it interprets your prompt, asks any genuinely ambiguous clarifying questions, and waits for explicit plan approval; and an autonomous Phase B where it spawns the four-teammate agent team (`architect`, `lead-dev`, `qa-enforcer`, `ux-guardian`) and drives the work to completion without further prompts. The PM role itself lives in the skill — the lead is the PM in agent-teams mode.
 
-The autonomy fallback rule from `AGENTS.md §14.1` applies in Phase B: when a decision is ambiguous, pick the smallest-surface, most-conservative interpretation that satisfies the `VISION.md` decision filter, document it in `ROADMAP.md → Strategic decisions`, and proceed. Do not call `AskUserQuestion` in Phase B. The only exceptions are (1) Phase A of the `/project-manager` skill, which is interactive by design, and (2) direct edits to `VISION.md` or `AGENTS.md`, which always require an explicit user request.
+The autonomy fallback rule from `AGENTS.md §14.1` applies in Phase B: when a decision is ambiguous, pick the smallest-surface, most-conservative interpretation that satisfies the `VISION.md` decision filter, document the choice in the PR description (and, if it introduces a binding constraint for future work, add a row to `ROADMAP.md → Strategic decisions in force`), and proceed. Do not call `AskUserQuestion` in Phase B. The only exceptions are (1) Phase A of the `/project-manager` skill, which is interactive by design, and (2) direct edits to `VISION.md` or `AGENTS.md`, which always require an explicit user request.
 
 ## Language
 
@@ -49,19 +49,21 @@ $VERIFY_CMD
 
 ## Skills
 
-- `/project-manager <prompt>` — orchestration entry point. Free-form prompt; the skill classifies it into a mode (autonomous-build, single milestone, bootstrap, audit, PR review, investigation, custom), clarifies if needed, proposes a plan, and only spawns the team after explicit user approval. The skill itself owns `ROADMAP.md` stewardship (status, Strategic decisions, Risk register, Change log).
+- `/project-manager <prompt>` — orchestration entry point. Free-form prompt; the skill classifies it into a mode (autonomous-build, single milestone, bootstrap, audit, PR review, investigation, custom), clarifies if needed, proposes a plan, and only spawns the team after explicit user approval. The skill itself owns `ROADMAP.md` stewardship (status transitions, Strategic decisions in force, Open risks).
 - `/implement <task>` — feature branch → change → `$VERIFY_CMD` → commit → push → PR. Enforces the `VISION.md` decision filter and the `AGENTS.md §14` workflow rules. The `lead-dev` teammate calls this once per milestone.
 - `/codereview` — isolated subagent review of the current branch against `main`. It applies the project governance files first, then risk-based review lenses for correctness, architecture, concurrency, security, privacy, reliability, performance, tests, supply chain, and operability. It posts a plain-text PASS or FAIL PR comment as the audit-trail entry. Every FAIL finding must include evidence, impact, violated local rule, minimum fix, and verification; external standards such as OWASP, CWE, NIST SSDF, SLSA, 12-Factor, ISO/IEC 25010, OpenTelemetry, or OWASP LLM Top 10 are cited only when materially relevant. The `qa-enforcer` teammate calls this after each `/implement` finishes.
 
 ## Roadmap
 
-`ROADMAP.md` at the repository root is the canonical status document for the milestone chain. Every milestone PR must update it before being merged:
+`ROADMAP.md` at the repository root is the **forward-looking** plan: milestones, active strategic constraints, open risks, milestone scopes. It is **not** an audit log — the audit trail of what happened and why is the git history of `main` (merge commits, never squash) plus PR descriptions and comments.
+
+Every milestone PR must update it before being merged:
 
 1. When the branch is opened, move that milestone's row from `Todo` to `In progress`.
 2. Before merging, move the row to `Done` and fill in the PR link.
-3. If a new strategic decision or technical risk surfaces mid-PR, add a line to the relevant section and a corresponding `Change log` entry.
+3. If a new binding constraint surfaces mid-PR, add a row to `Strategic decisions in force` (rewrite or remove rows when superseded — do not maintain an append-only ledger). If a risk surfaces, add it to `Open risks`; when it is mitigated, delete the row.
 
-Do not delete historical entries — the change log is an audit trail. Never write PII or any data forbidden by `VISION.md → Persistence and Privacy Posture` into `ROADMAP.md`.
+The full rationale for any decision lives in the PR that introduced it — not in `ROADMAP.md`. Never write PII or any data forbidden by `VISION.md → Persistence and Privacy Posture` into `ROADMAP.md`.
 
 ## Safeguards
 

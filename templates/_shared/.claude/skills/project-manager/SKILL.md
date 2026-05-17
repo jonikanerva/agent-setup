@@ -5,8 +5,9 @@ description: >
   what you want done, classifies it into an orchestration mode, clarifies open
   questions, proposes a plan, and (after explicit user approval) spawns the
   appropriate agent team to execute. Also owns ROADMAP.md stewardship —
-  status transitions, Strategic decisions, Risk register, and Change log —
-  directly from this session.
+  status transitions, Strategic decisions in force, and Open risks —
+  directly from this session. ROADMAP.md is forward-looking only; the
+  audit trail of what happened and why is git history + PR descriptions.
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Agent, Skill, AskUserQuestion, WebFetch, WebSearch
 argument-hint: <what you want orchestrated, in plain language>
 ---
@@ -145,8 +146,8 @@ When spawning, name each teammate by its role (`arch`, `dev`, `qa`, `ux`, option
 **Conditional `devils-advocate` spawn.** Do not spawn `devils-advocate` by default. Spawn it once between Step B-arch and Step B-dev for a given milestone if `arch` or `ux` returns a report whose final line is `Recommended next step: devils-advocate`. Hand it the milestone scope, the triggering report, and the relevant `VISION.md` / `STACK.md` context. Apply its verdict:
 
 - `PROCEED` → continue unchanged.
-- `PROCEED WITH SCOPE CUTS` → record the cuts in `ROADMAP.md → Strategic decisions`, update the milestone scope, continue.
-- `REWORK` → mark the milestone `Blocked` with the findings in the change log; continue to the next milestone.
+- `PROCEED WITH SCOPE CUTS` → update the milestone scope to reflect the cuts; if a cut introduces a binding constraint for future work (e.g. "feature X is out of scope until criterion Y is met"), add a row to `ROADMAP.md → Strategic decisions in force`. Continue.
+- `REWORK` → mark the milestone `Blocked`; post the `devils-advocate` report as a comment on the milestone's PR (or, if no PR exists yet, on the `docs/pm-<slug>` PR that carried the status transition) so the findings live as part of the GitHub audit trail; continue to the next milestone.
 
 Maximum one `devils-advocate` spawn per milestone.
 
@@ -158,9 +159,8 @@ If `ROADMAP.md` is the unfilled template (only entry in the Milestones table is 
 2. Decompose the product into **5–8 milestones** respecting the `VISION.md` decision filter. The first milestone is always **M0 — Foundation**: language version pinned, build commands wired, CI gate green, empty entry-point compiles, `README.md` placeholder. The point of M0 is to get `$VERIFY_CMD` passing on a trivial program before any feature work.
 3. Subsequent milestones build the minimum viable product — each independently shippable, with explicit `Scope (in)` / `Scope (out)` lists and a verification plan.
 4. Write the milestones into the Milestones table and per-milestone subsections of `ROADMAP.md → Milestone scopes`.
-5. Add a Change log entry: `<YYYY-MM-DD> — Initial milestone plan generated from VISION.md and STACK.md.`
-6. Open a `docs/pm-initial-roadmap` PR via `gh pr create`. Do **not** auto-merge.
-7. Tell the user (in Finnish): "Initial milestone plan PR opened — review and merge it before I continue. Reply 'go' when merged." Wait for the user reply. This is the one user-gated step in the bootstrap flow.
+5. Open a `docs/pm-initial-roadmap` PR via `gh pr create`. The PR description carries the rationale — which `VISION.md` principles drove the decomposition, what was deliberately deferred, the §0.1 decision-filter answers. Do **not** auto-merge.
+6. Tell the user (in Finnish): "Initial milestone plan PR opened — review and merge it before I continue. Reply 'go' when merged." Wait for the user reply. This is the one user-gated step in the bootstrap flow.
 
 ### Step B2: Milestone loop (modes = `autonomous-build`, `milestone`)
 
@@ -169,15 +169,15 @@ Loop while `ROADMAP.md` has a `Todo` milestone in the mode's scope (all `Todo` r
 1. **Pick the next milestone** — the lowest-numbered `Todo` row in the Milestones table.
 2. **Transition the row to `In progress`** directly. Land the status change either on a tiny `docs/pm-<slug>` branch + merged PR, or fold it into the upcoming feature branch the `lead-dev` will create — your call. Prefer the latter to save PRs.
 3. **`SendMessage` to `ux`** with the milestone scope, asking for the decision filter verdict.
-   - `REJECT` → mark the milestone `Blocked` with the rejection reason in the change log, continue to the next milestone.
+   - `REJECT` → mark the milestone `Blocked`; capture the rejection reason in the milestone scope notes (the `ux-guardian` report is the audit trail — post it as a PR comment on the `docs/pm-<slug>` PR carrying the status transition). Continue to the next milestone.
    - `NEEDS NARROWING` → update the milestone scope to the proposed narrower shape (with a Strategic-decisions entry), re-run `ux` until `ACCEPT`.
    - `ACCEPT` → continue.
 4. **`SendMessage` to `arch`** to design the implementation — propose interfaces, types, layer placement, and the actor / service boundaries. `arch` is read-only and returns its report.
 5. Apply the conditional `devils-advocate` rule (Step B0) if either `arch` or `ux` recommended it.
 6. **`SendMessage` to `dev`** to run `/implement` with the milestone scope as the argument. `dev` runs the full feature-branch ship loop (branch → code → `$VERIFY_CMD` → commit → push → PR). Wait for `dev` to report the PR URL.
-7. **`SendMessage` to `qa`** to run `/codereview` on the PR. If `qa` returns FAIL, send the findings back to `dev` ("address every finding from `/codereview`, then push and re-run `/codereview`"). Repeat. **Maximum 3 review rounds.** If `qa` still returns FAIL after 3 rounds, mark the milestone `Needs human` with the failing PR link and the most recent FAIL findings in the change log; do not merge; continue to the next milestone.
+7. **`SendMessage` to `qa`** to run `/codereview` on the PR. If `qa` returns FAIL, send the findings back to `dev` ("address every finding from `/codereview`, then push and re-run `/codereview`"). Repeat. **Maximum 3 review rounds.** If `qa` still returns FAIL after 3 rounds, mark the milestone `Needs human` with the failing PR link — the FAIL findings already live as `/codereview` PR comments, which are the audit trail. Do not merge; continue to the next milestone.
 8. **When `qa` returns PASS**, tell the user (in Finnish): `milestone <name> ready to merge — PR: <url>. I will continue once you merge.` The autonomous flow does **NOT** auto-merge — `gh pr merge` is gated by the user per `CLAUDE.md → Decision rights`. The user may reply "merge it" (or pre-authorise at plan approval) — only then run `gh pr merge`.
-9. **After merge**, transition the row to `Done`, fill in the PR link, and add a Change-log entry. Then loop to the next milestone.
+9. **After merge**, transition the row to `Done` and fill in the PR link. The merge commit on `main` plus the PR description and `/codereview` comments are the audit trail — no separate change-log entry. Then loop to the next milestone.
 
 For mode `milestone`, exit the loop after one iteration completes, blocks, or is marked `Needs human`.
 
@@ -191,7 +191,7 @@ If `ux` was also spawned (VISION-sensitive surface), include its decision-filter
 
 `SendMessage` to each investigator teammate with its hypothesis (or assignment) to investigate. Encourage them to challenge each other's findings — that is the point of the mode. Watch the shared task list and mailbox. When consensus emerges, or a single hypothesis survives the challenges, synthesize the result for the user in Finnish, with citations to specific files / lines.
 
-If the investigation surfaces a `VISION.md` decision-filter event (a behavior change is the root cause), record a Strategic-decisions entry in `ROADMAP.md` and a Change-log entry before reporting.
+If the investigation surfaces a `VISION.md` decision-filter event (a behavior change is the root cause), capture the rationale in the synthesis report (and, if there is an associated PR or issue, as a comment there so it lives on GitHub). If the finding establishes a binding constraint for future agents, add a row to `ROADMAP.md → Strategic decisions in force`. The investigation report itself is the audit trail — do not duplicate it into a change log.
 
 ### Step B5: Audit (mode = `audit`)
 
@@ -199,12 +199,12 @@ No spawn. You read `ROADMAP.md`, open PRs, recent main history, and write a sing
 
 1. **Milestone status** — table-row check vs reality, with any drift.
 2. **Open PRs** — what's blocking each, who owns the next move.
-3. **Scope drift** — any line in open work that crosses a milestone's `Scope (out)` list. Each crossed line is a `VISION.md` decision-filter event → Strategic decisions + Change log entry.
-4. **Decisions captured this round** — Strategic-decisions / Change-log additions.
-5. **Risks** — added / mitigated / closed since the last check-in.
-6. **Autonomy-fallback defaults taken** — any §14.1 events on the open branches.
+3. **Scope drift** — any line in open work that crosses a milestone's `Scope (out)` list. Each crossed line is a `VISION.md` decision-filter event; verify the PR description captures the rationale, and add to `Strategic decisions in force` if it sets a binding constraint.
+4. **Strategic decisions in force changes** — entries added, rewritten, or removed since the last check-in, with a reference to the PR that drove each change.
+5. **Risks** — added since the last check-in, and risks deleted because the mitigating PR shipped (point at the PR).
+6. **Autonomy-fallback defaults taken** — any §14.1 events on the open branches; verify each is captured in the respective PR description.
 
-Land any new dated entries into `ROADMAP.md` (English, audit-grade). Present the report to the user in Finnish.
+Update `ROADMAP.md → Strategic decisions in force` and `Open risks` accordingly (English). Do not maintain a separate dated change log — the merge-commit chain on `main` plus the PR descriptions are the audit trail. Present the report to the user in Finnish.
 
 ---
 
@@ -216,7 +216,7 @@ You own these artifacts. Edit them directly from this session — no separate te
 
 You may edit autonomously (no approval gate):
 
-- `ROADMAP.md` — milestone status transitions, scope additions, Strategic-decisions entries, Change-log entries, Risk-register additions / closures.
+- `ROADMAP.md` — milestone status transitions, scope additions, `Strategic decisions in force` additions / rewrites / removals, `Open risks` additions / removals.
 - `STACK.md` — anything **except** the language version, runtime version, and strictness mode (those are user-owned).
 - Trivial typo / formatting fixes inside files you already own.
 
@@ -236,17 +236,17 @@ You may **never** edit, on your own initiative, `VISION.md` or `AGENTS.md`. Thos
 Run an audit:
 
 - **Before** any milestone branch opens — refresh Files-to-add / Files-to-remove list against today's repo layout, resolve open-questions per `AGENTS.md §14.1`.
-- **During** any open milestone PR — once at PR open, once before merge. Compare diff against milestone `Scope (out)`; flag any crossed line. Each crossed line is a `VISION.md` decision-filter event needing a Strategic-decisions entry + Change-log entry, in that PR.
-- **After** merge — confirm the status row landed `Done`, the PR link is populated, the Change-log entry is dated and accurate.
-- **Whenever** `lead-dev` or `architect` makes an autonomy-fallback decision per `AGENTS.md §14.1` — capture it immediately in Strategic decisions and Change log.
+- **During** any open milestone PR — once at PR open, once before merge. Compare diff against milestone `Scope (out)`; flag any crossed line. Each crossed line is a `VISION.md` decision-filter event that must be explained in the PR description; if it sets a binding constraint for future agents, the constraint also goes into `Strategic decisions in force`.
+- **After** merge — confirm the status row landed `Done` and the PR link is populated. The merge commit on `main` plus the PR description and review comments are the audit trail; no separate change-log entry is required.
+- **Whenever** `lead-dev` or `architect` makes an autonomy-fallback decision per `AGENTS.md §14.1` — verify the PR description captures the rationale. If the decision introduces a binding constraint for future agents, add a row to `Strategic decisions in force`.
 
-When a strategic decision is superseded, do **not** delete the original — add a new dated bullet that references and overrides it.
+When a strategic decision is superseded, **rewrite or remove** the in-force entry — the git history of `ROADMAP.md` preserves the prior shape, and the PR that drove the supersession carries the rationale. Do not maintain a parallel append-only ledger.
 
 Convert relative dates ("next Thursday") to ISO `YYYY-MM-DD` before writing.
 
-### Risk register
+### Open risks
 
-Each entry has a short title, the failing condition, the mitigation, and the milestone where it is most likely to manifest. When fully mitigated by a shipped change, do **not** silently delete it — move it into a "Risks closed" Change-log entry on the date of closure.
+Each entry has a short title, the failing condition, the mitigation, and the milestone where it is most likely to manifest. When fully mitigated by a shipped change, **delete the row**. The PR that mitigated the risk (its description, commits, and merge into `main`) is the audit trail — do not duplicate it into `ROADMAP.md`.
 
 ---
 
@@ -270,7 +270,7 @@ When you stop, write a one-screen summary in Finnish:
 - Milestones `Done`: count + names.
 - Milestones `Blocked`: count + names + the `VISION.md` reason for each.
 - Milestones `Needs human`: count + names + the failing PR link for each.
-- Strategic decisions captured this run (date + headline only).
+- Binding constraints added to `Strategic decisions in force` this run (headline + originating PR).
 - Risks opened / closed this run.
 - Next suggested step for the user.
 
@@ -289,7 +289,8 @@ Then ask (in Finnish, free-form, **not** via `AskUserQuestion`) whether to clean
 - Running more than three review rounds on a single milestone without marking it `Needs human`. The limit surfaces stuck work, not grinds tokens forever.
 - Spawning `devils-advocate` by default. Spawn it only when `arch` or `ux` flags an unusually risky design.
 - Editing `VISION.md` or `AGENTS.md` without an explicit user authorisation in the same conversation turn.
-- ROADMAP entries that record an autonomy-fallback default without a `Why:` line — opaque "we did X" entries are not audit-grade.
+- PR descriptions that record an autonomy-fallback default without a clear "why" — opaque "we did X" entries are not audit-grade. The PR description is the audit trail; treat it like one.
+- Treating `ROADMAP.md` as an append-only history. It is forward-looking only: active strategic constraints, open risks, upcoming milestone scopes. Decisions made and risks closed live in git history and PR descriptions.
 - Allowing milestone scope to creep through "polish" or "small UX touches" that have not been through the `VISION.md` decision filter.
 - Optimistic milestone counts (>10) that compress all the hard decisions into one giant final milestone.
 

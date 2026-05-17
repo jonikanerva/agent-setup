@@ -21,7 +21,7 @@ Follow these steps in order. Do not skip steps.
 
 Before writing any code, read `VISION.md → Decision Filter` and answer all four questions verbatim.
 
-If the answer to any question is "no", **stop and document the conflict in `ROADMAP.md → Strategic decisions`** with the date, the proposed change, and which decision-filter answer was "no". Then propose the smallest framework-native alternative that passes the filter — that becomes the new task. Do NOT silently violate `VISION.md`.
+If the answer to any question is "no", **stop and surface the conflict in the PR description** (or, if no PR exists yet, on the issue / discussion that proposed the change) — list the proposed change and which decision-filter answer was "no". If the rejection establishes a binding constraint future agents must respect, also add a row to `ROADMAP.md → Strategic decisions in force`. Then propose the smallest framework-native alternative that passes the filter — that becomes the new task. Do NOT silently violate `VISION.md`.
 
 Also scan `AGENTS.md §13 "Reject changes that…"` and `STACK.md → Stack-specific reject-list additions`. If the task falls into any rejected category, stop, document, and rewrite the task to the smallest acceptable shape.
 
@@ -55,7 +55,7 @@ Implement what is described in `$ARGUMENTS`, following all project standards:
 If the task is unclear or ambiguous:
 
 1. Pick the smallest-surface, most-conservative interpretation that satisfies the `VISION.md` decision filter.
-2. Document the choice in `ROADMAP.md → Strategic decisions` with the date and rationale.
+2. Document the choice in the PR description (alternatives considered + rationale). If it introduces a binding constraint for future agents, also add a row to `ROADMAP.md → Strategic decisions in force`.
 3. Proceed.
 
 **Do not call `AskUserQuestion`.** The autonomous flow depends on this.
@@ -74,7 +74,7 @@ If verification fails:
 2. Fix the underlying issue — do NOT suppress warnings with `@unchecked Sendable`, `nonisolated(unsafe)`, `@preconcurrency`, `MainActor.assumeIsolated`, `as any`, `@ts-ignore`, or any equivalent escape hatch (see `AGENTS.md §4 C13` and `§13`).
 3. Re-run `$VERIFY_CMD`.
 4. Repeat until all checks pass.
-5. **Maximum 10 fix attempts.** If still failing on attempt 11, do not loop indefinitely — create a `chore/abandoned-<task>` branch with the work-in-progress, add a `ROADMAP.md → Change log` entry describing the failure mode and what was tried, and surface the situation in the PR description for the next teammate to pick up. Do **not** call `AskUserQuestion`.
+5. **Maximum 10 fix attempts.** If still failing on attempt 11, do not loop indefinitely — create a `chore/abandoned-<task>` branch with the work-in-progress, push it, and describe the failure mode and what was tried in the draft PR (or on the existing PR). The PR / branch on GitHub is the audit trail for the next teammate to pick up. Do **not** call `AskUserQuestion`.
 
 ### Step 5: Commit
 

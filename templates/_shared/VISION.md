@@ -133,7 +133,7 @@ The product succeeds when the user feels:
 
 ## Open Questions *(OPTIONAL)*
 
-*Things the human owner is still deciding. Agents do not block on these — they pick the most-conservative interpretation and document the choice in `ROADMAP.md → Strategic decisions` per `AGENTS.md §14.1`.*
+*Things the human owner is still deciding. Agents do not block on these — they pick the most-conservative interpretation, document the choice in the PR description per `AGENTS.md §14.1`, and add a row to `ROADMAP.md → Strategic decisions in force` only if the choice introduces a binding constraint for future work.*
 
 - `<Open question 1.>`
 - `<Open question 2.>`

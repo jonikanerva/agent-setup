@@ -27,7 +27,7 @@ When a newer language / framework feature supersedes an older one, prefer the ne
 
 `VISION.md` defines the product's core principles, non-goals, and decision filter. Read it before evaluating any feature.
 
-**Before accepting a feature, run the VISION decision filter** — the four questions defined in `VISION.md → Decision Filter`. If the answer to any of these is "no", **reject the feature and document the rejection in `ROADMAP.md → Strategic decisions`**. Do not silently violate `VISION.md`.
+**Before accepting a feature, run the VISION decision filter** — the four questions defined in `VISION.md → Decision Filter`. If the answer to any of these is "no", **reject the feature**. Document the rejection in the PR description (or, if no PR exists yet, on the issue / discussion that proposed the feature) — that is the audit trail. If the rejection establishes a binding constraint that future agents must respect (e.g. "no feature in category X without re-running the filter"), also add a row to `ROADMAP.md → Strategic decisions in force` so future agents see the constraint without searching PR history. Do not silently violate `VISION.md`.
 
 The decision filter is product-specific; agents read it dynamically from `VISION.md` and do not hard-code its contents.
 
@@ -296,14 +296,14 @@ When implementing a change:
 When a decision is genuinely ambiguous and the answer is not derivable from `VISION.md`, `STACK.md`, this file, or `ROADMAP.md`:
 
 1. Pick the smallest-surface, most-conservative interpretation that satisfies the §0.1 decision filter.
-2. Document the choice in `ROADMAP.md → Strategic decisions` with the date, the alternatives considered, and the rationale.
+2. Document the choice **in the PR description** — the alternatives considered and the rationale. The PR description (preserved by the merge commit on `main`) is the audit trail. If the choice introduces a binding constraint that future agents must respect, also add a row to `ROADMAP.md → Strategic decisions in force` so future agents see it without searching PR history.
 3. Proceed.
 
 Do not call `AskUserQuestion`. Do not pause for human input. The exception is direct edits to `VISION.md` or `AGENTS.md` themselves — those require an explicit user request, because they are the foundation other decisions rest on.
 
-If `$VERIFY_CMD` keeps failing despite up to **10 fix attempts**, do not loop indefinitely. Create a `chore/abandoned-<task>` branch with the work-in-progress, add a `ROADMAP.md → Change log` entry describing the failure mode and what was tried, and proceed to the next milestone.
+If `$VERIFY_CMD` keeps failing despite up to **10 fix attempts**, do not loop indefinitely. Create a `chore/abandoned-<task>` branch with the work-in-progress, push it, open a draft PR (or comment on the existing PR) describing the failure mode and what was tried, and proceed to the next milestone. The PR / branch on GitHub is the audit trail.
 
-If a requested change conflicts with this file, `VISION.md`, or `STACK.md`, propose the smallest framework-native alternative and document the conflict — do not silently violate the rule.
+If a requested change conflicts with this file, `VISION.md`, or `STACK.md`, propose the smallest framework-native alternative and document the conflict in the PR description — do not silently violate the rule.
 
 ---
 

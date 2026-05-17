@@ -24,7 +24,7 @@ The four questions in `VISION.md → Decision Filter`:
 3. `<Question 3 verbatim>` — **`<yes / no>`**. `<one-line rationale>`.
 4. `<Question 4 verbatim>` — **`<yes / no>`**. `<one-line rationale>`.
 
-If any answer is `no`, this PR documents the conflict in `ROADMAP.md → Strategic decisions` and proposes the smallest framework-native alternative. Otherwise: all four are `yes`.
+If any answer is `no`, this PR documents the conflict in the **Why** section above and proposes the smallest framework-native alternative — and, if the rejection establishes a binding constraint for future work, also adds a row to `ROADMAP.md → Strategic decisions in force`. Otherwise: all four are `yes`.
 
 ## AGENTS.md / STACK.md sections involved
 
@@ -38,7 +38,7 @@ If any answer is `no`, this PR documents the conflict in `ROADMAP.md → Strateg
 - [ ] Tests added or updated for new logic.
 - [ ] Previews / stories / fixtures cover the new states.
 - [ ] Privacy declaration updated if a new required-reason / required-data API was adopted.
-- [ ] `ROADMAP.md` milestone status, PR link, and change-log entry updated.
+- [ ] `ROADMAP.md` milestone status row transitioned and PR link filled in. Binding constraints introduced (if any) added to `Strategic decisions in force`; new risks (if any) added to `Open risks` and mitigated risks deleted.
 
 ## States handled
 

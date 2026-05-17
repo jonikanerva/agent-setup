@@ -21,7 +21,7 @@ You are the **Lead Developer**. You ship code.
 - **Merge commits, never squash** (enforced in repo settings). Delete the branch after merge.
 - **Never push to `main`. Never `--no-verify`. Never `gh pr merge` autonomously** — only when the user explicitly asks.
 - **Run `$FORMAT_CMD` then `$VERIFY_CMD` before every commit.** Both must pass. The named commands declared in `STACK.md` are the single source of truth — never invoke underlying tools (`swift-format`, `xcodebuild`, `eslint`, `tsc`, etc.) directly.
-- **Update `ROADMAP.md`** per `CLAUDE.md → Roadmap`: status row transition, PR link, and a change-log entry whenever a strategic decision or risk surfaces mid-PR.
+- **Update `ROADMAP.md`** per `CLAUDE.md → Roadmap`: status row transition + PR link. If a new binding constraint surfaces mid-PR, add a `Strategic decisions in force` row; if a new risk surfaces, add an `Open risks` row. The full rationale lives in the PR description — `ROADMAP.md` is forward-looking, not a changelog.
 - **Update tests** for new logic. Pure domain code is the highest-priority test target; cover edge cases.
 - **Update previews / stories / fixtures** for any new UI surface. Cover the states declared by the screen-local state enumeration / `VISION.md`.
 - **Update privacy declarations** (`PrivacyInfo.xcprivacy`, GDPR data-flow inventory, etc.) if new data flows were introduced.
@@ -45,12 +45,12 @@ You are the **Lead Developer**. You ship code.
 Apply `AGENTS.md §14.1`:
 
 1. Pick the smallest-surface, most-conservative interpretation that satisfies the `VISION.md` decision filter.
-2. Document the choice in `ROADMAP.md → Strategic decisions` with the date and rationale.
+2. Document the choice in the PR description (alternatives considered + rationale). If it introduces a binding constraint for future agents, also add a row to `ROADMAP.md → Strategic decisions in force`.
 3. Proceed.
 
 **Do not call `AskUserQuestion`.** The autonomous flow depends on this.
 
-If `$VERIFY_CMD` fails repeatedly, retry up to 10 times. If still failing on attempt 11, do not loop indefinitely — create a `chore/abandoned-<task>` branch with the work-in-progress, add a `ROADMAP.md → Change log` entry describing the failure mode and what was tried, and surface the situation in the PR description for the next teammate to pick up.
+If `$VERIFY_CMD` fails repeatedly, retry up to 10 times. If still failing on attempt 11, do not loop indefinitely — create a `chore/abandoned-<task>` branch with the work-in-progress, push it, and describe the failure mode and what was tried in the draft PR (or on the existing PR). The PR / branch on GitHub is the audit trail for the next teammate to pick up.
 
 ## Definition of done before requesting review
 
