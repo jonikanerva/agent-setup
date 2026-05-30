@@ -23,6 +23,7 @@ template/             # the bundle you copy into your project
 stacks/               # STACK.md profiles — copy one in as STACK.md
   STACK-TEMPLATE.md   #   empty skeleton for a new stack (Kotlin, Go, …)
   STACK-TS.md         #   example: strict TypeScript / Node / Hono / React / Vite / Vitest
+  STACK-EFFECT.md     #   example: strict TypeScript / Effect v3 / HttpApi / React
   STACK-SWIFT.md      #   example: strict Swift 6 / SwiftUI / Xcode 26+
 ```
 
@@ -38,12 +39,13 @@ Once `VISION.md` and `STACK.md` are filled, run `/project-manager <issue # or pr
 
 ---
 
-## Two example stacks
+## Example stacks
 
-| Stack     | Profile                                                                                    |
-| --------- | ------------------------------------------------------------------------------------------ |
-| **ts**    | Strict TypeScript 6 + Node 24 LTS + Hono 4 + React 19 + Vite 8 + Vitest 4, pnpm workspaces |
-| **swift** | Strict Swift 6 + SwiftUI + Xcode 26+, `make`-driven (`make test-all`)                      |
+| Stack      | Profile                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------ |
+| **ts**     | Strict TypeScript 6 + Node 24 LTS + Hono 4 + React 19 + Vite 8 + Vitest 4, pnpm workspaces |
+| **effect** | Strict TypeScript + Effect v3 + `@effect/platform` HttpApi + React 19 + Vite, pnpm         |
+| **swift**  | Strict Swift 6 + SwiftUI + Xcode 26+, `make`-driven (`make test-all`)                      |
 
 Each `stacks/STACK-*.md` documents the project shape, language version, runtime, build commands, performance budgets, approved-dependencies list, and stack-specific reject-list. They are **examples**: copy one in as `STACK.md` and edit it to match your real project. For a stack not covered here (Kotlin, Go, Rust, …), copy `stacks/STACK-TEMPLATE.md` and fill the skeleton — nothing else in the setup changes.
 
