@@ -53,29 +53,21 @@
 
 ---
 
-## Non-Goals *(REQUIRED)*
+## Non-Goals & Drift Guardrails *(REQUIRED)*
 
-*Things the product must not become. Be brutal. Each entry is a feature that will be rejected by `ux-guardian` and `architect` even if technically feasible.*
+*What the product must not become, and the early-warning signs of drift toward it. Be brutal. `ux-guardian` rejects anything that crosses these even if technically feasible.*
 
 The product must not become:
 
 - `<Non-goal 1.>`
 - `<Non-goal 2.>`
 - `<Non-goal 3.>`
-- `<…>`
 
----
+Drift signals to flag when proposing UX, copy, or features — do not:
 
-## Guardrails for Agents *(REQUIRED)*
-
-*Specific behaviours agents must avoid when proposing UX, copy, or features. These are the early-warning signs of vision drift.*
-
-When making product, UX, or feature decisions:
-
-- Do not `<drift pattern 1>`.
-- Do not `<drift pattern 2>`.
-- Do not `<drift pattern 3>`.
-- Do not `<drift pattern 4>`.
+- `<drift pattern 1>`.
+- `<drift pattern 2>`.
+- `<drift pattern 3>`.
 
 If a feature makes the product feel more like `<adjacent product category 1>`, `<category 2>`, or `<category 3>`, it is the wrong direction.
 
@@ -113,7 +105,7 @@ The product succeeds when the user feels:
 
 ## Persistence and Privacy Posture *(REQUIRED)*
 
-*State exactly what the product is allowed to persist and transmit. Agents enforce this in `AGENTS.md §6.2` and `§8`.*
+*State exactly what the product is allowed to persist and transmit. Agents enforce this via `CLAUDE.md → Side effects` and `→ Privacy & security`.*
 
 - **Persisted on-device:** `<list — be exhaustive>`.
 - **Transmitted off-device:** `<list, or "nothing" if fully local>`.
@@ -133,7 +125,7 @@ The product succeeds when the user feels:
 
 ## Open Questions *(OPTIONAL)*
 
-*Things the human owner is still deciding. Agents do not block on these — they pick the most-conservative interpretation, document the choice in the PR description per `AGENTS.md §14.1`, and state it in the relevant issue only if the choice introduces a binding constraint for future work.*
+*Things the human owner is still deciding. Agents do not block on these — they pick the most-conservative interpretation, document the choice in the PR description per the `CLAUDE.md → Autonomy fallback` rule, and state it in the relevant issue only if the choice introduces a binding constraint for future work.*
 
 - `<Open question 1.>`
 - `<Open question 2.>`

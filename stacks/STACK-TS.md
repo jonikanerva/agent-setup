@@ -4,6 +4,14 @@
 
 ---
 
+## 0. Project shape
+
+- **Shape:** UI app (`apps/web`) + backend service (`apps/api`).
+- **Critical execution path:** the browser main thread / React render path on the web; the per-request hot path on the API.
+- **Applicable states:** web surfaces handle awaiting-first-data, success, empty, degraded, offline, error (plus product-specific); API responses are typed success / typed error.
+
+---
+
 ## 1. Language & Runtime
 
 - **Primary language:** TypeScript 6.0
@@ -127,6 +135,6 @@ Default answer to "should we add a library?" is **no**. The lists below are inte
 
 ## 10. Intentional Divergences
 
-| Date     | AGENTS.md rule | Divergence | Reason |
+| Date     | CLAUDE.md rule | Divergence | Reason |
 | -------- | -------------- | ---------- | ------ |
 | _(none)_ | —              | —          | —      |

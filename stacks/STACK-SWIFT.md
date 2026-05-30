@@ -4,6 +4,14 @@
 
 ---
 
+## 0. Project shape
+
+- **Shape:** UI app (iOS / SwiftUI).
+- **Critical execution path:** the main actor / UI thread (one display frame).
+- **Applicable states:** every screen handles awaiting-first-data, success, empty, degraded, permission-blocked, offline, error (plus product-specific).
+
+---
+
 ## 1. Language & Runtime
 
 - **Primary language:** Swift 6.1
@@ -115,6 +123,6 @@ SwiftData is **not** the default. Reintroducing `@Model` / `ModelContainer` / `@
 
 ## 10. Intentional Divergences
 
-| Date     | AGENTS.md rule | Divergence | Reason |
+| Date     | CLAUDE.md rule | Divergence | Reason |
 | -------- | -------------- | ---------- | ------ |
 | _(none)_ | —              | —          | —      |

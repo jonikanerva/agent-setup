@@ -5,7 +5,7 @@ The /implement skill drafts this for you. Verify, then ship.
 
 ## Why
 
-`<One-paragraph motivation. What problem is this PR solving and which VISION.md / AGENTS.md / STACK.md section is at play.>`
+`<One-paragraph motivation. What problem is this PR solving and which VISION.md / CLAUDE.md / STACK.md rule is at play.>`
 
 Closes #`<issue number, if this PR resolves a GitHub issue>`
 
@@ -26,12 +26,12 @@ The four questions in `VISION.md → Decision Filter`:
 3. `<Question 3 verbatim>` — **`<yes / no>`**. `<one-line rationale>`.
 4. `<Question 4 verbatim>` — **`<yes / no>`**. `<one-line rationale>`.
 
-If any answer is `no`, this PR documents the conflict in the **Why** section above and proposes the smallest framework-native alternative — and, if the rejection establishes a binding constraint for future work, also states it in the linked issue. Otherwise: all four are `yes`.
+If any answer is `no`, this PR documents the conflict in the **Why** section above and proposes the smallest idiomatic alternative — and, if the rejection establishes a binding constraint for future work, also states it in the linked issue. Otherwise: all four are `yes`.
 
-## AGENTS.md / STACK.md sections involved
+## Rules involved
 
-- `AGENTS.md §<x.y>` — `<one-line how this PR honours the rule>`
-- `STACK.md §<x>` — `<one-line>`
+- `CLAUDE.md → <rule by name>` — `<one-line how this PR honours it>`
+- `STACK.md → <section>` — `<one-line>`
 
 ## Verification
 
@@ -44,7 +44,7 @@ If any answer is `no`, this PR documents the conflict in the **Why** section abo
 
 ## States handled
 
-For UI-affecting changes, list every state the new surface renders:
+For changes that affect a user- or caller-facing surface, list every state it renders:
 
 - [ ] loading / awaiting first data
 - [ ] success
@@ -56,7 +56,7 @@ For UI-affecting changes, list every state the new surface renders:
 
 ## Notes for reviewer
 
-`<Anything the reviewer should know that the diff alone does not surface — e.g. an autonomy-fallback default taken per AGENTS.md §14.1, a deferred decision, an open risk.>`
+`<Anything the reviewer should know that the diff alone does not surface — e.g. an autonomy-fallback default taken, a deferred decision, an open risk.>`
 
 ---
 
