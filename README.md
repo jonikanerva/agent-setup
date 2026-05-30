@@ -9,6 +9,20 @@ A pre-wired template for **Claude Code** that gives a new project:
 - Three skills: `/project-manager` (the only surface that talks to you), `/implement` (feature branch → PR), and `/codereview` (PASS/FAIL audit on the current branch).
 - A pre-configured `.claude/settings.json` with permission rules and hooks.
 
+## Layout
+
+```
+template/          # the bundle you copy into your project
+  .claude/         #   skills (project-manager, implement, codereview) + agents
+  .github/         #   PR template
+  AGENTS.md        #   engineering contract
+  CLAUDE.md        #   Claude-Code operating rules
+  VISION.md        #   product contract (fill this in)
+stacks/            # example STACK.md profiles — pick one, copy it in as STACK.md
+  STACK-TS.md      #   strict TypeScript / Node / Hono / React / Vite / Vitest
+  STACK-SWIFT.md   #   strict Swift 6 / SwiftUI / Xcode 26+
+```
+
 ## How it works
 
 1. You keep a **backlog of GitHub issues** of any size. You are the boss.
@@ -21,25 +35,28 @@ Once `VISION.md` and `STACK.md` are filled, run `/project-manager <issue # or pr
 
 ---
 
-## Two starter profiles
+## Two example stacks
 
-| Profile   | Stack                                                                                      |
+| Stack     | Profile                                                                                    |
 | --------- | ------------------------------------------------------------------------------------------ |
+| **ts**    | Strict TypeScript 6 + Node 24 LTS + Hono 4 + React 19 + Vite 8 + Vitest 4, pnpm workspaces |
 | **swift** | Strict Swift 6 + SwiftUI + Xcode 26+, `make`-driven (`make test-all`)                      |
-| **ts**    | Strict TypeScript 6 + Node 24 LTS + Hono 4 + React 19 + Vite 8 + Vitest 4, pnpm 11 workspaces |
 
-Both ship with the language version, runtime version, build commands, performance budgets, approved-dependencies list, and stack-specific reject-list pre-filled in `STACK.md`.
+Each `stacks/STACK-*.md` documents the language version, runtime, build commands, performance budgets, approved-dependencies list, and stack-specific reject-list. They are **examples**: copy one in as `STACK.md` and edit it to match your real project.
 
 ---
 
 ## Use it
 
-You should already have `claude`, `gh`, and `jq` installed.
+You need to have `claude`, `gh` and `jq` installed.
 
-### Generate the scaffold
+### Copy the setup into your project
+
+Copy the template and one stack example into your project, replacing `<your-project-dir>` with your project path:
 
 ```sh
-make swift   # for Swift / SwiftUI / Xcode
-# or
-make ts      # for TypeScript / Node / Hono / React
+cp -R template/. <your-project-dir>/
+cp stacks/STACK-TS.md <your-project-dir>/STACK.md   # or STACK-SWIFT.md
 ```
+
+Then in your project: fill `VISION.md` and `STACK.md`, open a few GitHub issues as your backlog, and run `claude` → `/project-manager solve issue #1` (or describe a problem directly).
