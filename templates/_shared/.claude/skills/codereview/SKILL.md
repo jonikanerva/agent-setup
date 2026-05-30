@@ -14,7 +14,7 @@ Communicate in Finnish when reporting progress to the user; write the PR-review 
 ## Prerequisites
 
 - A PR must exist for the current branch. If not, the autonomy fallback applies: do NOT call `AskUserQuestion`. Instead, run `gh pr create` against the current branch with a minimal title / body derived from the latest commit, then proceed. (The lead-dev should already have done this; the fallback is for races where it has not.)
-- Read: `gh pr view --comments`, `gh pr diff`, `gh pr checks`, and the governance files `VISION.md`, `AGENTS.md`, `STACK.md`, `CLAUDE.md`, `README.md`.
+- Read: `gh pr view --comments`, `gh pr diff`, `gh pr checks`, and the governance files `VISION.md`, `AGENTS.md`, `STACK.md`, `CLAUDE.md`, `README.md`. If the PR links an issue (`Closes #<N>`), read it with `gh issue view <N> --comments` — that issue is the scope contract for the scope-fit lens.
 - Inspect the branch history with `git log main..HEAD --oneline`.
 - Prefer reviewing the whole changed surface, not only the displayed diff hunk. Follow call sites, state ownership, service boundaries, tests, previews / stories, build scripts, and configuration touched by the change.
 
@@ -31,7 +31,7 @@ Do **not** fail a PR for subjective taste, personal style, or a possible alterna
 Evaluate every PR through these lenses. Use the lenses to organize your reasoning; convert them into findings only when the evidence meets the blocking-finding bar.
 
 1. **Functional correctness** — Does the changed code do what the PR claims? Are edge cases, empty inputs, invalid data, permission denial, retries, cancellation, and migration paths correct?
-2. **Product and scope fit** — Does the change satisfy `VISION.md → Decision Filter`, avoid `VISION.md → Non-Goals`, and stay inside the current `ROADMAP.md` milestone?
+2. **Product and scope fit** — Does the change satisfy `VISION.md → Decision Filter`, avoid `VISION.md → Non-Goals`, and stay inside the scope of the issue it is solving (the issue the PR links with `Closes #<N>`)?
 3. **Architecture and maintainability** — Does it preserve the layered shape in `AGENTS.md §3`, local ownership, obvious state flow, small purpose-driven types, and framework-native primitives?
 4. **Concurrency and lifecycle safety** — Does it satisfy `AGENTS.md §4 C1–C13`, including UI-thread isolation, structured concurrency, cancellation, and thread-safe boundary types?
 5. **Security and privacy** — Does it avoid injection, credential exposure, broken access control, PII leakage, overbroad permissions, forbidden persistence, and unsafe transport / logging?
@@ -141,7 +141,7 @@ Every blocking finding in the PR comment must use this format:
 - **Verification:** <test, check, preview, or command that proves the fix>
 ```
 
-Do not include findings that cannot be tied to a concrete location, PR metadata item, or changed project artifact. For PR-level issues, use `PR description`, `branch history`, `CI checks`, or `ROADMAP.md` as the location.
+Do not include findings that cannot be tied to a concrete location, PR metadata item, or changed project artifact. For PR-level issues, use `PR description`, `branch history`, `CI checks`, or the linked `issue #<N>` as the location.
 
 ## Output
 
@@ -171,7 +171,7 @@ Finally, report to the user in Finnish (Claude's chat replies are the only Finni
 - Verdict (PASS / FAIL).
 - Number of blocking findings if FAIL.
 - Link to the review comment on GitHub.
-- For FAIL: suggest running `/codereview` again after fixing (the autonomous flow does this automatically — up to 3 review rounds before the milestone is marked `Needs human`).
+- For FAIL: suggest running `/codereview` again after fixing (the autonomous flow does this automatically — up to 3 review rounds before the issue is flagged for a human look).
 
 ## Autonomy fallback
 

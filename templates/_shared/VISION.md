@@ -1,7 +1,7 @@
 # Product Vision
 
 > **Template — replace this entire file before running `/project-manager`.**
-> This document is the single source of truth for what the product *is* and what it is *not*. Every agent reads it on every milestone. Be specific. Be opinionated. Cut everything that does not belong.
+> This document is the single source of truth for what the product *is* and what it is *not*. Every agent reads it on every issue. Be specific. Be opinionated. Cut everything that does not belong.
 >
 > Sections marked **REQUIRED** must be filled. Sections marked **OPTIONAL** can be removed if not applicable.
 > Replace every `<…>` placeholder. Delete any guidance text in italics once the section is final.
@@ -133,7 +133,7 @@ The product succeeds when the user feels:
 
 ## Open Questions *(OPTIONAL)*
 
-*Things the human owner is still deciding. Agents do not block on these — they pick the most-conservative interpretation, document the choice in the PR description per `AGENTS.md §14.1`, and add a row to `ROADMAP.md → Strategic decisions in force` only if the choice introduces a binding constraint for future work.*
+*Things the human owner is still deciding. Agents do not block on these — they pick the most-conservative interpretation, document the choice in the PR description per `AGENTS.md §14.1`, and state it in the relevant issue only if the choice introduces a binding constraint for future work.*
 
 - `<Open question 1.>`
 - `<Open question 2.>`

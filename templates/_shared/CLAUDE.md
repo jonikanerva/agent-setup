@@ -1,17 +1,16 @@
 @AGENTS.md
 @VISION.md
 @STACK.md
-@ROADMAP.md
 
 # Claude Code workflow
 
-`VISION.md`, `AGENTS.md`, `STACK.md`, and `ROADMAP.md` are the single sources of truth for product, technical, and milestone rules. This file only adds Claude-Code-specific operational rules (skills, verification, git workflow, safeguards, decision rights). Nothing is duplicated from the other documents.
+`VISION.md`, `AGENTS.md`, and `STACK.md` are the single sources of truth for product and technical rules. The **backlog and roadmap are the GitHub issue list** (the user owns it) — there is no roadmap or backlog file in this repo. This file only adds Claude-Code-specific operational rules (skills, verification, git workflow, safeguards, decision rights). Nothing is duplicated from the other documents.
 
 ## Autonomy
 
-This project runs on the autonomous "default agent stack" pattern. Invoke the `/project-manager` skill — it is the team-lead entry point. The skill runs in two phases: an interactive Phase A where it interprets your prompt, asks any genuinely ambiguous clarifying questions, and waits for explicit plan approval; and an autonomous Phase B where it spawns the four-teammate agent team (`architect`, `lead-dev`, `qa-enforcer`, `ux-guardian`) and drives the work to completion without further prompts. The PM role itself lives in the skill — the lead is the PM in agent-teams mode.
+This project runs on the autonomous "default agent stack" pattern. Invoke the `/project-manager` skill — it is the team-lead entry point and the only surface that talks to the user. You drive it by issue (`solve issue #42`) or by describing the problem directly. The skill runs in two phases: an interactive Phase A where it reads the issue / interprets your prompt, asks any genuinely ambiguous clarifying questions, and waits for plan approval; and an autonomous Phase B where it convenes the full five-teammate agent team (`architect`, `ux-guardian`, `devils-advocate`, `lead-dev`, `qa-enforcer`) and drives the work to a PR. The team runs its own `/codereview` to PASS before the PR is ever surfaced to you for the final human code review. The PM role itself lives in the skill — the lead is the PM in agent-teams mode.
 
-The autonomy fallback rule from `AGENTS.md §14.1` applies in Phase B: when a decision is ambiguous, pick the smallest-surface, most-conservative interpretation that satisfies the `VISION.md` decision filter, document the choice in the PR description (and, if it introduces a binding constraint for future work, add a row to `ROADMAP.md → Strategic decisions in force`), and proceed. Do not call `AskUserQuestion` in Phase B. The only exceptions are (1) Phase A of the `/project-manager` skill, which is interactive by design, and (2) direct edits to `VISION.md` or `AGENTS.md`, which always require an explicit user request.
+The autonomy fallback rule from `AGENTS.md §14.1` applies in Phase B: when a decision is ambiguous, pick the smallest-surface, most-conservative interpretation that satisfies the `VISION.md` decision filter, document the choice in the PR description (and, if it introduces a binding decision for future work, also note it in the relevant issue), and proceed. Do not call `AskUserQuestion` in Phase B. The only exceptions are (1) Phase A of the `/project-manager` skill, which is interactive by design, and (2) direct edits to `VISION.md` or `AGENTS.md`, which always require an explicit user request.
 
 ## Language
 
@@ -42,6 +41,7 @@ $VERIFY_CMD
 - Every commit authored by an agent ends with a `Co-Authored-By: <agent display name> <noreply@anthropic.com>` trailer (one trailer per agent that contributed to that commit). Human commits do not need the trailer.
 - Branch names: `feat/<topic>`, `fix/<topic>`, `chore/<topic>`, `docs/<topic>` (max 50 chars, lowercase, hyphens only).
 - **Always merge to `main` with a merge commit — never squash.** The PR keeps its full commit history as the audit trail. This is enforced in the GitHub repo settings.
+- When a PR resolves an issue, link it with `Closes #<N>` in the description so merging closes the issue and the issue thread carries the outcome.
 - Every PR description covers _why_ and _what_, the relevant `AGENTS.md` sections, and the `VISION.md → Decision Filter` outcome. The PR is the permanent audit trail.
 - Delete the branch after merge.
 - **Never** commit or push directly to `main`.
@@ -49,21 +49,22 @@ $VERIFY_CMD
 
 ## Skills
 
-- `/project-manager <prompt>` — orchestration entry point. Free-form prompt; the skill classifies it into a mode (autonomous-build, single milestone, bootstrap, audit, PR review, investigation, custom), clarifies if needed, proposes a plan, and only spawns the team after explicit user approval. The skill itself owns `ROADMAP.md` stewardship (status transitions, Strategic decisions in force, Open risks).
-- `/implement <task>` — feature branch → change → `$VERIFY_CMD` → commit → push → PR. Enforces the `VISION.md` decision filter and the `AGENTS.md §14` workflow rules. The `lead-dev` teammate calls this once per milestone.
+- `/project-manager <issue # or problem>` — the orchestration entry point and the only surface that talks to the user. Driven by an issue number or a free-form problem description; it reads the issue / interprets the prompt, clarifies if needed, proposes a plan, and only convenes the team after approval. The full five-teammate team is convened for every issue, the team runs its own `/codereview` to PASS, and the PR is surfaced to the user only after PASS for the final human code review.
+- `/implement <task>` — feature branch → change → `$VERIFY_CMD` → commit → push → PR. Enforces the `VISION.md` decision filter and the `AGENTS.md §14` workflow rules. The `lead-dev` teammate calls this once per issue.
 - `/codereview` — isolated subagent review of the current branch against `main`. It applies the project governance files first, then risk-based review lenses for correctness, architecture, concurrency, security, privacy, reliability, performance, tests, supply chain, and operability. It posts a plain-text PASS or FAIL PR comment as the audit-trail entry. Every FAIL finding must include evidence, impact, violated local rule, minimum fix, and verification; external standards such as OWASP, CWE, NIST SSDF, SLSA, 12-Factor, ISO/IEC 25010, OpenTelemetry, or OWASP LLM Top 10 are cited only when materially relevant. The `qa-enforcer` teammate calls this after each `/implement` finishes.
 
-## Roadmap
+## Backlog & audit trail
 
-`ROADMAP.md` at the repository root is the **forward-looking** plan: milestones, active strategic constraints, open risks, milestone scopes. It is **not** an audit log — the audit trail of what happened and why is the git history of `main` (merge commits, never squash) plus PR descriptions and comments.
+The **backlog and roadmap are the GitHub issue list** — the user owns and maintains it. Issues can be any size. There is no `ROADMAP.md`, backlog file, or change-log file in this repo, and none should be created.
 
-Every milestone PR must update it before being merged:
+The audit trail of *what happened and why* is:
 
-1. When the branch is opened, move that milestone's row from `Todo` to `In progress`.
-2. Before merging, move the row to `Done` and fill in the PR link.
-3. If a new binding constraint surfaces mid-PR, add a row to `Strategic decisions in force` (rewrite or remove rows when superseded — do not maintain an append-only ledger). If a risk surfaces, add it to `Open risks`; when it is mitigated, delete the row.
+- **GitHub issues** — the problem statement, scope clarifications in the thread, and the decision-filter outcome when an issue is rejected or narrowed.
+- **Commits** — Conventional Commits, one logical unit each, "why" in the message.
+- **PR descriptions and review comments** — the rationale for every decision, the four decision-filter answers, the `AGENTS.md` / `STACK.md` sections touched, and the `/codereview` PASS/FAIL verdicts.
+- **The merge-commit chain on `main`** (merge, never squash) — the permanent, ordered record.
 
-The full rationale for any decision lives in the PR that introduced it — not in `ROADMAP.md`. Never write PII or any data forbidden by `VISION.md → Persistence and Privacy Posture` into `ROADMAP.md`.
+A PR that resolves an issue links it with `Closes #<N>`. A decision that binds future work is written in plain, audit-grade language into the PR description and the relevant issue — never an opaque "we did X". Never write PII or any data forbidden by `VISION.md → Persistence and Privacy Posture` into an issue, commit, or PR.
 
 ## Safeguards
 
@@ -75,6 +76,6 @@ Safeguards are implemented in `.claude/settings.json` (permissions + hooks). The
 
 ## Decision rights
 
-- **Auto-allow**: read-only commands, `STACK.md` build/test/lint commands, feature-branch operations (create, commit, push origin `<branch>`), PR creation, `gh pr view` / `comment` / `diff` / `review`, `ROADMAP.md` / `STACK.md` edits.
-- **Ask first**: edits to `VISION.md` or `AGENTS.md`, `gh api` calls that modify repo settings. `gh pr merge` is allowed only when the user explicitly asks for it.
+- **Auto-allow**: read-only commands, `STACK.md` build/test/lint commands, feature-branch operations (create, commit, push origin `<branch>`), PR creation, `gh pr view` / `comment` / `diff` / `review`, `gh issue view` / `list` / `comment`, `STACK.md` edits.
+- **Ask first**: edits to `VISION.md` or `AGENTS.md`, creating or restructuring issues (the user owns the backlog), `gh api` calls that modify repo settings. `gh pr merge` is allowed only when the user explicitly asks for it.
 - **Never**: force push, push to `main`, bypass hooks (`--no-verify` etc.), `rm -rf` anything inside the project, violate any guardrail in `AGENTS.md §13`, persist or transmit data forbidden by `VISION.md → Persistence and Privacy Posture`.

@@ -7,6 +7,8 @@ The /implement skill drafts this for you. Verify, then ship.
 
 `<One-paragraph motivation. What problem is this PR solving and which VISION.md / AGENTS.md / STACK.md section is at play.>`
 
+Closes #`<issue number, if this PR resolves a GitHub issue>`
+
 ## What
 
 `<Bulleted technical summary of the changes. Files added / removed / changed.>`
@@ -24,7 +26,7 @@ The four questions in `VISION.md → Decision Filter`:
 3. `<Question 3 verbatim>` — **`<yes / no>`**. `<one-line rationale>`.
 4. `<Question 4 verbatim>` — **`<yes / no>`**. `<one-line rationale>`.
 
-If any answer is `no`, this PR documents the conflict in the **Why** section above and proposes the smallest framework-native alternative — and, if the rejection establishes a binding constraint for future work, also adds a row to `ROADMAP.md → Strategic decisions in force`. Otherwise: all four are `yes`.
+If any answer is `no`, this PR documents the conflict in the **Why** section above and proposes the smallest framework-native alternative — and, if the rejection establishes a binding constraint for future work, also states it in the linked issue. Otherwise: all four are `yes`.
 
 ## AGENTS.md / STACK.md sections involved
 
@@ -38,7 +40,7 @@ If any answer is `no`, this PR documents the conflict in the **Why** section abo
 - [ ] Tests added or updated for new logic.
 - [ ] Previews / stories / fixtures cover the new states.
 - [ ] Privacy declaration updated if a new required-reason / required-data API was adopted.
-- [ ] `ROADMAP.md` milestone status row transitioned and PR link filled in. Binding constraints introduced (if any) added to `Strategic decisions in force`; new risks (if any) added to `Open risks` and mitigated risks deleted.
+- [ ] The issue this PR resolves is linked with `Closes #<N>` above. Any binding decision introduced (if any) is stated in plain language in this description and the issue.
 
 ## States handled
 

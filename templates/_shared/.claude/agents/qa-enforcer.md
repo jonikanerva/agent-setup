@@ -18,7 +18,7 @@ For every PR / branch you review, all of these must be true:
 3. **The latest `/codereview` comment is audit-grade** — it starts with `**Verdict: PASS**` or `**Verdict: FAIL**`. If it is a FAIL, every blocking finding includes location, evidence, impact, local rule, external reference when applicable, minimum fix, and verification. If the comment is malformed, demand a rerun.
 4. **`$FORMAT_CMD`** is idempotent. Re-run it; it must produce zero diff.
 5. **`$VERIFY_CMD`** is green and warning-free (lint → build → tests as composed by `STACK.md`). Capture the tail of the output as evidence.
-6. **`ROADMAP.md` is updated** — the relevant milestone row transitioned to `Done` (or `In progress` for an open PR), the PR link is filled in, any binding constraint introduced by this PR is reflected in `Strategic decisions in force`, and any newly-surfaced risk is in `Open risks` (resolved risks are deleted, not logged). Historical "change log" entries are not required — the PR description and merge-commit chain on `main` are the audit trail.
+6. **The issue is linked** — when the PR resolves a GitHub issue, its description carries `Closes #<N>` so merging closes the issue and the issue thread holds the outcome. Any binding decision introduced by this PR is written in plain language in the PR description (and the issue). There is no `ROADMAP.md` or change-log to check — the issue, commits, PR description, and merge-commit chain on `main` are the audit trail.
 7. **PR description** quotes the four `VISION.md` decision-filter answers, lists the `AGENTS.md` and `STACK.md` sections involved, and names the new states handled. *Trivial PRs* (per `CLAUDE.md → Git workflow → Trivial PR exception`) may fill these three blocks with a single `N/A — trivial change, no behavioral surface affected.` line; verify the change actually qualifies (no behavioral surface, no new state, no new dependency, no new persistence, no privacy-relevant log line). Otherwise the verbatim quote is mandatory.
 
 ## §15 definition-of-done checklist
@@ -43,7 +43,7 @@ Every item must be verifiable against the diff or in the runtime / simulator / b
 
 ## Process
 
-1. Read `AGENTS.md §15`, `CLAUDE.md`, `STACK.md`, the current `ROADMAP.md` milestone scope, the PR diff, and the latest `/codereview` PR comment.
+1. Read `AGENTS.md §15`, `CLAUDE.md`, `STACK.md`, the GitHub issue being solved (`gh issue view <N>`, when there is one), the PR diff, and the latest `/codereview` PR comment.
 2. Run the workflow gates check above.
 3. Walk the §15 checklist against the diff. Quote file paths and line numbers for each verified or blocked item.
 4. Inspect git log for the branch (`git log main..HEAD --oneline`) to confirm Conventional Commits, no pushed-history rewrite without justification, no `gh pr merge` already executed.

@@ -21,7 +21,7 @@ Follow these steps in order. Do not skip steps.
 
 Before writing any code, read `VISION.md → Decision Filter` and answer all four questions verbatim.
 
-If the answer to any question is "no", **stop and surface the conflict in the PR description** (or, if no PR exists yet, on the issue / discussion that proposed the change) — list the proposed change and which decision-filter answer was "no". If the rejection establishes a binding constraint future agents must respect, also add a row to `ROADMAP.md → Strategic decisions in force`. Then propose the smallest framework-native alternative that passes the filter — that becomes the new task. Do NOT silently violate `VISION.md`.
+If the answer to any question is "no", **stop and surface the conflict in the PR description** (or, if no PR exists yet, on the issue that proposed the change) — list the proposed change and which decision-filter answer was "no". If the rejection establishes a binding constraint future agents must respect, also state it in the relevant issue. Then propose the smallest framework-native alternative that passes the filter — that becomes the new task. Do NOT silently violate `VISION.md`.
 
 Also scan `AGENTS.md §13 "Reject changes that…"` and `STACK.md → Stack-specific reject-list additions`. If the task falls into any rejected category, stop, document, and rewrite the task to the smallest acceptable shape.
 
@@ -55,7 +55,7 @@ Implement what is described in `$ARGUMENTS`, following all project standards:
 If the task is unclear or ambiguous:
 
 1. Pick the smallest-surface, most-conservative interpretation that satisfies the `VISION.md` decision filter.
-2. Document the choice in the PR description (alternatives considered + rationale). If it introduces a binding constraint for future agents, also add a row to `ROADMAP.md → Strategic decisions in force`.
+2. Document the choice in the PR description (alternatives considered + rationale). If it introduces a binding constraint for future agents, also state it in the relevant issue.
 3. Proceed.
 
 **Do not call `AskUserQuestion`.** The autonomous flow depends on this.
@@ -105,7 +105,7 @@ Check if a PR already exists for this branch:
 gh pr list --head <branch-name> --json number,url --jq '.[0]'
 ```
 
-**If no PR exists**, create one using `gh pr create --title "<title>" --body "<body>"`. The body must follow `.github/pull_request_template.md`:
+**If no PR exists**, create one using `gh pr create --title "<title>" --body "<body>"`. When the change resolves a GitHub issue, include `Closes #<N>` in the body so merging closes the issue and the issue thread carries the outcome. The body must follow `.github/pull_request_template.md`:
 
 - **Why** — motivation; which `VISION.md` / `AGENTS.md` / `STACK.md` section is at play.
 - **What** — brief technical summary of changes.
@@ -129,7 +129,7 @@ Tell the user in Finnish (the only Finnish artifact — everything written to th
 - Summary of what was implemented.
 - Verification results (all passing).
 - PR URL.
-- Suggest that the user run `/codereview` when ready for review (or note that `/project-manager` will dispatch `qa-enforcer` automatically when running in `autonomous-build` or `milestone` mode).
+- Suggest that the user run `/codereview` when ready for review (or note that `/project-manager` dispatches `qa-enforcer` automatically — the PR is surfaced to the user only after the team's `/codereview` is PASS).
 
 ## Rules
 
