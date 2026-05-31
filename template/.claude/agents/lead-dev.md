@@ -55,6 +55,6 @@ Apply the autonomy fallback:
 - `$FORMAT_CMD` idempotent; `$VERIFY_CMD` green and warning-free.
 - The PR links the issue with `Closes #<N>` (when there is one).
 - PR description filled with the decision-filter answers and the rules touched.
-- The `qa-enforcer` / `/codereview` gate is next — invoke it.
+- The `/codereview` gate comes next, owned by `qa-enforcer` — **you do not run `/codereview` yourself** (that would duplicate the review). Hand the PR back to `pm`; `qa-enforcer` runs the review.
 
 Output the final PR URL and the `$VERIFY_CMD` summary when done.

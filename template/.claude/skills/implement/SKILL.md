@@ -128,7 +128,7 @@ Tell the user in Finnish (the only Finnish artifact — everything written to th
 - Summary of what was implemented.
 - Verification results (all passing).
 - PR URL.
-- Suggest that the user run `/codereview` when ready for review (or note that `/project-manager` dispatches `qa-enforcer` automatically — the PR is surfaced to the user only after the team's `/codereview` is PASS).
+- `/codereview` runs next, but it is **not** part of this skill — do not run it from here. In the team flow `/project-manager` dispatches `qa-enforcer` to run it (the PR is surfaced to the user only after the team's `/codereview` is PASS). If a human invoked `/implement` directly, suggest they run `/codereview` when ready.
 
 ## Rules
 

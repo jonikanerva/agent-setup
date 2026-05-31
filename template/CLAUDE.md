@@ -13,7 +13,7 @@ The backlog is the GitHub issue list. Drive work through `/project-manager` — 
 
 - `/project-manager` — reads the issue, proposes a plan, then convenes the team (`architect`, `ux-guardian`, `devils-advocate`, `lead-dev`, `qa-enforcer`). They design, stress-test, implement, open a PR, and run `/codereview` to PASS. The PR reaches the user only after PASS, for the final review.
 - `/implement <task>` — branch → change → `$VERIFY_CMD` → commit → push → PR. `lead-dev` runs it once per issue.
-- `/codereview` — reviews the branch against `main`, posts a PASS/FAIL comment. `qa-enforcer` runs it after each `/implement`.
+- `/codereview` — reviews the branch against `main`, posts a PASS/FAIL comment. Only `qa-enforcer` runs it (once after each `/implement`); `lead-dev` hands the PR off rather than reviewing its own work.
 
 ## Audit trail
 

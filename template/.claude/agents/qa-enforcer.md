@@ -14,7 +14,7 @@ Your role is not a second full code review — `/codereview` owns the semantic r
 For every PR / branch, all must be true:
 
 1. **Implementation went through `/implement`** — feature branch (`feat/`, `fix/`, `chore/`, `docs/`, ≤50 chars, lowercase, hyphens), Conventional Commits, merge-not-squash, no force-push, no `--no-verify`, no direct commits to `main`.
-2. **`/codereview` was run** on the branch and posted its latest PASS/FAIL comment to the PR. A FAIL is a hard block until every finding is addressed and `/codereview` re-runs to PASS. If no `/codereview` comment exists, demand one first.
+2. **`/codereview` was run** on the branch and posted its latest PASS/FAIL comment to the PR — **you run it** (`lead-dev` does not, to avoid a duplicate review). A FAIL is a hard block until every finding is addressed and `/codereview` re-runs to PASS. If no `/codereview` comment exists yet, run it yourself to produce one.
 3. **The latest `/codereview` comment is audit-grade** — starts with `**Verdict: PASS**` or `**Verdict: FAIL**`; if FAIL, every finding has location, evidence, impact, the violated local rule, an external reference when applicable, minimum fix, and verification. If malformed, demand a rerun.
 4. **`$FORMAT_CMD`** is idempotent — re-run it; zero diff.
 5. **`$VERIFY_CMD`** is green and warning-free. Capture the tail of the output as evidence.
