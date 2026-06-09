@@ -1,0 +1,16 @@
+[user]
+	name = Joni Kanerva
+	email = jhonny@jhonny.org
+
+[init]
+    defaultBranch = main
+
+[pull]
+    ff = only
+
+[push]
+    default = simple
+
+[url "https://github.com/"]
+    insteadOf = git@github.com:
+    insteadOf = ssh://git@github.com/

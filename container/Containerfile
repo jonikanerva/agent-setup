@@ -1,0 +1,36 @@
+FROM docker.io/archlinux:base-devel
+
+RUN sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf
+
+RUN pacman -Syu --noconfirm \
+    mise \
+    git \
+    github-cli \
+    ca-certificates \
+    openssh \
+    curl \
+    ripgrep \
+    bash \
+    bubblewrap \
+    socat \
+    && pacman -Scc --noconfirm
+
+RUN useradd -m -s /bin/bash agent && \
+    mkdir -p /workspace && \
+    chown -R agent:agent /workspace
+
+USER agent
+
+ENV HOME=/home/agent
+ENV PATH=/home/agent/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin
+
+COPY --chown=agent:agent gitconfig /home/agent/.gitconfig
+
+RUN echo '[[ -f ~/.bashrc ]] && source ~/.bashrc' > /home/agent/.bash_profile && \
+    echo 'eval "$(mise activate bash)"' >> /home/agent/.bashrc
+
+RUN curl -fsSL https://claude.ai/install.sh | bash
+
+WORKDIR /workspace
+
+CMD ["/bin/bash"]
