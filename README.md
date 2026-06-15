@@ -65,3 +65,14 @@ cp stacks/STACK-TS.md <your-project-dir>/STACK.md   # or STACK-SWIFT.md
 ```
 
 Then in your project: fill `VISION.md` and `STACK.md`, open a few GitHub issues as your backlog, and run `claude` → `/project-manager solve issue #1` (or describe a problem directly).
+
+### Use the agents & skills globally
+
+To make the agents and skills available in **every** Claude Code session, symlink them into `~/.claude` instead of copying. The repo stays the single source of truth — symlinks point at the repo files, so edits and `git pull` take effect immediately, with no copy step to keep in sync:
+
+```sh
+bin/link-global.sh            # symlink agents & skills into ~/.claude
+bin/link-global.sh --prune    # the above, plus remove links whose source was removed
+```
+
+The script is idempotent (re-run it after adding a new agent or skill) and never overwrites real files already in `~/.claude` (e.g. other skills). Only the agents and skills are linked — `template/.claude/settings.json` is project-distribution config and is **not** applied to your global `~/.claude`.
