@@ -15,8 +15,6 @@ This profile is intended for:
 - a backend service exposing typed REST via `@effect/platform` HttpApi;
 - a browser SPA built with React, Vite, and TanStack Router;
 - external-data-driven products where data is decoded, narrowed, and filtered at the schema boundary;
-- no durable server persistence by default;
-- no account system or per-user state by default;
 - agent-assisted development where correctness must be validated by compiler, tests, contract checks, and browser smoke tests.
 
 This profile is **not** the default choice for:
@@ -535,17 +533,7 @@ Default:
 
 ### 11.3 Forbidden persistence
 
-Forbidden unless `VISION.md` and ADR explicitly change the product scope:
-
-- accounts;
-- user preferences;
-- per-user state;
-- telemetry;
-- analytics profiles;
-- raw upstream responses;
-- PII;
-- device identifiers;
-- long-lived user/session identifiers.
+Anything declared forbidden in `VISION.md → Persistence and Privacy Posture`. The set of forbidden categories (accounts, per-user state, PII, device/session identifiers, telemetry, raw upstream payloads, …) is product/privacy policy owned by `VISION.md`, not restated here.
 
 ---
 
@@ -621,15 +609,8 @@ Server logging:
 
 Telemetry:
 
-- No product analytics by default.
-- No user tracking by default.
-- Aggregated operational metrics MAY be allowed only if they cannot identify a user or device and are approved in `VISION.md`.
-- External crash/error reporting requires:
-  - data-flow ADR;
-  - approved dependency entry;
-  - redaction policy;
-  - retention policy;
-  - product/privacy approval.
+- Telemetry and analytics policy is owned by `VISION.md → Telemetry and analytics`; this file does not restate it.
+- Any telemetry, metrics, or crash/error reporter approved there is wired here as an approved dependency (`Section 12`), with redaction and retention configured in code.
 
 ---
 
@@ -646,8 +627,7 @@ Forbidden by default:
 - background polling without active user interaction;
 - long-lived connections without active user interaction;
 - background work retaining data forbidden by `VISION.md`;
-- background jobs that create durable state;
-- silent analytics or telemetry jobs.
+- background jobs that create durable state.
 
 ---
 

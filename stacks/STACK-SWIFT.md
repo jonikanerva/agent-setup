@@ -8,7 +8,7 @@
 
 - **Shape:** UI app (iOS / SwiftUI).
 - **Critical execution path:** the main actor / UI thread (one display frame).
-- **Applicable states:** every screen handles awaiting-first-data, success, empty, degraded, permission-blocked, offline, error (plus product-specific).
+- **Applicable states:** every screen handles awaiting-first-data, success, empty, degraded, offline, error (plus product-specific).
 
 ---
 
@@ -19,7 +19,7 @@
 - **Target runtime:** iOS 26+
 - **Minimum runtime version:** iOS 26.0 (no back-deployment, no `#available` for older OSes)
 - **Package manager:** Swift Package Manager (`Package.resolved`)
-- **Lockfile:** `Adventure.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` (or workspace equivalent)
+- **Lockfile:** `<AppName>.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` (or workspace equivalent)
 
 ---
 
@@ -65,7 +65,7 @@ The `Makefile` in this profile is the single source of truth. Never invoke `swif
 - **UI frame budget:** 16 ms baseline (iPhone 13+); 8.3 ms on ProMotion devices.
 - **Cold start:** < 1 s on iPhone 13.
 - **Memory ceiling:** < 200 MB resident in the journey / hot path.
-- **Battery:** continuous outdoor use is acceptable only if the product explicitly demands it. Background work is allowed only while a Live Activity is live.
+- **Battery:** sustained high-power usage is acceptable only if the product explicitly demands it. Background work is allowed only while a Live Activity is live.
 - **Bundle size:** < 50 MB IPA at launch.
 
 ---
@@ -93,12 +93,9 @@ SwiftData is **not** the default. Reintroducing `@Model` / `ModelContainer` / `@
 
 - `ObservableObject`, `@StateObject`, `@ObservedObject`, `@EnvironmentObject`, `@Published` in **new** code — Observation framework only.
 - SwiftData primitives (`@Model`, `ModelContainer`, `@Query`) — not used unless an Intentional Divergence exists.
-- `MKDirections`, `MKRoute`, `MKDirectionsRequest`, or any turn-by-turn / routing API — these are routing-product surfaces, not orientation surfaces.
-- `kCLLocationAccuracyBestForNavigation` — it is for turn-by-turn navigation; this profile never builds turn-by-turn products.
-- `allowsBackgroundLocationUpdates = true` outside an active Live Activity session.
 - `@unchecked Sendable`, `nonisolated(unsafe)`, `@preconcurrency`, `MainActor.assumeIsolated` without an inline-justified, audited reason.
 - `DispatchQueue.main.async` "to fix a warning" — fix isolation properly.
-- `print()` in shipped code; `os.Logger` lines that interpolate coordinate-derived or other PII values without `.private`.
+- `print()` in shipped code; `os.Logger` lines that interpolate PII values without `.private`.
 - `AnyView`, broad type erasure, reflection tricks unless there is a measured benefit.
 - Force-unwraps (`!`) and `try!` outside tests and `#Preview`.
 - New SwiftPM packages without a `Section 6 → Approved Dependencies` entry approved in advance.
@@ -108,7 +105,7 @@ SwiftData is **not** the default. Reintroducing `@Model` / `ModelContainer` / `@
 ## 8. Logging & privacy
 
 - **Logger:** `os.Logger` with per-subsystem / category loggers; `OSSignposter` for hot-path measurement.
-- **PII redaction:** `os.Logger` `.private` interpolation for any value derived from coordinates, identifiers, or other PII. In release builds the substituted value must not leak PII.
+- **PII redaction:** `os.Logger` `.private` interpolation for any value derived from identifiers or other PII. In release builds the substituted value must not leak PII.
 - **Crash reporter:** MetricKit. No Sentry / Crashlytics / equivalent third-party crash reporters.
 - Maintain `PrivacyInfo.xcprivacy` accurately. Every required-reason API call is declared.
 
@@ -116,8 +113,8 @@ SwiftData is **not** the default. Reintroducing `@Model` / `ModelContainer` / `@
 
 ## 9. Background & lifecycle
 
-- **Allowed background work:** Live Activity-bound location / sensor updates only, while the Live Activity is active.
-- **Forbidden background work:** `allowsBackgroundLocationUpdates = true` outside an active Live Activity; long-running silent push-driven jobs; background fetch for coordinate-derived data.
+- **Allowed background work:** Live Activity-bound updates only, while the Live Activity is active.
+- **Forbidden background work:** background execution outside an active Live Activity; long-running silent push-driven jobs; background fetch for data the product does not actively need.
 
 ---
 
