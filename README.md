@@ -25,6 +25,7 @@ stacks/               # STACK.md profiles — copy one in as STACK.md
   STACK-TS.md         #   example: strict TypeScript / Node / Hono / React / Vite / Vitest
   STACK-EFFECT.md     #   example: strict TypeScript / Effect v3 / HttpApi / React
   STACK-SWIFT.md      #   example: strict Swift 6 / SwiftUI / Xcode 26+
+  STACK-PY.md         #   example: strict Python 3.13 / Home Assistant custom integration (HACS)
 ```
 
 ## How it works
