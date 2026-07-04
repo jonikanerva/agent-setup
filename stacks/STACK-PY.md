@@ -215,7 +215,7 @@ Time is treated exactly like any other external input: **UTC everywhere internal
   - HA stores and computes in UTC and renders in the user's configured timezone — do not fight this.
 - **Timestamp entities:** `SensorDeviceClass.TIMESTAMP` (and similar) MUST return timezone-aware UTC datetimes; HA localises them for display.
 
-> This UTC-in-logic / convert-at-edges rule is language-neutral doctrine. If it should bind every stack, add it to `template/CLAUDE.md`; this section pins the concrete Python/HA mechanics.
+> The language-neutral UTC-in-logic / convert-at-edges rule lives in `CLAUDE.md → Time`; this section pins the concrete Python/HA mechanics.
 
 ---
 

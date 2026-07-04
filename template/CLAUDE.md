@@ -75,6 +75,10 @@ On the critical execution path (whatever `STACK.md` declares — UI thread, even
 
 Every visible surface handles the states `VISION.md` and `STACK.md` declare — commonly awaiting-first-data, success, empty, degraded, permission-blocked, offline, error, plus product-specific. Previews / stories / fixtures exercise each applicable state.
 
+## Time
+
+Treat time like any other external input: work in one absolute reference (UTC) everywhere internally — logic, domain values, persistence, caches, and logs — and convert to or from a zoned/local representation only at the boundary (normalise inbound values on parse; convert outbound values when rendering a user-facing value). Nothing between the edges holds local time. Never hand-roll timezone-offset arithmetic; use the platform time APIs named in `STACK.md`. Instants crossing a persistence or wire boundary are serialised in UTC. `STACK.md` pins the concrete types and calls.
+
 ## Side effects
 
 - **External systems / networking** — through the client in `STACK.md`; request building, decoding, retries, backoff live in the service layer, never inline in the interface. Wrap every side-effecting system behind a service with explicit degraded phases; start work when needed, stop when not; request the narrowest permission scope.
@@ -100,7 +104,7 @@ Default to no — especially for what the platform already solves. A genuinely n
 
 ## Reject changes that…
 
-violate a decision-filter question or add a `VISION.md → Non-Goals` feature; add a competing framework or boilerplate where a smaller owner suffices; put heavy work on the critical path or in per-event code; couple the interface layer to network/storage/sensor internals; hide failure behind infinite spinners or use parallel booleans for a state machine; suppress warnings with escape hatches; spawn fire-and-forget async with no ownership or cancellation; add a dependency for what the platform solves or lower the minimum version in `STACK.md`; introduce debug output, stubs, or commented-out code, or log PII; add singletons/DI containers without `STACK.md` approval; or break any `STACK.md → Stack-specific reject-list additions` rule.
+violate a decision-filter question or add a `VISION.md → Non-Goals` feature; add a competing framework or boilerplate where a smaller owner suffices; put heavy work on the critical path or in per-event code; couple the interface layer to network/storage/sensor internals; store or compute in local time (or hand-roll timezone-offset math) instead of UTC-internally with conversion only at the boundary; hide failure behind infinite spinners or use parallel booleans for a state machine; suppress warnings with escape hatches; spawn fire-and-forget async with no ownership or cancellation; add a dependency for what the platform solves or lower the minimum version in `STACK.md`; introduce debug output, stubs, or commented-out code, or log PII; add singletons/DI containers without `STACK.md` approval; or break any `STACK.md → Stack-specific reject-list additions` rule.
 
 ## Definition of done
 

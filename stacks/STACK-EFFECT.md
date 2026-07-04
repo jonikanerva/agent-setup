@@ -295,6 +295,8 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 - **Tests:** exercise TTL, retry, timeout, and refresh windows with `TestClock` (already required by §9.3) rather than wall-clock waits; no timezone-dependent assertions.
 - **Never** hand-roll offset/`timedelta` arithmetic for timezone conversion; go through `DateTime` / `Intl`.
 
+> The language-neutral UTC-in-logic / convert-at-edges rule lives in `CLAUDE.md → Time`; this subsection pins the concrete Effect/TypeScript mechanics.
+
 ---
 
 ## 5. API contract and typed errors

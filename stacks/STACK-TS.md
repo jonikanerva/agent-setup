@@ -147,7 +147,7 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 - **Wire format:** the API contract exchanges UTC ISO-8601 strings (`Z` suffix); the frontend converts to the user's timezone for display only.
 - **Tests:** freeze/inject the clock (a fixed `Date` / Vitest fake timers) rather than reading wall-clock time; no timezone-dependent assertions.
 
-> This UTC-in-logic / convert-at-edges rule is language-neutral doctrine. If it should bind every stack, add it to `template/CLAUDE.md`; this section pins the concrete TypeScript mechanics.
+> The language-neutral UTC-in-logic / convert-at-edges rule lives in `CLAUDE.md → Time`; this section pins the concrete TypeScript mechanics.
 
 ---
 

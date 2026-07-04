@@ -130,7 +130,7 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 - **"Now":** `Date.now` / `Date()`. Never hand-roll `TimeInterval` offset math to fake a timezone.
 - **Tests:** inject a clock or a fixed `Date` rather than reading `Date.now`; no timezone-dependent assertions (a test that passes only in one region is a bug).
 
-> This UTC-in-logic / convert-at-edges rule is language-neutral doctrine. If it should bind every stack, add it to `template/CLAUDE.md`; this section pins the concrete Swift mechanics.
+> The language-neutral UTC-in-logic / convert-at-edges rule lives in `CLAUDE.md → Time`; this section pins the concrete Swift mechanics.
 
 ---
 
