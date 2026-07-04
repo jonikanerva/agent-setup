@@ -93,11 +93,11 @@ Bootstrap the environment with `mise install` (provisions the pinned tools/runti
 | ------------- | ----------------------------------------------------------------------------- |
 | `$FORMAT_CMD` | `uv run ruff format .`                                                         |
 | `$LINT_CMD`   | `uv run ruff check . && uv run mypy custom_components`                         |
-| `$BUILD_CMD`  | `uv run python -m script.hassfest` (manifest/validation) — there is no compile step |
+| `$BUILD_CMD`  | `uv run python -m compileall -q custom_components` (syntax gate — there is no compile step) |
 | `$TEST_CMD`   | `uv run pytest`                                                                |
 | `$VERIFY_CMD` | `uv run ruff format --check . && uv run ruff check . && uv run mypy custom_components && uv run pytest` (format-check → lint → type-check → tests) |
 
-> Python has no build artifact, so `$BUILD_CMD` maps to **structural validation** (`hassfest` + HACS action) rather than compilation — that is the equivalent gate for this ecosystem. `$VERIFY_CMD` is what any agent must run and report on before claiming completion; it MUST also pass the `hassfest` and HACS-validate GitHub Actions.
+> Python has no build artifact, so `$BUILD_CMD` maps to a **bytecode-compile syntax gate** over the integration package. The ecosystem's structural gates — `hassfest` and HACS validation — cannot run locally in a custom-integration repo (`script.hassfest` lives in the Home Assistant core repository), so they run in CI as the `home-assistant/actions/hassfest` and `hacs/action` GitHub Actions. `$VERIFY_CMD` is what any agent must run and report on before claiming completion; the PR must additionally pass the hassfest and HACS-validate actions in CI.
 
 ---
 

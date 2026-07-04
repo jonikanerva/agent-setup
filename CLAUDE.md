@@ -48,7 +48,7 @@ These rules are stated in `template/CLAUDE.md` and **repeated and relied upon** 
 
 ## Adding or editing a stack profile
 
-A new stack (Kotlin, Go, Rust, …) is added by writing a new `stacks/STACK-<name>.md` — **nothing else in the setup changes**. Match the section structure of the existing profiles (`STACK-TS.md` is the fullest reference): Project shape · Language & Runtime · Frameworks · Build & verify commands · Performance budgets · Persistence shape · Approved dependencies · Stack-specific reject-list additions · Logging & privacy · Background & lifecycle · Intentional Divergences. Section 3 **must** define all five `$*_CMD` variables, because every skill and agent dereferences them.
+A new stack (Kotlin, Go, Rust, …) is added by copying `stacks/STACK-TEMPLATE.md` to `stacks/STACK-<name>.md` and filling it — **nothing else in the setup changes**. Match the section structure of the existing profiles (`STACK-TS.md` is a compact filled example): Project shape · Language & Runtime · Frameworks · Build & verify commands · Performance budgets · Persistence shape · Approved dependencies · Stack-specific reject-list additions · Logging & privacy · Background & lifecycle · Intentional Divergences. Section 3 **must** define all five `$*_CMD` variables, because every skill and agent dereferences them.
 
 ## Editing rules of thumb
 

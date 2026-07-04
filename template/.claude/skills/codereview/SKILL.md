@@ -14,7 +14,7 @@ Communicate in Finnish when reporting progress to the user; write the PR-review 
 ## Prerequisites
 
 - A PR must exist for the current branch. If not, the autonomy fallback applies: do NOT call `AskUserQuestion`. Instead, run `gh pr create` against the current branch with a minimal title / body derived from the latest commit, then proceed. (The lead-dev should already have done this; the fallback is for races where it has not.)
-- Read: `gh pr view --comments`, `gh pr diff`, `gh pr checks`, and the governance files `VISION.md`, `CLAUDE.md` (the engineering doctrine + workflow), `STACK.md`, `README.md`. If the PR links an issue (`Closes #<N>`), read it with `gh issue view <N> --comments` — that issue is the scope contract for the scope-fit lens.
+- Read: `gh pr view --comments`, `gh pr diff`, `gh pr checks`, and the governance files `VISION.md`, `CLAUDE.md` (the engineering doctrine + workflow), `STACK.md`, `README.md`. If the PR links an issue (`Closes #<N>`), read it with `gh issue view <N> --comments` — that issue is the scope contract for the scope checks.
 - Inspect the branch history with `git log main..HEAD --oneline`.
 - Prefer reviewing the whole changed surface, not only the displayed diff hunk. Follow call sites, state ownership, service boundaries, tests, previews / stories, build scripts, and configuration touched by the change.
 
@@ -25,23 +25,6 @@ The bar is the quality target stated in `VISION.md → Success Definition`, `CLA
 **Every blocking finding is a FAIL.** A blocking finding is any rule-backed defect, regression risk, missing required evidence, security / privacy issue, production failure mode, required-test gap, unsupported dependency / build-system change, or mismatch with the PR's stated scope.
 
 Do **not** fail a PR for subjective taste, personal style, or a possible alternative that is not clearly better under the local rules. If an observation is not actionable, not tied to the diff, or not tied to a violated project rule / material risk, omit it from the PR comment. This review is a merge gate, not a brainstorming session.
-
-## Review lenses
-
-Evaluate every PR through these lenses. Use the lenses to organize your reasoning; convert them into findings only when the evidence meets the blocking-finding bar.
-
-1. **Functional correctness** — Does the changed code do what the PR claims? Are edge cases, empty inputs, invalid data, permission denial, retries, cancellation, and migration paths correct?
-2. **Product and scope fit** — Does the change satisfy `VISION.md → Decision Filter`, avoid `VISION.md → Non-Goals`, and stay inside the scope of the issue it is solving (the issue the PR links with `Closes #<N>`)?
-3. **Architecture and maintainability** — Does it preserve the layered shape in `CLAUDE.md → Architecture`, local ownership, obvious state flow, small purpose-driven types, and idiomatic primitives (as declared in `STACK.md`)?
-4. **Concurrency and lifecycle safety** — Does it satisfy `CLAUDE.md → Concurrency`, including critical-path isolation, structured concurrency, cancellation, and thread-safe boundary types?
-5. **Security and privacy** — Does it avoid injection, credential exposure, broken access control, PII leakage, overbroad permissions, forbidden persistence, and unsafe transport / logging?
-6. **Reliability and failure modes** — Does it behave under slow network, degraded dependencies, missing permissions, first launch, cold start, backgrounding, low memory, and partial failure?
-7. **Performance and resource budget** — Does it avoid critical-path blocking, unbounded collection rendering, excessive allocation, and drift past the budgets in `STACK.md` (latency, memory, battery, bundle — whichever apply)?
-8. **Test adequacy** — Do tests cover new domain logic, state transitions, edge cases, async timelines, and regression risks using the project's declared test framework?
-9. **Supply-chain and dependency risk** — Are dependencies approved, lockfiles intentional, build scripts safe, CI permissions bounded, generated artifacts justified, and external tooling pinned where appropriate?
-10. **Operability and observability** — Are errors actionable, logs privacy-safe, hot paths measurable where needed, and silent failures avoided?
-11. **Accessibility and inclusive UX** — For UI surfaces, does the change honor dynamic / large text, screen reader semantics, focus order, contrast, reduced motion, color-independence, and keyboard / pointer alternatives? For copy and error messages, are they understandable to a non-expert?
-12. **AI / agent behavior** — If the PR adds LLMs, prompts, retrieval, tool use, model output handling, or autonomous agents, does it handle prompt injection, tool authorization, data exfiltration, unsafe output trust, evaluation, and auditability?
 
 ## Reference mapping
 

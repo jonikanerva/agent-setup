@@ -38,15 +38,9 @@ git branch --show-current
 
 ### Step 3: Implement the change
 
-Implement what is described in `$ARGUMENTS`, following the engineering doctrine in `CLAUDE.md` and the concrete rules in `STACK.md`. In particular:
+Implement what is described in `$ARGUMENTS`, following the engineering doctrine in `CLAUDE.md` (Architecture, Concurrency, Responsiveness & resource budget, Side effects, Privacy & security, Code conventions, Testing) and the concrete rules in `STACK.md`. Those two files are the source of truth — apply the rules from them directly; they are deliberately not restated here. Two ship-loop reminders:
 
-- **Architecture** — keep the layered shape; right-size state ownership (no controller / service per trivial surface); model phases as tagged unions, not parallel booleans.
-- **Concurrency** — the strictest mode `STACK.md` declares; isolate critical-path state; thread-safe primitives for shared mutable non-UI state; structured, cancellation-aware async.
-- **Responsiveness & resources** — stay inside the budgets in `STACK.md`; no heavy work on the critical execution path or in code that runs on every event.
-- **Side effects** — wrap external systems behind services with explicit degraded phases.
-- **Privacy** — never log PII; never persist data forbidden by `VISION.md → Persistence and Privacy Posture` or `STACK.md`.
-- **Code conventions** — value types and immutable bindings by default; no unsafe unwraps; no debug output; no global mutable state; hot paths allocation-light. `STACK.md` names the specific banned calls.
-- **Tests** — every new feature or behavior change has tests; pure domain code gets the deepest, edge-case coverage.
+- Every new feature or behavior change has tests; pure domain code gets the deepest, edge-case coverage.
 - Every surface that gains new states gets preview / story / fixture coverage for each applicable declared state.
 
 ### Step 3.1: Autonomy fallback (no AskUserQuestion)

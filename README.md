@@ -47,6 +47,7 @@ Once `VISION.md` and `STACK.md` are filled, run `/project-manager <issue # or pr
 | **ts**     | Strict TypeScript 6 + Node 24 LTS + Hono 4 + React 19 + Vite 8 + Vitest 4, pnpm workspaces |
 | **effect** | Strict TypeScript + Effect v3 + `@effect/platform` HttpApi + React 19 + Vite, pnpm         |
 | **swift**  | Strict Swift 6 + SwiftUI + Xcode 26+, `make`-driven (`make test-all`)                      |
+| **py**     | Strict Python 3.13 Home Assistant custom integration (HACS), uv + ruff + `mypy --strict`  |
 
 Each `stacks/STACK-*.md` documents the project shape, language version, runtime, build commands, performance budgets, approved-dependencies list, and stack-specific reject-list. They are **examples**: copy one in as `STACK.md` and edit it to match your real project. For a stack not covered here (Kotlin, Go, Rust, …), copy `stacks/STACK-TEMPLATE.md` and fill the skeleton — nothing else in the setup changes.
 
@@ -66,6 +67,8 @@ cp stacks/STACK-TS.md <your-project-dir>/STACK.md   # or STACK-SWIFT.md
 ```
 
 Then in your project: fill `VISION.md` and `STACK.md`, open a few GitHub issues as your backlog, and run `claude` → `/project-manager solve issue #1` (or describe a problem directly).
+
+The bundled `.claude/settings.json` allow-lists the git/GitHub commands the team needs, denies destructive ones (force-push in both spellings, pushes to `main`, the `rm -rf`/`rm -Rf` variants, `git reset --hard`), and backs the deny-list with a `PreToolUse` hook that blocks destructive pushes even when a permission pattern would miss them. It also permits sandbox writes to `~/.gnupg` so GPG-signed commits work in sandboxed sessions (gpg takes lock files there) — remove that entry if you don't sign commits.
 
 ### Use the agents & skills globally
 
