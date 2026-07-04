@@ -89,6 +89,7 @@ repo/
   STACK-EFFECT-STATELESS-SPA.md
   VISION.md
   AGENTS.md
+  mise.toml
   package.json
   pnpm-workspace.yaml
   pnpm-lock.yaml
@@ -161,6 +162,12 @@ Rules:
 - Dependency upgrades happen in dedicated PRs.
 - Major upgrades require Context7 docs retrieval and a changelog summary.
 - New production dependencies require a `STACK` or ADR entry with rationale, owner, approver, and date.
+
+### 2.4 Dev-environment provisioning
+
+- **Bootstrap:** [`mise`](https://mise.jdx.dev/) is the single bootstrap. `mise install` provisions **every pinned tool and runtime version** from `mise.toml` — the exact Node.js 24 LTS interpreter and `pnpm` — so a fresh checkout reaches a reproducible environment with one command.
+- Wire dependency install as a mise task (e.g. `mise run setup` → `pnpm install`) so `mise install` followed by that task fully bootstraps.
+- **Pinning surfaces (two layers, each owns one):** `mise.toml` pins tool/runtime versions (Node, pnpm); `pnpm-lock.yaml` pins the resolved dependency graph. `mise.toml`, `.node-version`, the Docker base image, the CI image, and the deployment runtime MUST agree on the same Node major line. Never rely on a globally-installed Node or pnpm — go through mise so local and CI use identical versions.
 
 ---
 
@@ -277,6 +284,16 @@ HttpApi handlers:
 - do not contain business rules;
 - do not contain hand-rolled error-to-response glue;
 - do not perform ad hoc validation after decode except for use-case invariants.
+
+### 4.6 Time and timezones
+
+Time is treated exactly like any other external input: **UTC everywhere internally, converted only at the boundary** — the same decode/narrow-at-the-edge discipline §4.4 applies to data, applied to instants.
+
+- **Internal representation:** all instants in domain logic, cache entries, API payloads, and logs are **UTC** — `DateTime.Utc` (Effect's `DateTime` module) or a UTC ISO-8601 string with a `Z` offset. Values carrying an implicit local offset are forbidden.
+- **Conversion happens only at the two edges:** decode inbound values to UTC at the Schema boundary (`Schema.Date` / a UTC-normalising schema); serialise outbound values as UTC ISO-8601 (`Z` suffix) in the API contract; convert to the target timezone only when rendering a user-facing value in the SPA (`Intl.DateTimeFormat` with an explicit `timeZone`). Nothing in between holds local time.
+- **The clock is a capability, not ambient.** Read "now" through Effect's `Clock` (`DateTime.now`, `Clock.currentTimeMillis`) declared in `R`, never `Date.now()` / `new Date()` in domain code — see §4.1. This is what makes time deterministic under test.
+- **Tests:** exercise TTL, retry, timeout, and refresh windows with `TestClock` (already required by §9.3) rather than wall-clock waits; no timezone-dependent assertions.
+- **Never** hand-roll offset/`timedelta` arithmetic for timezone conversion; go through `DateTime` / `Intl`.
 
 ---
 
@@ -414,7 +431,7 @@ Hard rule: never write or modify code that uses an approved package from memory.
 
 ## 8. Build and verify commands
 
-The `package.json` scripts are the single source of truth. Do not invoke `tsc`, `eslint`, `vitest`, `playwright`, or `vite` directly from commits, CI, or agent scripts unless a script delegates to them.
+Bootstrap the environment with `mise install` (provisions the pinned Node/pnpm versions — see §2.4) before running any command below. The `package.json` scripts are the single source of truth. Do not invoke `tsc`, `eslint`, `vitest`, `playwright`, or `vite` directly from commits, CI, or agent scripts unless a script delegates to them.
 
 | Variable             | Command              |
 | -------------------- | -------------------- |
@@ -585,6 +602,7 @@ The following are forbidden unless an ADR explicitly permits them:
 - `console.*` in shipped code;
 - class-based React components;
 - `useEffect` for server-state data fetching;
+- reading wall-clock time directly (`Date.now()` / `new Date()`) in domain logic instead of the `Clock` capability; naive/local-time instants or manual UTC-offset arithmetic (see §4.6);
 - raw `fetch` from React components;
 - hand-rolled error-to-response glue in HttpApi handlers;
 - Effect v4 beta APIs;

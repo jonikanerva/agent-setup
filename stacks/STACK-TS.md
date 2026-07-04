@@ -20,6 +20,8 @@
 - **Minimum runtime version:** Node 24.0 (no back-deployment to Node 22 / 20)
 - **Package manager:** pnpm (workspaces)
 - **Lockfile:** `pnpm-lock.yaml`
+- **Dev-environment provisioning:** [`mise`](https://mise.jdx.dev/) is the single bootstrap. `mise install` provisions **every pinned tool and runtime version** from `mise.toml` — the exact Node.js 24 interpreter and `pnpm` — so a fresh checkout reaches a reproducible environment with one command. Wire dependency install as a mise task (e.g. `mise run setup` → `pnpm install`) so `mise install` followed by that task fully bootstraps. `mise.toml` is the source of truth for tool/runtime versions; commit it alongside the lockfile.
+- **Pinning surfaces (two layers, each owns one):** `mise.toml` pins tool/runtime versions (Node, pnpm); `pnpm-lock.yaml` pins the resolved dependency graph. Never rely on a globally-installed Node or pnpm — go through mise so local and CI use identical versions.
 
 ---
 
@@ -53,7 +55,7 @@
 | `$TEST_CMD`   | `pnpm test`                                         |
 | `$VERIFY_CMD` | `pnpm test-all` (type-check → lint → build → tests) |
 
-The `package.json` scripts are the single source of truth. Never invoke `eslint`, `tsc`, `vitest`, or `vite` directly from commits, CI, or agent scripts.
+Bootstrap the environment with `mise install` (provisions the pinned Node/pnpm versions) before running any command above. The `package.json` scripts are the single source of truth. Never invoke `eslint`, `tsc`, `vitest`, or `vite` directly from commits, CI, or agent scripts.
 
 ---
 
@@ -107,6 +109,8 @@ Default answer to "should we add a library?" is **no**. The lists below are inte
 - `as` casts that bypass type checking — use `satisfies` or a runtime guard.
 - `// @ts-ignore` / `// @ts-expect-error` without an inline explanation that names the underlying constraint.
 - `moment` / `moment.js` — use `Temporal` (proposal) via polyfill or `date-fns` if approved.
+- Local-time storage or computation, and manual UTC-offset arithmetic — timezone conversion happens only at the request-parse / response-build edges (see §10).
+- `new Date(...)`-based local-time math or storing `Date`/timestamps that implicitly carry a local offset; formatting to a local-time string anywhere except the display boundary.
 - Full-import of `lodash` (`import _ from 'lodash'`) — import single functions only, or use the standard library equivalent.
 - Raw `fetch` without zod-validated response parsing for any external network call.
 - `console.log` / `console.warn` / `console.error` in shipped code — use the `pino` logger.
@@ -133,7 +137,21 @@ Default answer to "should we add a library?" is **no**. The lists below are inte
 
 ---
 
-## 10. Intentional Divergences
+## 10. Time & timezones
+
+Time is treated exactly like any other external input: **UTC everywhere internally, converted only at the boundary.** This is the same "validate/narrow at the edge" discipline this profile applies to data, applied to instants.
+
+- **Internal representation:** all timestamps in logic, API payloads, persistence, caches, and logs are **UTC instants** — a `Date` (which is an absolute epoch instant, not a wall-clock time) or a UTC `Temporal.Instant` / ISO-8601 string with a `Z` offset. Values that carry an implicit local offset are forbidden (see §7).
+- **Conversion happens only at the two edges:** parsing an inbound request/payload → normalise to a UTC instant immediately (validate with Zod, e.g. `z.string().datetime()` / `z.coerce.date()`); building an outbound response → serialise as UTC ISO-8601 (`.toISOString()`); rendering a user-facing value → convert to the target timezone at the last moment (`Intl.DateTimeFormat` with an explicit `timeZone`). Nothing in between ever holds local time.
+- **Mechanics:** prefer `Temporal` (via the approved polyfill) or `date-fns` for date math; never hand-roll `timedelta`/offset arithmetic. When using `Date`, only ever read/write epoch milliseconds or ISO-8601-with-`Z`; never `Date.parse` a local-format string and never assemble a date from local components for logic.
+- **Wire format:** the API contract exchanges UTC ISO-8601 strings (`Z` suffix); the frontend converts to the user's timezone for display only.
+- **Tests:** freeze/inject the clock (a fixed `Date` / Vitest fake timers) rather than reading wall-clock time; no timezone-dependent assertions.
+
+> This UTC-in-logic / convert-at-edges rule is language-neutral doctrine. If it should bind every stack, add it to `template/CLAUDE.md`; this section pins the concrete TypeScript mechanics.
+
+---
+
+## 11. Intentional Divergences
 
 | Date     | CLAUDE.md rule | Divergence | Reason |
 | -------- | -------------- | ---------- | ------ |

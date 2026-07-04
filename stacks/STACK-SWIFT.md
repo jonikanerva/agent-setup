@@ -98,6 +98,7 @@ SwiftData is **not** the default. Reintroducing `@Model` / `ModelContainer` / `@
 - `print()` in shipped code; `os.Logger` lines that interpolate PII values without `.private`.
 - `AnyView`, broad type erasure, reflection tricks unless there is a measured benefit.
 - Force-unwraps (`!`) and `try!` outside tests and `#Preview`.
+- Persisting or computing with local-time / calendar-component values instead of a `Date` instant; manual UTC-offset arithmetic; a `DateFormatter` / `Calendar` without an explicit `timeZone` in logic (see §10).
 - New SwiftPM packages without a `Section 6 → Approved Dependencies` entry approved in advance.
 
 ---
@@ -118,7 +119,22 @@ SwiftData is **not** the default. Reintroducing `@Model` / `ModelContainer` / `@
 
 ---
 
-## 10. Intentional Divergences
+## 10. Time & timezones
+
+Time is treated exactly like any other external input: **UTC everywhere internally, converted only at the boundary.** This is the same "validate/narrow at the edge" discipline the rest of this profile applies to data, applied to instants.
+
+- **Internal representation:** all timestamps in logic, `UserDefaults`/persistence, caches, and logs are `Date` **instants** — an absolute point on the timeline, timezone-free by construction. Never store or compute with calendar components (year/month/day/hour) or formatted local-time strings; those carry an implicit zone.
+- **Conversion happens only at the two edges:** decoding an inbound value → parse to a `Date` immediately (`ISO8601DateFormatter`, which defaults to GMT, or `Date(timeIntervalSince1970:)`); building a user-facing value → convert to the display timezone at the last moment. Nothing in between holds local time.
+- **Serialization:** `Codable` encodes `Date` deterministically (`.iso8601` strategy, which is UTC). For any hand-built wire/persisted string use `ISO8601DateFormatter` (GMT) — never a locale/zone-dependent `DateFormatter`.
+- **Display boundary only:** `Calendar`, `TimeZone`, and `Date.FormatStyle` / `DateFormatter` are used **only** when producing a value for the UI, and always with an explicit `timeZone` (usually `.current` / `.autoupdatingCurrent`) and `Calendar` — never implicitly in logic. Prefer SwiftUI's `Text(date, format:)` / `.formatted(...)` at the view layer.
+- **"Now":** `Date.now` / `Date()`. Never hand-roll `TimeInterval` offset math to fake a timezone.
+- **Tests:** inject a clock or a fixed `Date` rather than reading `Date.now`; no timezone-dependent assertions (a test that passes only in one region is a bug).
+
+> This UTC-in-logic / convert-at-edges rule is language-neutral doctrine. If it should bind every stack, add it to `template/CLAUDE.md`; this section pins the concrete Swift mechanics.
+
+---
+
+## 11. Intentional Divergences
 
 | Date     | CLAUDE.md rule | Divergence | Reason |
 | -------- | -------------- | ---------- | ------ |
