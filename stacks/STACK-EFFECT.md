@@ -11,7 +11,7 @@
 - **Shape:** backend service (`apps/server`, `@effect/platform` HttpApi) + browser SPA (`apps/web`, React + Vite), sharing one contract package.
 - **Critical execution path:** server — request decode → scope narrowing → use case → typed response or typed error; web — route match → query/client cache → typed view model → React render.
 - **Applicable states:** web surfaces handle awaiting-first-data, success, empty, degraded, offline, error (plus product-specific); API responses are typed success / typed error.
-- **Intended for:** stateless, external-data-driven products where data is decoded, narrowed, and filtered at the schema boundary. **Not the default for:** SEO-first or SSR-required sites, or products needing durable business data, accounts, workflows, payments, or background jobs as core behaviour — those need a persistent variant of this profile, recorded via §11.
+- **Intended for:** stateless, external-data-driven products where data is decoded, narrowed, and filtered at the schema boundary. **Not the default for:** SEO-first or SSR-required sites, or products needing durable business data, accounts, workflows, payments, or background jobs as core behaviour — those need a persistent variant of this profile, recorded via §13.
 
 ### Monorepo layout
 
@@ -44,7 +44,7 @@ repo/
 
 ## 1. Language & Runtime
 
-- **Primary language:** TypeScript 6.x stable line. The TypeScript 7 native preview MUST NOT be used in mainline; migrating requires a §11 entry after a CI compatibility trial.
+- **Primary language:** TypeScript 6.x stable line. The TypeScript 7 native preview MUST NOT be used in mainline; migrating requires a §13 entry after a CI compatibility trial.
 - **Strictness mode:** ESLint with `@typescript-eslint/strict-type-checked`, plus this non-negotiable `tsconfig` baseline:
 
 ```json
@@ -84,7 +84,7 @@ repo/
 | Frontend UI            | React 19 + React DOM                    | Function components only                                               |
 | Frontend build         | Vite                                    | SPA build and dev server                                               |
 | Routing                | TanStack Router                         | Type-safe SPA routing                                                  |
-| SSR escape hatch       | TanStack Start                          | Conditional only; requires a §11 entry (see §2.3)                      |
+| SSR escape hatch       | TanStack Start                          | Conditional only; requires a §13 entry (see §2.3)                      |
 | Client cache           | TanStack Query                          | Query cache, background refetch, controlled technical persistence      |
 | Styling                | Tailwind CSS v4 via `@tailwindcss/vite` | Utility-first styling with Vite integration                            |
 | Unit/integration tests | Vitest                                  | Pure functions, Effects, Layers, API handlers                          |
@@ -149,11 +149,11 @@ type RemoteView<A, E> =
 
 ### 2.3 TanStack Start (SSR) policy
 
-TanStack Start is not a default dependency. Adopting it requires a §11 entry naming at least one explicit product need: SEO, social sharing previews, a first-render latency target the SPA cannot meet, edge rendering, a server-side session/auth model, or an SSR-required integration. Until then, TanStack Router runs in SPA mode.
+TanStack Start is not a default dependency. Adopting it requires a §13 entry naming at least one explicit product need: SEO, social sharing previews, a first-render latency target the SPA cannot meet, edge rendering, a server-side session/auth model, or an SSR-required integration. Until then, TanStack Router runs in SPA mode.
 
 ### 2.4 `@effect/platform` HttpApi risk acceptance
 
-Parts of the Effect platform ecosystem move faster than the core `effect` package; HttpApi is accepted with mitigations: exact versions pinned in `pnpm-lock.yaml`; `@effect/platform` / `@effect/platform-node` versions chosen for Effect v3 compatibility (do not assume they share `effect`'s major version); the three packages upgrade together in one dependency PR; OpenAPI output is snapshot-tested; every public endpoint has contract tests plus at least one golden-path test through the derived/generated client. Any HttpApi API-surface change gets a §11 entry.
+Parts of the Effect platform ecosystem move faster than the core `effect` package; HttpApi is accepted with mitigations: exact versions pinned in `pnpm-lock.yaml`; `@effect/platform` / `@effect/platform-node` versions chosen for Effect v3 compatibility (do not assume they share `effect`'s major version); the three packages upgrade together in one dependency PR; OpenAPI output is snapshot-tested; every public endpoint has contract tests plus at least one golden-path test through the derived/generated client. Any HttpApi API-surface change gets a §13 entry.
 
 ### 2.5 Testing policy
 
@@ -199,7 +199,7 @@ pnpm verify:ci  = verify → property tests → contract tests → selected brow
 
 ## 4. Performance budgets
 
-Starting points; product-specific budgets in `VISION.md` or a §11 entry override them.
+Starting points; product-specific budgets in `VISION.md` or a §13 entry override them.
 
 - **API handler overhead:** p99 < 100 ms, p50 < 30 ms (excluding upstream calls). End-to-end p95 including upstream calls is product-specific.
 - **Every upstream call** MUST have: a timeout; a typed failure; a retry policy or an explicit no-retry rationale; bounded concurrency (no unbounded fan-out); structured logging without raw payloads.
@@ -210,7 +210,7 @@ Starting points; product-specific budgets in `VISION.md` or a §11 entry overrid
 
 ## 5. Persistence shape
 
-- **Server default:** in-memory Effect `Cache` only — TTL-bounded, no manual invalidation without a documented reason, no database, no on-disk persistence, no per-visitor state. If durable persistence becomes necessary, this profile is no longer sufficient — create a persistent variant profile and record the change via §11.
+- **Server default:** in-memory Effect `Cache` only — TTL-bounded, no manual invalidation without a documented reason, no database, no on-disk persistence, no per-visitor state. If durable persistence becomes necessary, this profile is no longer sufficient — create a persistent variant profile and record the change via §13.
 - **Client default:** TanStack Query in-memory cache; optional technical persistence only per §2.2 and only if `VISION.md` allows it; no product state, no user preferences, no account/session state, no user identifiers in cache keys.
 - **Forbidden persistence:** anything declared forbidden in `VISION.md → Persistence and Privacy Posture` (accounts, per-user state, PII, device/session identifiers, telemetry, raw upstream payloads, …) — that list is product/privacy policy owned by `VISION.md`, not restated here.
 
@@ -251,7 +251,7 @@ Default answer to "should we add a library?" is **no**. New entries require a `S
 
 ## 7. Stack-specific reject-list additions
 
-The following are forbidden unless a §11 entry explicitly permits them:
+The following are forbidden unless a §13 entry explicitly permits them:
 
 - explicit or implicit `any`; `as unknown as`; casts that bypass type checking instead of Schema guards or `satisfies`;
 - `// @ts-ignore` / `// @ts-expect-error` without a precise inline reason naming the underlying TypeScript limitation, and a tracking issue;
@@ -300,7 +300,24 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 
 ---
 
-## 11. Intentional Divergences
+## 11. Design guidelines & UX thresholds
+
+- **Design authority:** WCAG 2.2 AA + native HTML semantics (browser platform conventions). Semantic elements first; ARIA only when no native element fits.
+- **Documented thresholds to exercise at the threshold:**
+  - Pointer target size ≥ 24×24 CSS px (WCAG 2.5.8).
+  - Text contrast ≥ 4.5:1 body / 3:1 large text (WCAG 1.4.3).
+  - Visible focus indicator on every interactive element (WCAG 2.4.7).
+- **Input paths:** full keyboard operability; focus order follows DOM order; no pointer-only interactions.
+
+---
+
+## 12. Best practices source
+
+`architect` and `ux-guardian` consult current Effect, MDN, and framework documentation before design and review verdicts on API-level questions, and cite the section. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with `effect.website` / MDN via WebFetch as fallback. Training-data memory is not an acceptable source for API signatures or accessibility specifics.
+
+---
+
+## 13. Intentional Divergences
 
 | Date     | CLAUDE.md rule | Divergence | Reason |
 | -------- | -------------- | ---------- | ------ |

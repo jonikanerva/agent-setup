@@ -151,7 +151,24 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 
 ---
 
-## 11. Intentional Divergences
+## 11. Design guidelines & UX thresholds
+
+- **Design authority:** WCAG 2.2 AA + native HTML semantics (browser platform conventions). Semantic elements first; ARIA only when no native element fits.
+- **Documented thresholds to exercise at the threshold:**
+  - Pointer target size ≥ 24×24 CSS px (WCAG 2.5.8).
+  - Text contrast ≥ 4.5:1 body / 3:1 large text (WCAG 1.4.3).
+  - Visible focus indicator on every interactive element (WCAG 2.4.7).
+- **Input paths:** full keyboard operability; focus order follows DOM order; no pointer-only interactions.
+
+---
+
+## 12. Best practices source
+
+`architect` and `ux-guardian` consult current MDN and framework documentation before design and review verdicts on API-level questions, and cite the section. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with MDN via WebFetch as fallback. Training-data memory is not an acceptable source for API signatures or accessibility specifics.
+
+---
+
+## 13. Intentional Divergences
 
 | Date     | CLAUDE.md rule | Divergence | Reason |
 | -------- | -------------- | ---------- | ------ |

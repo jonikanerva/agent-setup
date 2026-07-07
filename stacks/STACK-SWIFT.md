@@ -134,7 +134,24 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 
 ---
 
-## 11. Intentional Divergences
+## 11. Design guidelines & UX thresholds
+
+- **Design authority:** Apple Human Interface Guidelines (iOS). System components and system behaviours win; no custom chrome.
+- **Documented thresholds to exercise at the threshold** (examples — extend per product):
+  - Alert / confirmation-dialog button count — truncation past ~10 buttons; use a sheet + picker beyond that.
+  - `Picker` style — `.menu` above ~7 options, `.inline` below.
+  - Sheet detents / minimum sizes per HIG → Sheets.
+- **Input paths:** touch first-class; VoiceOver, Dynamic Type, and Reduced Motion honoured on every surface.
+
+---
+
+## 12. Best practices source
+
+`architect` and `ux-guardian` fetch Apple's current documentation and HIG before every design and review pass, and cite the doc / HIG section in their reports. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with `developer.apple.com` via WebFetch as fallback. Training-data memory is not an acceptable source for API syntax or HIG specifics.
+
+---
+
+## 13. Intentional Divergences
 
 | Date     | CLAUDE.md rule | Divergence | Reason |
 | -------- | -------------- | ---------- | ------ |
