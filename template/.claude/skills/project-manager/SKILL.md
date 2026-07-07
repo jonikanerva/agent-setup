@@ -9,7 +9,7 @@ description: >
   final human code review. The backlog and roadmap live entirely in GitHub
   issues (owned by the user); the audit trail of what happened and why lives in
   issue comments, commits, and PR descriptions.
-allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Agent, Skill, AskUserQuestion, WebFetch, WebSearch
+allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Agent, SendMessage, TeamCreate, TeamDelete, TaskOutput, TaskStop, Skill, AskUserQuestion, WebFetch, WebSearch
 argument-hint: <issue number to solve, or a problem described in plain language>
 ---
 
@@ -172,7 +172,7 @@ You may, autonomously:
 You may **never**, on your own initiative:
 
 - Edit `VISION.md` or `CLAUDE.md` — propose changes as a `docs/pm-<topic>` PR gated on the user's explicit "yes".
-- Create or restructure the backlog — the user owns the issue list. You may *suggest* a follow-up issue to the user, but you do not file backlog items unless the user asks. (Filing a tracking/decision issue to preserve a binding decision is allowed when no issue or PR can carry it.)
+- Create or restructure the backlog — the user owns the issue list. You may *suggest* new feature work to the user, but you do not file backlog items unless the user asks. (Two exceptions: a tracking/decision issue to preserve a binding decision when no issue or PR can carry it, and a `follow-up`-labelled issue for work deferred out of the current scope, per `CLAUDE.md → Audit trail`.)
 - `git push` to `main`, force-push, or `--no-verify`.
 - `gh pr merge` — only when the user has explicitly asked or pre-authorised it.
 
@@ -230,3 +230,5 @@ Then ask (free-form Finnish, **not** `AskUserQuestion`) whether to clean up the 
 - Do not push to `main` or bypass `$VERIFY_CMD`.
 - Do not maintain the backlog — the user owns the issue list.
 - Do not call `AskUserQuestion` in Phase B.
+- Do not invoke the `claude` CLI from Bash — teammates are spawned via the Agent tool, never as raw CLI processes.
+- Do not weaken permissions: no `--permission-mode bypassPermissions`, no editing `.claude/settings.json` to loosen a deny rule.

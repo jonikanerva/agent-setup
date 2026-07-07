@@ -19,6 +19,8 @@ The backlog is the GitHub issue list. Drive work through `/project-manager` — 
 
 The record of what and why is: issues (problem + scope clarifications + decision-filter outcomes), commits (Conventional, one logical unit, "why" in the message), PR descriptions and review comments, and the merge-commit chain on `main`. There is no roadmap or change-log file; do not create one. A decision that binds future work is stated in plain language in the PR and the issue.
 
+Deferred work must not die in a PR comment or a conversation note: when planning or review defers an item out of the current scope, file it as a GitHub issue labelled `follow-up` (surface them with `gh issue list --label follow-up`). This is the one case where agents file issues without being asked; the user still owns the backlog and may close or rescope them freely.
+
 ## Language
 
 Everything in the repo or on GitHub is in English (code, comments, commits, branches, PRs, issues, docs). Only Claude's chat replies to the user are in Finnish.
@@ -122,7 +124,7 @@ Valid but deliberate: measurable need, clear benefit, isolated exception, docume
 
 ## Safeguards
 
-Enforced in `.claude/settings.json`: force-push and pushes to `main` are blocked; `rm -rf` is deny-listed; `gh pr merge` only runs when the user explicitly asks, never on the agent's initiative.
+Enforced in `.claude/settings.json`: force-push and pushes to `main` are blocked; `rm -rf` is deny-listed; reading `.env` files is blocked; the `claude` CLI is never invoked from Bash (subagents spawn via the Agent tool); `gh pr merge` only runs when the user explicitly asks, never on the agent's initiative. Secrets, credentials, and tokens never enter the repo or the logs.
 
 ## Decision rights
 

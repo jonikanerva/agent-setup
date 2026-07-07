@@ -52,6 +52,7 @@
       "Skill(codereview)"
     ],
     "deny": [
+      "Bash(claude:*)",
       "Bash(git push -f:*)",
       "Bash(git push --force:*)",
       "Bash(git push origin main:*)",
@@ -80,6 +81,19 @@
           {
             "type": "command",
             "command": "bash -c 'cmd=$(jq -r \".tool_input.command\"); if echo \"$cmd\" | grep -qE \"git[[:space:]]+push([^[:alnum:]_-]|$)\" && echo \"$cmd\" | grep -qE \"(^|[^[:alnum:]_-])(--force|-f)([^[:alnum:]_-]|$)|origin[[:space:]]+(main|HEAD:main)([^[:alnum:]_/-]|$)\"; then echo \"BLOCKED: destructive push. Never push to main or force-push. Use --force-with-lease if absolutely required; create a PR otherwise.\" >&2; exit 2; fi'"
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'cmd=$(jq -r \".tool_input.command\"); if echo \"$cmd\" | grep -qE \"(^|[[:space:];|&])claude([[:space:]]|$)\"; then echo \"BLOCKED: spawn subagents via the Agent tool, not the claude CLI.\" >&2; exit 2; fi'"
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'p=$(jq -r \".tool_input.file_path // empty\"); case \"$(basename \"$p\")\" in .env|.env.*) echo \"BLOCKED: reading .env files is not allowed.\" >&2; exit 2;; esac'"
           }
         ]
       }

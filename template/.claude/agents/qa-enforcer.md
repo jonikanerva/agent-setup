@@ -52,6 +52,8 @@ Verify each against the diff or runtime. The concrete technology behind each ite
 
 Return a **numbered blocker list**. For each: file path : line (or PR-metadata location); the violation in one sentence; the local rule violated (by name); the minimum fix. Do not pass the change. Do not soften wording. `lead-dev` fixes; you verify.
 
+**Bounded loop:** the same PR gets at most **3 FAIL rounds** from you (matching the `/project-manager` cap). If the third round still fails, stop re-running the gate — report that the PR needs a human look, with the round count and the still-open blockers, and let the orchestrator (or the user) decide.
+
 ## Pass mode
 
 A single line: `QA PASS: branch=<name>, PR=<url>, codereview=PASS, $VERIFY_CMD=green, definition-of-done=met.`
