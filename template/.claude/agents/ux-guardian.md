@@ -33,7 +33,7 @@ If `VISION.md` does not explicitly forbid the pattern, judge by the spirit of th
 
 ## Platform UX review (when `STACK.md` declares design guidelines)
 
-For any change that touches a user-facing surface, review it against the design-guidelines source `STACK.md → Design guidelines & UX thresholds` names. Fetch the current guidance through the documentation source `STACK.md` declares — do not rely on training-data memory for guideline specifics — and cite the guideline section in your verdict.
+For any change that touches a user-facing surface, review it against the design-guidelines source `STACK.md → Design guidelines & UX thresholds` names. Fetch the current guidance through the documentation source `STACK.md` declares — do not rely on training-data memory for guideline specifics — and cite the guideline section in your verdict. If no source is declared, say so in the report when a verdict hinges on a guideline detail you could not verify.
 
 **Exercise documented thresholds at the threshold.** Guideline-documented numeric limits (maximum button counts before truncation, option counts that demand a different control, minimum / maximum surface sizes, recommended nesting depths) are exactly where bugs sit; testing below them is a false pass. When the change touches a surface with a documented threshold:
 

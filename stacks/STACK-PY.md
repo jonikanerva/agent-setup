@@ -219,7 +219,20 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 
 ---
 
-## 11. Intentional Divergences
+## 11. Design guidelines & UX thresholds
+
+- **Design authority:** Home Assistant UX conventions. The integration owns no custom frontend — configuration renders through standard HA config-flow steps and selectors; entities follow HA naming and device-class conventions so HA's own UI thresholds apply.
+- **Input paths:** whatever HA's frontend provides; nothing custom to verify beyond flow-step correctness.
+
+---
+
+## 12. Best practices source
+
+`architect` and `ux-guardian` consult the current Home Assistant developer documentation (developers.home-assistant.io, via the team's documentation tool) before design and review verdicts, and cite the page. Training-data memory is not an acceptable source for HA API details.
+
+---
+
+## 13. Intentional Divergences
 
 | Date     | CLAUDE.md rule | Divergence | Reason |
 | -------- | -------------- | ---------- | ------ |
