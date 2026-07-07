@@ -228,7 +228,7 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 
 ## 12. Best practices source
 
-`architect` and `ux-guardian` consult the current Home Assistant developer documentation (developers.home-assistant.io, via the team's documentation tool) before design and review verdicts, and cite the page. Training-data memory is not an acceptable source for HA API details.
+`architect` and `ux-guardian` consult the current Home Assistant developer documentation before design and review verdicts, and cite the page. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with `developers.home-assistant.io` via WebFetch as fallback. Training-data memory is not an acceptable source for HA API details.
 
 ---
 

@@ -147,7 +147,7 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 
 ## 12. Best practices source
 
-`architect` and `ux-guardian` fetch Apple's current documentation and HIG (via the team's documentation tool or `developer.apple.com`) before every design and review pass, and cite the doc / HIG section in their reports. Training-data memory is not an acceptable source for API syntax or HIG specifics.
+`architect` and `ux-guardian` fetch Apple's current documentation and HIG before every design and review pass, and cite the doc / HIG section in their reports. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with `developer.apple.com` via WebFetch as fallback. Training-data memory is not an acceptable source for API syntax or HIG specifics.
 
 ---
 

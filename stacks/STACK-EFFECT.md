@@ -313,7 +313,7 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 
 ## 12. Best practices source
 
-`architect` and `ux-guardian` consult current MDN and framework documentation (via the team's documentation tool) before design and review verdicts on API-level questions, and cite the section. Training-data memory is not an acceptable source for API signatures or accessibility specifics.
+`architect` and `ux-guardian` consult current Effect, MDN, and framework documentation before design and review verdicts on API-level questions, and cite the section. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with `effect.website` / MDN via WebFetch as fallback. Training-data memory is not an acceptable source for API signatures or accessibility specifics.
 
 ---
 

@@ -135,7 +135,7 @@ UTC everywhere internally, converted only at the boundary (`CLAUDE.md → Time`)
 
 ## 12. Best practices source *(optional)*
 
-*Name the documentation source agents consult before design and review passes (and how), so API-level verdicts are grounded in current docs, not training-data memory. Remove if the project has no such source.*
+*Name the documentation source agents consult before design and review passes — and the concrete tool invocation. Subagents only have the tools their definition grants (typically Bash + WebFetch): MCP tools from the user's config are NOT available to them, so prefer a CLI invocable from Bash (e.g. `npx ctx7@latest`) or a WebFetch-able URL. Remove if the project has no such source.*
 
 `<e.g. "architect and ux-guardian fetch current platform docs via <tool / URL> before every design and review pass, and cite the doc section in their reports.">`
 
