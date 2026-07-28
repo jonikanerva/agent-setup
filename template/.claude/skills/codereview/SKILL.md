@@ -130,11 +130,17 @@ Do not include findings that cannot be tied to a concrete location, PR metadata 
 
 Post every review as a plain PR comment. The PASS / FAIL verdict lives as the first line of the comment body.
 
-```sh
-gh pr review --comment --body "<comment>"
-```
+**Body-file discipline (mandatory — prevents stale-body mis-posts):**
 
-Do not use `--approve` or `--request-changes`: GitHub rejects those when the reviewer is also the PR author, which is the common case here. Plain comments work regardless of authorship and still produce a permanent audit-trail entry on the PR.
+1. Resolve the target first: `PR=$(gh pr view --json number -q .number)` and `HEAD_SHA=$(git rev-parse HEAD)`.
+2. Write the comment body to a FRESH, uniquely named file in the session scratchpad: `review-pr${PR}-${HEAD_SHA:0:12}-$(date +%s).md`. Never reuse an existing file; never use a fixed name like `review.md`. Write the file and post it in the same turn.
+3. The body MUST end with a machine-checkable footer: `Reviewed: PR #<PR> @ <HEAD_SHA> (round <R>)`.
+4. Post with: `gh pr review "$PR" --comment --body-file "<that file>"`.
+5. **Post-submit self-check (mandatory):** fetch the newest review back (`gh pr view "$PR" --json reviews`) and verify all three:
+   (a) the verdict line equals the verdict computed THIS round,
+   (b) the footer names THIS PR number,
+   (c) the footer SHA equals `$HEAD_SHA`.
+   If any check fails: immediately edit the mis-posted body to `MIS-POSTED — DISREGARD. Posted in error; see the corrected review below.` (GitHub edit history preserves the original), then repeat steps 2–5 with a new file. Never report a verdict to the caller before the self-check passes.
 
 The comment body starts with one of:
 
