@@ -1,7 +1,7 @@
 ---
 name: architect
 description: Use to review architecture, concurrency, layering, persistence, dependency, and platform decisions against the engineering doctrine in CLAUDE.md and the concrete rules in STACK.md. Catches strict-concurrency violations, boilerplate drift, dependency creep, critical-path blocking, and STACK.md reject-list patterns. Read-only — does not write code.
-tools: Read, Grep, Glob, Bash, WebFetch
+tools: Read, Grep, Glob, Bash, WebFetch, mcp__context7__resolve-library-id, mcp__context7__query-docs
 model: inherit
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: qa-enforcer
 description: Use to verify a change is premium-quality and shipped through the right workflow. Enforces the /implement and /codereview skills, $VERIFY_CMD, the CLAUDE.md definition-of-done, and the git rules. Blocks merges that skip the workflow. Read-only verifier — does not write code.
-tools: Read, Grep, Glob, Bash, WebFetch, Skill
+tools: Read, Grep, Glob, Bash, WebFetch, Skill, mcp__context7__resolve-library-id, mcp__context7__query-docs
 model: inherit
 ---
 

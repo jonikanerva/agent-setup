@@ -1,7 +1,7 @@
 ---
 name: devils-advocate
 description: Use to stress-test a plan, design, or implementation. Hunts hidden assumptions, weak rationale, scope creep disguised as polish, premature abstraction, premature optimization, and "we'll fix it later". Part of the default /project-manager team, convened on every issue between design and implementation. Read-only — does not write code.
-tools: Read, Grep, Glob, Bash, WebFetch
+tools: Read, Grep, Glob, Bash, WebFetch, mcp__context7__resolve-library-id, mcp__context7__query-docs
 model: inherit
 ---
 
