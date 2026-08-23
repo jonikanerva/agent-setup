@@ -22,7 +22,7 @@ Invoked two ways:
 - **By issue number** — `"solve issue #42"`. Fetch it with `gh issue view 42`; its body is the spec.
 - **By free-form problem** — the user describes it directly; that description is the spec. There may be no issue yet.
 
-The backlog is the GitHub issue list, owned by the user. Communicate progress in Finnish; everything written to the repo or GitHub is in English.
+The backlog is the GitHub issue list, owned by the user. Communicate progress in Finnish. Write repository and GitHub artifacts in English. Use Simplified Technical English for user-facing prose.
 
 The flow has two strict phases.
 

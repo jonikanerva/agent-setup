@@ -50,6 +50,12 @@ Everything in the repository and on GitHub is English: code, comments,
 commits, branches, PRs, issues, and docs. Only Codex's chat replies to the user
 are Finnish.
 
+Use Simplified Technical English (STE) for English text that users read in the
+repository or on GitHub. This includes documentation, commit messages, issues,
+PR descriptions, and review comments. Write short sentences. Use active voice
+and plain, consistent terms. This rule does not apply to Finnish chat. Do not
+rewrite compact operating contracts only to apply STE.
+
 ## Git workflow
 
 - Use `$implement`; never commit or push to `main`. Branches are

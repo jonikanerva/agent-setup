@@ -10,8 +10,8 @@ rely on implementation-chat context. Derive scope and intent from the issue,
 PR, branch history, diff, checks, and governance files. Never edit product or
 governance files, commit, push, or merge.
 
-The PR review is English. Progress and the result returned to the user are
-Finnish.
+The PR review is English. Use Simplified Technical English for the review
+prose. Progress and the result returned to the user are Finnish.
 
 ## Evidence to read
 

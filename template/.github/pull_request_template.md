@@ -1,6 +1,9 @@
 <!--
 Fill every section. Remove this comment before saving.
 The /implement skill drafts this for you. Verify, then ship.
+Use Simplified Technical English.
+Write short sentences.
+Use active voice and plain terms.
 -->
 
 ## Why

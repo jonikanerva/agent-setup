@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# link-global.sh — symlink this repo's static Claude and Codex setup into the
-# user-level discovery locations. The repository remains the single source of
-# truth: edits and `git pull` are visible to new sessions without a copy step.
+# link-global.sh — symlink this repo's static Claude and Codex roles and skills
+# into the user-level discovery locations. The repository remains the single
+# source of truth for these global files.
 #
 # Usage:
 #   bin/link-global.sh                         # link both hosts
@@ -122,8 +122,6 @@ link_codex() {
   local skill_dest="$DEST_HOME/.agents/skills"
 
   mkdir -p "$codex_dest/agents" "$skill_dest"
-  link_one "$REPO_ROOT/template/AGENTS.md" "$codex_dest/AGENTS.md"
-
   local file dir
   for file in "$agent_src"/*.toml; do
     [ -e "$file" ] || continue
@@ -152,4 +150,4 @@ esac
 
 echo
 echo "Done: $linked linked, $skipped skipped, $pruned pruned."
-echo "Static setup changes are live for new $HOST sessions. Re-run only after adding or removing entries."
+echo "Static role and skill changes are live for new $HOST sessions. Re-run only after adding or removing entries."

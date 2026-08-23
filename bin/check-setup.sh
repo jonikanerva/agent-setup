@@ -30,6 +30,9 @@ require_file template/CLAUDE.md
 require_file template/AGENTS.md
 require_file template/VISION.md
 require_file template/.claude/settings.json
+jq -e '.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS == "1"' \
+  template/.claude/settings.json >/dev/null \
+  || fail "Claude Agent Teams is not enabled in template/.claude/settings.json"
 
 for role in "${roles[@]}"; do
   require_file "template/.claude/agents/$role.md"

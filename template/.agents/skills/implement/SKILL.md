@@ -7,7 +7,8 @@ description: Implement an approved feature, fix, or code change on a feature bra
 
 Complete the approved change and leave a verified PR for independent review.
 Communicate with the user in Finnish. Write code, comments, branches, commits,
-issues, and PR text in English.
+issues, and PR text in English. Use Simplified Technical English for
+user-facing prose.
 
 ## 1. Validate scope
 
@@ -66,9 +67,10 @@ tokens, or other secrets. Push only the feature branch.
 Check whether the current branch already has a PR. Create one when absent; add
 an update comment when it already exists. Keep the title under 70 characters.
 
-Follow `.github/pull_request_template.md`. Include why, what, decision-filter
-answers, rules involved, verification, states handled, and any autonomy
-fallback. Add `Closes #<N>` when the PR resolves an issue.
+Follow `.github/pull_request_template.md` when the project has that file.
+Otherwise include why, what, decision-filter answers, rules involved,
+verification, states handled, and any autonomy fallback. Add `Closes #<N>`
+when the PR resolves an issue.
 
 Return the PR URL, commit SHA, changed files, and `$VERIFY_CMD` summary to the
 project manager. Do not run `$codereview`; `qa_enforcer` owns that gate. Never

@@ -15,17 +15,21 @@ model and supported hosts.
 
 ## Distribution model
 
-Project distribution copies the complete template plus one stack profile:
+Link global roles and skills before you configure a project. Then copy only
+the product contract, one stack profile, and the selected host contract:
 
 ```sh
-cp -R template/. <target-project>/
-cp stacks/STACK-TS.md <target-project>/STACK.md
+bin/link-global.sh
+PROJECT_DIR="/path/to/project"
+cp template/VISION.md "$PROJECT_DIR/VISION.md"
+cp stacks/STACK-TS.md "$PROJECT_DIR/STACK.md"
+cp template/CLAUDE.md "$PROJECT_DIR/CLAUDE.md"
+cp template/AGENTS.md "$PROJECT_DIR/AGENTS.md"
 ```
 
-Global distribution uses `bin/link-global.sh`. It symlinks the static files in
-this repository into the user-level discovery locations for Claude and Codex.
-Edits and `git pull` therefore apply to new sessions without a copy or render
-step.
+Global distribution uses `bin/link-global.sh`. It symlinks the static role and
+skill files into the user-level discovery locations for Claude and Codex.
+Edits and `git pull` apply to new sessions without a copy or render step.
 
 Never overwrite a user's real file while changing the linker. It may replace
 only symlinks, and pruning may remove only dead links whose target is inside
@@ -73,6 +77,9 @@ file. The files are deliberately self-contained because agents may run in
 isolated contexts.
 
 - Repository and GitHub artifacts are English; user chat is Finnish.
+- New user-facing English uses Simplified Technical English. Write short
+  sentences. Use active voice and plain, consistent terms. Do not rewrite
+  compact operating contracts only to apply STE.
 - Never commit or push to `main`; use `feat|fix|chore|docs/<topic>` branches.
 - Conventional Commits with the host-specific co-author trailer; merge commits,
   never squash.

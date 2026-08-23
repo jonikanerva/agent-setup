@@ -6,11 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is **not an application** — it is the versioned source bundle for static Claude Code and Codex project setups. It ships pre-wired host configurations, engineering doctrines, and per-stack profiles that get copied into other projects or linked into user-level discovery locations. There is no generated setup: every distributed file is checked in as the final artifact downstream projects consume.
 
-Distribution is a manual copy (no installer, no package):
+Global roles and skills are linked first. Each project then receives only the
+product contract, one stack profile, and its selected host contract:
 
 ```sh
-cp -R template/. <target-project>/     # the bundle
-cp stacks/STACK-TS.md <target-project>/STACK.md   # one stack profile, renamed to STACK.md
+bin/link-global.sh
+PROJECT_DIR="/path/to/project"
+cp template/VISION.md "$PROJECT_DIR/VISION.md"
+cp stacks/STACK-TS.md "$PROJECT_DIR/STACK.md"
+cp template/CLAUDE.md "$PROJECT_DIR/CLAUDE.md"   # Claude
+cp template/AGENTS.md "$PROJECT_DIR/AGENTS.md"   # Codex
 ```
 
 `README.md` is the canonical explanation of the whole system — read it first.
@@ -43,10 +48,11 @@ The corresponding Codex files live under `template/.codex/agents/` and `template
 These rules are stated in both operating contracts and **repeated and relied upon** in the skills, agents, PR template, and host safeguards. If you change one, grep both host trees and update every affected static file — they are intentionally redundant so each agent reads them in isolation:
 
 - **Language split:** everything written to the repo or GitHub (code, commits, branches, PRs, issues, docs) is in **English**; only the active agent host's chat replies to the user are in **Finnish**. (This is a rule the template imposes on downstream projects.)
+- **Simplified Technical English:** use STE for new user-facing English in the repository and on GitHub. Write short sentences. Use active voice and plain, consistent terms. Do not rewrite compact operating contracts only to apply STE.
 - **Git:** never commit/push to `main`; feature branches `feat|fix|chore|docs/<topic>` (≤50 chars); Conventional Commits with the host-specific `Co-Authored-By` agent trailer; **merge commits, never squash**; `Closes #<N>` links the issue.
 - **No ledger files:** the backlog is GitHub issues; the audit trail is issues + commits + PR descriptions. The template forbids creating `ROADMAP.md` / changelog / backlog files — do not add one here either.
 - **Autonomy fallback:** in autonomous phases, agents do not call `AskUserQuestion`; they pick the smallest-surface conservative interpretation and document it. `VISION.md` / `CLAUDE.md` edits require an explicit user request.
-- **Safeguards:** Claude's enforceable deny-list lives in `template/.claude/settings.json`; Codex uses custom-agent sandbox defaults plus the user's native sandbox and approval controls. Both doctrines' Safeguards and Decision rights must describe the same behavioral boundaries without claiming identical host enforcement.
+- **Safeguards:** `template/.claude/settings.json` is the reference Claude deny-list and hook configuration; the global linker does not install it. Codex uses custom-agent sandbox defaults plus the user's native sandbox and approval controls. Both doctrines' Safeguards and Decision rights must describe the same behavioral boundaries without claiming identical host enforcement.
 
 ## Adding or editing a stack profile
 
