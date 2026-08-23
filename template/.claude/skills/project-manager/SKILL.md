@@ -9,7 +9,7 @@ description: >
   final human code review. The backlog and roadmap live entirely in GitHub
   issues (owned by the user); the audit trail of what happened and why lives in
   issue comments, commits, and PR descriptions.
-allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Agent, SendMessage, TeamCreate, TeamDelete, TaskOutput, TaskStop, Skill, AskUserQuestion, WebFetch, WebSearch
+allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Agent, SendMessage, TaskOutput, TaskStop, Skill, AskUserQuestion, WebFetch, WebSearch
 argument-hint: <issue number to solve, or a problem described in plain language>
 ---
 
@@ -187,7 +187,7 @@ You may **never**, on your own initiative:
 
 ## Stop conditions
 
-Stop, write a short final report (in Finnish), and clean up the team when **any** is true:
+Stop and write a short final report (in Finnish) when **any** is true:
 
 - The issue's PR is surfaced to the user at PASS (single-issue run), or merged (if self-merge was authorised).
 - The issue was rejected by the decision filter (Step B1) or marked needs-human after 3 failed review rounds (Step B5).
@@ -204,7 +204,7 @@ When you stop, write a one-screen Finnish summary:
 - Any binding decision recorded this run → which issue / PR carries it.
 - Next suggested step for the user.
 
-Then ask (free-form Finnish, **not** `AskUserQuestion`) whether to clean up the team or leave it spawned. Default to cleaning up.
+Then ask (free-form Finnish, **not** `AskUserQuestion`) whether the user wants follow-up work from the same teammates. If not, do nothing more — idle teammates end with the session; there is no separate cleanup step.
 
 ---
 
