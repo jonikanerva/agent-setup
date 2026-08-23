@@ -11,7 +11,7 @@ argument-hint: <description of what to implement>
 
 Complete workflow for implementing a change and shipping it as a PR. The task description comes from `$ARGUMENTS`.
 
-Communicate in Finnish with the user. All code artifacts (commits, branch names, PR text, code comments) in English per project policy (`CLAUDE.md → Language`).
+Communicate in Finnish with the user. Write all repository and GitHub artifacts in English per `CLAUDE.md → Language`. Use Simplified Technical English for user-facing prose.
 
 ## Procedure
 
@@ -98,7 +98,7 @@ Check if a PR already exists for this branch:
 gh pr list --head <branch-name> --json number,url --jq '.[0]'
 ```
 
-**If no PR exists**, create one using `gh pr create --title "<title>" --body "<body>"`. When the change resolves a GitHub issue, include `Closes #<N>` in the body so merging closes the issue and the issue thread carries the outcome. The body must follow `.github/pull_request_template.md`:
+**If no PR exists**, create one using `gh pr create --title "<title>" --body "<body>"`. When the change resolves a GitHub issue, include `Closes #<N>` in the body so merging closes the issue and the issue thread carries the outcome. Follow `.github/pull_request_template.md` when the project has that file. Otherwise use this structure:
 
 - **Why** — motivation; which `VISION.md` / `CLAUDE.md` / `STACK.md` rule is at play.
 - **What** — brief technical summary of changes.

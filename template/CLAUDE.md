@@ -25,6 +25,8 @@ Deferred work must not die in a PR comment or a conversation note: when planning
 
 Everything in the repo or on GitHub is in English (code, comments, commits, branches, PRs, issues, docs). Only Claude's chat replies to the user are in Finnish.
 
+Use Simplified Technical English (STE) for English text that users read in the repository or on GitHub. This includes documentation, commit messages, issues, PR descriptions, and review comments. Write short sentences. Use active voice and plain, consistent terms. This rule does not apply to Finnish chat. Do not rewrite compact operating contracts only to apply STE.
+
 ## Git workflow
 
 - Use `/implement`; never commit or push to `main`. Branches: `feat|fix|chore|docs/<topic>` (≤50 chars, lowercase, hyphens).
@@ -124,7 +126,7 @@ Valid but deliberate: measurable need, clear benefit, isolated exception, docume
 
 ## Safeguards
 
-Enforced in `.claude/settings.json`: force-push and pushes to `main` are blocked; `rm -rf` is deny-listed; the Read tool refuses `.env` files; direct `claude` CLI invocations from Bash are blocked (subagents spawn via the Agent tool); `gh pr merge` only runs when the user explicitly asks, never on the agent's initiative. By doctrine, beyond what hooks can catch: never open `.env` files through any other channel, and never let secrets, credentials, or tokens enter the repo or the logs.
+Enforce these rules with Claude user or project settings when available: block force-push and pushes to `main`; deny recursive deletion and hard reset; refuse `.env` reads; block direct `claude` CLI calls from Bash; and allow `gh pr merge` only after an explicit user request. `template/.claude/settings.json` is the reference configuration. These doctrine rules remain mandatory when the reference settings are not installed. Never open `.env` files through another channel. Never put secrets, credentials, or tokens in the repository or logs.
 
 ## Decision rights
 

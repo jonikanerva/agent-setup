@@ -4,30 +4,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-This is **not an application** — it is the source bundle for a Claude Code project setup. It ships a pre-wired `.claude/` configuration, an engineering doctrine, and per-stack profiles that get **copied into other projects**. There is no build, lint, or test command here; "the code" is Markdown and JSON config. When you edit a file, you are editing the template that downstream projects will inherit.
+This is **not an application** — it is the versioned source bundle for static Claude Code and Codex project setups. It ships pre-wired host configurations, engineering doctrines, and per-stack profiles that get copied into other projects or linked into user-level discovery locations. There is no generated setup: every distributed file is checked in as the final artifact downstream projects consume.
 
-Distribution is a manual copy (no installer, no package):
+Global roles and skills are linked first. Each project then receives only the
+product contract, one stack profile, and its selected host contract:
 
 ```sh
-cp -R template/. <target-project>/     # the bundle
-cp stacks/STACK-TS.md <target-project>/STACK.md   # one stack profile, renamed to STACK.md
+bin/link-global.sh
+PROJECT_DIR="/path/to/project"
+cp template/VISION.md "$PROJECT_DIR/VISION.md"
+cp stacks/STACK-TS.md "$PROJECT_DIR/STACK.md"
+cp template/CLAUDE.md "$PROJECT_DIR/CLAUDE.md"   # Claude
+cp template/AGENTS.md "$PROJECT_DIR/AGENTS.md"   # Codex
 ```
 
 `README.md` is the canonical explanation of the whole system — read it first.
 
-## The core design: three documents, one indirection
+## The core design: host contracts, shared project documents, one indirection
 
 The entire setup rests on a separation that you must preserve when editing:
 
-- **`template/CLAUDE.md`** — the engineering doctrine + team workflow. It is **technology-neutral**: it names no language, framework, or command. It is meant to be identical across every project that uses this setup. When it needs a concrete rule, it defers with the phrase *"as in `STACK.md`"* or a `$VAR_CMD` placeholder.
+- **`template/CLAUDE.md` and `template/AGENTS.md`** — host-specific engineering doctrines + team workflows. Both are **technology-neutral**: they name no language, framework, or concrete command. They are static final artifacts, not generated outputs. When they need a concrete rule, they defer with the phrase *"as in `STACK.md`"* or a `$VAR_CMD` placeholder.
 - **`template/VISION.md`** — a fill-in-the-blank product contract (what the product *is* and *is not*). Shipped as a template full of `<…>` placeholders.
 - **`stacks/STACK-*.md`** — concrete technology profiles. Each one is copied into a target project as `STACK.md` and holds every language/framework/command/budget/banned-call.
 
-**The load-bearing indirection:** `template/CLAUDE.md` and the skills/agents refer to commands only through variables — `$FORMAT_CMD`, `$LINT_CMD`, `$BUILD_CMD`, `$TEST_CMD`, `$VERIFY_CMD` — which are **defined once** in each `STACK.md` Section 3 ("Build & verify commands"). This is why the doctrine works unchanged for TypeScript, Swift, or any future stack. **Never hard-code a concrete command or framework name into `template/CLAUDE.md`, the skills, or the agents** — that would break the neutrality the whole system depends on. Concrete tooling lives in `STACK.md` alone.
+**The load-bearing indirection:** both host contracts and all skills/agents refer to commands only through variables — `$FORMAT_CMD`, `$LINT_CMD`, `$BUILD_CMD`, `$TEST_CMD`, `$VERIFY_CMD` — which are **defined once** in each `STACK.md` Section 3 ("Build & verify commands"). This is why the doctrine works unchanged for TypeScript, Swift, or any future stack. **Never hard-code a concrete command or framework name into an operating contract, skill, or agent** — that would break the neutrality the whole system depends on. Concrete tooling lives in `STACK.md` alone.
 
 ## The agent team and workflow (what the template encodes)
 
-The bundle wires up a five-agent team driven by three skills. Understanding this flow is essential before editing any of the pieces, because they cross-reference each other heavily:
+Each host bundle wires up the same five-agent team driven by three skills. Claude uses Markdown agent definitions and slash-command skills; Codex uses TOML custom agents, dollar-prefixed skills, and subagent delegation. Understanding the flow is essential before editing either host tree:
 
 - **`project-manager`** (`template/.claude/skills/project-manager/SKILL.md`) — the **only** surface that talks to the user. Two phases: **Phase A** (interactive — reads the issue, proposes a plan, `AskUserQuestion` allowed) and **Phase B** (autonomous — convenes the team, drives to a PASS-reviewed PR, `AskUserQuestion` **forbidden**, autonomy fallback applies). It never writes app code itself.
 - **`implement`** skill — the branch → change → `$VERIFY_CMD` → commit → push → PR loop. Run once per issue by the `lead-dev` agent.
@@ -36,15 +41,18 @@ The bundle wires up a five-agent team driven by three skills. Understanding this
 
 The PM convenes the team for every issue; the team reviews its own work to PASS *before* a PR is ever surfaced to the user.
 
+The corresponding Codex files live under `template/.codex/agents/` and `template/.agents/skills/`. Their host-native syntax is intentionally separate and visible in Git. Keep semantics aligned, but do not introduce a generator or runtime include mechanism to hide the final artifacts.
+
 ## Invariants to keep consistent across files
 
-These rules are stated in `template/CLAUDE.md` and **repeated and relied upon** in the skills, agents, PR template, and `settings.json`. If you change one, grep for every other mention and update them together — they are intentionally redundant so each agent reads them in isolation:
+These rules are stated in both operating contracts and **repeated and relied upon** in the skills, agents, PR template, and host safeguards. If you change one, grep both host trees and update every affected static file — they are intentionally redundant so each agent reads them in isolation:
 
-- **Language split:** everything written to the repo or GitHub (code, commits, branches, PRs, issues, docs) is in **English**; only Claude's chat replies to the user are in **Finnish**. (Note: this `agent-setup` repo's own response language follows the user's global setting; the English/Finnish split is a *rule the template imposes on downstream projects*.)
-- **Git:** never commit/push to `main`; feature branches `feat|fix|chore|docs/<topic>` (≤50 chars); Conventional Commits with a `Co-Authored-By` agent trailer; **merge commits, never squash**; `Closes #<N>` links the issue.
+- **Language split:** everything written to the repo or GitHub (code, commits, branches, PRs, issues, docs) is in **English**; only the active agent host's chat replies to the user are in **Finnish**. (This is a rule the template imposes on downstream projects.)
+- **Simplified Technical English:** use STE for new user-facing English in the repository and on GitHub. Write short sentences. Use active voice and plain, consistent terms. Do not rewrite compact operating contracts only to apply STE.
+- **Git:** never commit/push to `main`; feature branches `feat|fix|chore|docs/<topic>` (≤50 chars); Conventional Commits with the host-specific `Co-Authored-By` agent trailer; **merge commits, never squash**; `Closes #<N>` links the issue.
 - **No ledger files:** the backlog is GitHub issues; the audit trail is issues + commits + PR descriptions. The template forbids creating `ROADMAP.md` / changelog / backlog files — do not add one here either.
 - **Autonomy fallback:** in autonomous phases, agents do not call `AskUserQuestion`; they pick the smallest-surface conservative interpretation and document it. `VISION.md` / `CLAUDE.md` edits require an explicit user request.
-- **Safeguards** live in `template/.claude/settings.json`: deny-list (force-push, push to `main`, `rm -rf`, `git reset --hard`) + a `PreToolUse` hook that blocks destructive pushes. The doctrine's "Safeguards" / "Decision rights" sections must stay in sync with this JSON.
+- **Safeguards:** `template/.claude/settings.json` is the reference Claude deny-list and hook configuration; the global linker does not install it. Codex uses custom-agent sandbox defaults plus the user's native sandbox and approval controls. Both doctrines' Safeguards and Decision rights must describe the same behavioral boundaries without claiming identical host enforcement.
 
 ## Adding or editing a stack profile
 
@@ -52,6 +60,7 @@ A new stack (Kotlin, Go, Rust, …) is added by copying `stacks/STACK-TEMPLATE.m
 
 ## Editing rules of thumb
 
-- Changing `template/CLAUDE.md`, the skills, or the agents = changing the doctrine every downstream project inherits. Keep it neutral, keep the cross-references intact, and verify a rule isn't contradicted in a sibling file.
+- Changing either operating contract, a skill, or an agent changes the doctrine downstream projects inherit. Keep it neutral, preserve the host-native cross-references, and verify the other host does not contradict the change.
 - The skill/agent files are long and deliberately self-contained (each is read in isolation by a separate subagent). Some redundancy is by design — do not "DRY it up" across files in a way that assumes shared context.
 - Keep `README.md` accurate when you add a stack or change the flow — it is the front door.
+- Run `bin/check-setup.sh` before committing. It validates the checked-in static distributions and does not generate or rewrite files.

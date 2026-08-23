@@ -1,82 +1,245 @@
 # Default Agent Stack
 
-## What this is
+## What this repository provides
 
-A pre-wired template for **Claude Code** that gives a new project:
+This repository provides a static agent setup for Claude Code and Codex.
 
-- **`CLAUDE.md`** — the fixed, **technology-neutral** engineering doctrine + workflow. It names no language or framework; it never changes between projects.
-- Two per-project contracts: **`VISION.md`** (what the product is) and **`STACK.md`** (the technology and all its concrete rules). The **backlog and roadmap are GitHub issues** (you own the list); the audit trail lives in issues, commits, and PR descriptions.
-- A five-teammate agent team — `architect`, `ux-guardian`, `devils-advocate`, `lead-dev`, and `qa-enforcer` — convened in full for every issue.
-- Three skills: `/project-manager` (the only surface that talks to you), `/implement` (feature branch → PR), and `/codereview` (PASS/FAIL audit on the current branch).
-- A pre-configured `.claude/settings.json` with permission rules and hooks.
+The setup contains:
 
-**Technology-agnostic by design:** every technology choice lives in `STACK.md` alone. The same agents, skills, and doctrine work for iOS, macOS, TypeScript, Kotlin, a backend, a CLI, a library — you swap `STACK.md` (and `VISION.md`), nothing else.
+- Five roles: architect, UX guardian, devil's advocate, lead developer, and QA
+  enforcer.
+- Three workflows: project manager, implementation, and code review.
+- A technology-neutral operating contract for each tool.
+- A product contract template in `VISION.md`.
+- Technology profiles that become a project's `STACK.md`.
 
-## Layout
+The project manager uses all five roles for each delivery task. The roles
+review product fit, architecture, scope, implementation, and quality. The
+project manager shows the pull request only after the code review reports PASS.
+The user reviews and merges the pull request.
 
+## Technical basis
+
+The Claude implementation uses these Claude Code features:
+
+- [Agent Teams](https://code.claude.com/docs/en/agent-teams) provide the team
+  lead, independent teammates, shared tasks, and direct messages.
+- [Custom subagents](https://code.claude.com/docs/en/sub-agents) define the five
+  reusable roles and their tool access.
+- [Skills](https://code.claude.com/docs/en/skills) define the three reusable
+  workflows.
+
+Claude Code marks Agent Teams as experimental. You must enable Agent Teams
+before you use the Claude workflow.
+
+The Codex implementation uses these Codex features:
+
+- [Subagents and custom agents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
+  provide delegated workers and TOML role definitions.
+- [Skills](https://learn.chatgpt.com/docs/build-skills) define the three
+  reusable workflows.
+- [AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
+  provides the project operating contract.
+
+The two tools use different coordination systems. Claude teammates can share
+tasks and send direct messages. The Codex primary agent starts subagents and
+collects their results. Both implementations use the same roles, order, and
+quality gates.
+
+## Repository layout
+
+```text
+template/
+  .claude/
+    agents/           # Claude role definitions
+    skills/           # Claude workflows
+    settings.json     # Reference project settings for Claude
+  .codex/agents/      # Codex role definitions
+  .agents/skills/     # Codex workflows
+  CLAUDE.md           # Claude project contract
+  AGENTS.md           # Codex project contract
+  VISION.md           # Product contract template
+stacks/
+  STACK-TEMPLATE.md
+  STACK-TS.md
+  STACK-EFFECT.md
+  STACK-SWIFT.md
+  STACK-PY.md
+bin/
+  link-global.sh
+  check-setup.sh
 ```
-template/             # the bundle you copy into your project
-  .claude/            #   skills (project-manager, implement, codereview) + agents + settings.json
-  .github/            #   PR template
-  CLAUDE.md           #   engineering doctrine + workflow (fixed, technology-neutral)
-  VISION.md           #   product contract (fill this in)
-stacks/               # STACK.md profiles — copy one in as STACK.md
-  STACK-TEMPLATE.md   #   empty skeleton for a new stack (Kotlin, Go, …)
-  STACK-TS.md         #   example: strict TypeScript / Node / Hono / React / Vite / Vitest
-  STACK-EFFECT.md     #   example: strict TypeScript / Effect v3 / HttpApi / React
-  STACK-SWIFT.md      #   example: strict Swift 6 / SwiftUI / Xcode 26+
-  STACK-PY.md         #   example: strict Python 3.13 / Home Assistant custom integration (HACS)
-```
 
-## How it works
+Do not copy the complete `template/` directory into a project. The global link
+installs the roles and workflows. Each project needs only `VISION.md`, one
+`STACK.md`, and the operating contract for the selected tool.
 
-1. You keep a **backlog of GitHub issues** of any size. You are the boss.
-2. You tell `/project-manager` either `solve issue #42` or describe the problem directly.
-3. The PM convenes the full team — they run the `VISION.md` decision filter, design, stress-test, implement on a feature branch, open a PR, and run `/codereview` to **PASS**.
-4. Only once the team's review is PASS does the PM surface the PR to you for the final human code review and merge. You can pre-authorise self-merge or batching, but neither is the default.
-5. PRs always **merge** (never squash) so the audit trail survives. There is no roadmap, backlog, or change-log file in the repo — issues + commits + PR descriptions are the record.
+## Requirements
 
-Once `VISION.md` and `STACK.md` are filled, run `/project-manager <issue # or problem>`.
+Install these tools:
 
----
+- Claude Code, Codex, or both.
+- GitHub CLI (`gh`).
+- `jq`.
 
-## Example stacks
-
-| Stack      | Profile                                                                                    |
-| ---------- | ------------------------------------------------------------------------------------------ |
-| **ts**     | Strict TypeScript 6 + Node 24 LTS + Hono 4 + React 19 + Vite 8 + Vitest 4, pnpm workspaces |
-| **effect** | Strict TypeScript + Effect v3 + `@effect/platform` HttpApi + React 19 + Vite, pnpm         |
-| **swift**  | Strict Swift 6 + SwiftUI + Xcode 26+, `make`-driven (`make test-all`)                      |
-| **py**     | Strict Python 3.13 Home Assistant custom integration (HACS), uv + ruff + `mypy --strict`  |
-
-Each `stacks/STACK-*.md` documents the project shape, language version, runtime, build commands, performance budgets, approved-dependencies list, and stack-specific reject-list. They are **examples**: copy one in as `STACK.md` and edit it to match your real project. For a stack not covered here (Kotlin, Go, Rust, …), copy `stacks/STACK-TEMPLATE.md` and fill the skeleton — nothing else in the setup changes.
-
----
+Use a GitHub repository for the target project. GitHub issues form the backlog.
+Issues, commits, pull requests, and review comments form the audit trail.
 
 ## Use it
 
-You need to have `claude`, `gh` and `jq` installed.
+### 1. Create the global links
 
-### Copy the setup into your project
-
-Copy the template and one stack example into your project, replacing `<your-project-dir>` with your project path:
-
-```sh
-cp -R template/. <your-project-dir>/
-cp stacks/STACK-TS.md <your-project-dir>/STACK.md   # or STACK-SWIFT.md
-```
-
-Then in your project: fill `VISION.md` and `STACK.md`, open a few GitHub issues as your backlog, and run `claude` → `/project-manager solve issue #1` (or describe a problem directly).
-
-The bundled `.claude/settings.json` allow-lists the git/GitHub commands the team needs, denies destructive ones (force-push in both spellings, pushes to `main`, the `rm -rf`/`rm -Rf` variants, `git reset --hard`), and backs the deny-list with a `PreToolUse` hook that blocks destructive pushes even when a permission pattern would miss them. It also permits sandbox writes to `~/.gnupg` so GPG-signed commits work in sandboxed sessions (gpg takes lock files there) — remove that entry if you don't sign commits.
-
-### Use the agents & skills globally
-
-To make the agents and skills available in **every** Claude Code session, symlink them into `~/.claude` instead of copying. The repo stays the single source of truth — symlinks point at the repo files, so edits and `git pull` take effect immediately, with no copy step to keep in sync:
+Run the global link command first. This step is required.
+Run all setup commands from the root of this repository.
 
 ```sh
-bin/link-global.sh            # symlink agents & skills into ~/.claude
-bin/link-global.sh --prune    # the above, plus remove links whose source was removed
+bin/link-global.sh
 ```
 
-The script is idempotent (re-run it after adding a new agent or skill) and never overwrites real files already in `~/.claude` (e.g. other skills). Only the agents and skills are linked — `template/.claude/settings.json` is project-distribution config and is **not** applied to your global `~/.claude`.
+The default command installs both tools. You can select one tool:
+
+```sh
+bin/link-global.sh --host claude
+bin/link-global.sh --host codex
+```
+
+The command creates these links:
+
+- Claude roles: `~/.claude/agents/`
+- Claude skills: `~/.claude/skills/`
+- Codex roles: `~/.codex/agents/`
+- Codex skills: `~/.agents/skills/`
+
+The command does not replace a real file or directory. The command can replace
+only a symlink. The command does not change Claude or Codex user settings.
+
+For Claude, merge this setting into your existing
+`~/.claude/settings.json` file:
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+
+Do not replace other settings in the file. Claude Agent Teams do not start
+without this setting.
+
+The file `template/.claude/settings.json` contains reference permission rules
+and hooks. The link command does not install those settings. Merge the required
+rules into your existing settings when you want the same enforcement.
+
+### 2. Add the project files
+
+Set a path for the target project:
+
+```sh
+PROJECT_DIR="/path/to/project"
+```
+
+Copy the product contract:
+
+```sh
+cp template/VISION.md "$PROJECT_DIR/VISION.md"
+```
+
+Copy one stack profile. Rename the file to `STACK.md`:
+
+```sh
+cp stacks/STACK-TS.md "$PROJECT_DIR/STACK.md"
+```
+
+Use `STACK-TEMPLATE.md` when no example matches the project.
+
+Copy the contract for the selected tool.
+
+For Claude Code:
+
+```sh
+cp template/CLAUDE.md "$PROJECT_DIR/CLAUDE.md"
+```
+
+For Codex:
+
+```sh
+cp template/AGENTS.md "$PROJECT_DIR/AGENTS.md"
+```
+
+Copy both contracts when the project uses both hosts.
+
+Edit `VISION.md` and `STACK.md`. Replace every placeholder. Define all named
+build and verification commands in `STACK.md`.
+
+### 3. Start the workflow
+
+For Claude Code, run:
+
+```text
+/project-manager solve issue #1
+```
+
+For Codex, run:
+
+```text
+$project-manager solve issue #1
+```
+
+You can also give the project manager a direct problem description.
+
+## Updates
+
+The repository is the source of truth for global roles and skills. Run
+`git pull` in this repository to update them. Start a new Claude or Codex
+session after an update.
+
+Run the link command again after you add or remove a role or skill:
+
+```sh
+bin/link-global.sh --host all --prune
+```
+
+The copied project contracts do not update automatically. Review contract
+changes and copy the new version into each project when required.
+
+## Stack profiles
+
+| Profile | Main use |
+| --- | --- |
+| `STACK-TS.md` | Strict TypeScript, Node, Hono, React, Vite, and Vitest |
+| `STACK-EFFECT.md` | Strict TypeScript with Effect |
+| `STACK-SWIFT.md` | Strict Swift, SwiftUI, and Xcode |
+| `STACK-PY.md` | Strict Python and Home Assistant custom integrations |
+| `STACK-TEMPLATE.md` | A new stack that has no existing profile |
+
+Each profile defines the project shape, runtime, frameworks, commands, budgets,
+persistence, dependencies, logging, lifecycle, time rules, and reject rules.
+
+## Writing standard
+
+Use [Simplified Technical English](https://en.wikipedia.org/wiki/Simplified_Technical_English)
+for new English text that users read. This rule applies to documentation,
+commit messages, issues, pull requests, and review comments.
+
+Write short sentences. Use active voice. Use plain and consistent terms. The
+rule does not apply to Finnish chat. Do not rewrite compact operating contracts
+only to apply this rule.
+
+## Static source of truth
+
+This repository does not use a generator. Git contains every final agent and
+skill file. A pull request shows the exact setup that each tool loads.
+
+Some rules appear in more than one file. The repetition is intentional. Each
+agent can run in an isolated context. Claude and Codex also use different file
+formats.
+
+Run the static checks after a change:
+
+```sh
+bin/check-setup.sh
+```
+
+The check validates both role lists and all workflow files. The check does not
+generate or change files.

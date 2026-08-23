@@ -9,7 +9,7 @@ allowed-tools: Read, Grep, Glob, Bash, WebFetch
 
 Review all changes on the current branch against `main`. **This skill runs as an isolated subagent** — do not rely on any prior conversation context. Derive all understanding from the PR diff, description, check output, and the project's governance files only.
 
-Communicate in Finnish when reporting progress to the user; write the PR-review comment itself in English (project policy: all PR artifacts are in English).
+Communicate in Finnish when reporting progress to the user. Write the PR review in English. Use Simplified Technical English for the review prose.
 
 ## Prerequisites
 
