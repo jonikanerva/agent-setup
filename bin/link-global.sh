@@ -1,27 +1,58 @@
 #!/usr/bin/env bash
 #
-# link-global.sh — symlink this repo's agents & skills into ~/.claude so they
-# are active in every Claude Code session, with the repo staying the single
-# source of truth.
-#
-# The symlink target IS the repo file, so edits and `git pull` take effect
-# immediately — no copy step. Re-run this script only when you ADD a new agent
-# or skill (it creates the missing links), or pass --prune to clean up links
-# whose source was removed from the repo.
+# link-global.sh — symlink this repo's static Claude and Codex setup into the
+# user-level discovery locations. The repository remains the single source of
+# truth: edits and `git pull` are visible to new sessions without a copy step.
 #
 # Usage:
-#   bin/link-global.sh            # create/refresh symlinks
-#   bin/link-global.sh --prune    # the above, plus remove dead repo links
+#   bin/link-global.sh                         # link both hosts
+#   bin/link-global.sh --host claude           # link Claude only
+#   bin/link-global.sh --host codex            # link Codex only
+#   bin/link-global.sh --host all --prune       # also remove dead repo links
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SRC="$REPO_ROOT/template/.claude"
-DEST="$HOME/.claude"
+DEST_HOME="${AGENT_SETUP_HOME:-$HOME}"
 
+HOST="all"
 PRUNE=0
-[ "${1:-}" = "--prune" ] && PRUNE=1
+
+usage() {
+  sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --host)
+      [ "$#" -ge 2 ] || { echo "error: --host requires claude, codex, or all" >&2; exit 2; }
+      HOST="$2"
+      shift 2
+      ;;
+    --prune)
+      PRUNE=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "error: unknown argument: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
+
+case "$HOST" in
+  claude|codex|all) ;;
+  *)
+    echo "error: --host must be claude, codex, or all" >&2
+    exit 2
+    ;;
+esac
 
 linked=0
 skipped=0
@@ -35,12 +66,13 @@ link_one() {
     skipped=$((skipped + 1))
     return
   fi
-  ln -sfn "$src" "$dst"   # -f overwrites an existing symlink, -n avoids following a dir symlink
+  ln -sfn "$src" "$dst"
   echo "linked: $dst -> $src"
   linked=$((linked + 1))
 }
 
-# Remove symlinks under a dir that point into the repo but whose source is gone.
+# Remove symlinks under a directory when they point into this repo and their
+# source no longer exists. Real files and links owned by other setups survive.
 prune_dir() {
   local dir="$1"
   [ -d "$dir" ] || return 0
@@ -60,25 +92,64 @@ prune_dir() {
   done
 }
 
-mkdir -p "$DEST/agents" "$DEST/skills"
+link_claude() {
+  local src="$REPO_ROOT/template/.claude"
+  local dest="$DEST_HOME/.claude"
 
-# Agents: each *.md file -> ~/.claude/agents/<name>.md
-for f in "$SRC"/agents/*.md; do
-  [ -e "$f" ] || continue
-  link_one "$f" "$DEST/agents/$(basename "$f")"
-done
+  mkdir -p "$dest/agents" "$dest/skills"
 
-# Skills: each skill dir -> ~/.claude/skills/<name> (whole dir, incl. references/)
-for d in "$SRC"/skills/*/; do
-  [ -d "$d" ] || continue
-  link_one "${d%/}" "$DEST/skills/$(basename "$d")"
-done
+  local file dir
+  for file in "$src"/agents/*.md; do
+    [ -e "$file" ] || continue
+    link_one "$file" "$dest/agents/$(basename "$file")"
+  done
 
-if [ "$PRUNE" -eq 1 ]; then
-  prune_dir "$DEST/agents"
-  prune_dir "$DEST/skills"
-fi
+  for dir in "$src"/skills/*/; do
+    [ -d "$dir" ] || continue
+    link_one "${dir%/}" "$dest/skills/$(basename "$dir")"
+  done
+
+  if [ "$PRUNE" -eq 1 ]; then
+    prune_dir "$dest/agents"
+    prune_dir "$dest/skills"
+  fi
+}
+
+link_codex() {
+  local agent_src="$REPO_ROOT/template/.codex/agents"
+  local skill_src="$REPO_ROOT/template/.agents/skills"
+  local codex_dest="$DEST_HOME/.codex"
+  local skill_dest="$DEST_HOME/.agents/skills"
+
+  mkdir -p "$codex_dest/agents" "$skill_dest"
+  link_one "$REPO_ROOT/template/AGENTS.md" "$codex_dest/AGENTS.md"
+
+  local file dir
+  for file in "$agent_src"/*.toml; do
+    [ -e "$file" ] || continue
+    link_one "$file" "$codex_dest/agents/$(basename "$file")"
+  done
+
+  for dir in "$skill_src"/*/; do
+    [ -d "$dir" ] || continue
+    link_one "${dir%/}" "$skill_dest/$(basename "$dir")"
+  done
+
+  if [ "$PRUNE" -eq 1 ]; then
+    prune_dir "$codex_dest/agents"
+    prune_dir "$skill_dest"
+  fi
+}
+
+case "$HOST" in
+  claude) link_claude ;;
+  codex) link_codex ;;
+  all)
+    link_claude
+    link_codex
+    ;;
+esac
 
 echo
-echo "Done: $linked linked, $skipped skipped${PRUNE:+, $pruned pruned}."
-echo "Edits in $SRC and 'git pull' are live immediately. Re-run after adding a new agent/skill."
+echo "Done: $linked linked, $skipped skipped, $pruned pruned."
+echo "Static setup changes are live for new $HOST sessions. Re-run only after adding or removing entries."

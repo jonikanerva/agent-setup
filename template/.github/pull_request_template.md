@@ -5,7 +5,7 @@ The /implement skill drafts this for you. Verify, then ship.
 
 ## Why
 
-`<One-paragraph motivation. What problem is this PR solving and which VISION.md / CLAUDE.md / STACK.md rule is at play.>`
+`<One-paragraph motivation. What problem is this PR solving and which VISION.md / operating-contract / STACK.md rule is at play.>`
 
 Closes #`<issue number, if this PR resolves a GitHub issue>`
 
@@ -30,7 +30,7 @@ If any answer is `no`, this PR documents the conflict in the **Why** section abo
 
 ## Rules involved
 
-- `CLAUDE.md → <rule by name>` — `<one-line how this PR honours it>`
+- `<CLAUDE.md or AGENTS.md> → <rule by name>` — `<one-line how this PR honours it>`
 - `STACK.md → <section>` — `<one-line>`
 
 ## Verification
@@ -60,4 +60,4 @@ For changes that affect a user- or caller-facing surface, list every state it re
 
 ---
 
-**Next step:** run `/codereview` on this branch. The autonomous flow runs it automatically; if you opened this PR by hand, run it yourself before requesting merge.
+**Next step:** run `/codereview` in Claude or `$codereview` in Codex on this branch. The autonomous flow runs it automatically; if you opened this PR by hand, run the matching host skill before requesting merge.
