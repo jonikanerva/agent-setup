@@ -55,8 +55,15 @@ Review all of these:
     chain changes are approved and intentional.
 11. No dead code, duplicated existing helper, placeholder, debug output,
     commented-out code, unsafe escape hatch, or forbidden marker remains.
-12. `$FORMAT_CMD` is idempotent and `$VERIFY_CMD` passes without new warnings.
-13. Branch, commits, issue linkage, PR body, and audit trail follow AGENTS.md.
+12. Comments follow `AGENTS.md → Code conventions → Comments`. Each comment
+    states a constraint and reads correctly from its own file. No comment
+    narrates history, holds rationale that belongs in the issue or the PR, or
+    depends on an issue number, a PR number, or a commit reference. A comment
+    over 5 lines is a signal only: clear it by naming the constraint in each
+    line. Never ask for a contract to be deleted to reach the budget, and
+    report a missing contract as a defect.
+13. `$FORMAT_CMD` is idempotent and `$VERIFY_CMD` passes without new warnings.
+14. Branch, commits, issue linkage, PR body, and audit trail follow AGENTS.md.
 
 ## Finding format
 

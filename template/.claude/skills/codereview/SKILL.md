@@ -64,6 +64,7 @@ The following are blocking findings when present in changed production code or r
 - Dead code, unused imports, orphaned helpers, unreachable paths, or placeholder implementation.
 - Code duplication when a shared helper exists or a small extraction clearly removes real duplication.
 - `TODO` / `FIXME` / `HACK` / `XXX` comments, commented-out code, debug / console output, or crash-on-stub placeholders (the specific calls `STACK.md` bans).
+- Comments that break `CLAUDE.md → Code conventions → Comments`: history narration (what the code used to be, what a fix changed, what a design replaced); rationale or rejected alternatives that belong in the issue or the PR; a comment whose meaning depends on an issue number, a PR number, or a commit reference — delete the reference and the comment must still read correctly; a line number, file offset, or count of things elsewhere in the tree. A comment over 5 lines is a smell, not a violation by itself: clear it by naming the constraint each line carries, and never ask for a contract to be cut to reach the number. Report a *missing* constraint as readily as an excess comment — over-pruning a contract is the more expensive defect.
 - Force-unwraps / non-null assertions / unsafe casts outside tests and previews.
 - Concurrency / type-check escape hatches (the ones `STACK.md → Stack-specific reject-list additions` bans for this stack) without a documented, audited justification in an inline comment naming the underlying-API constraint (`CLAUDE.md → Concurrency`).
 - Identifier whose meaning contradicts the function / type's documented responsibility, or that reuses a name already bound to a different concept in the same module.
@@ -86,7 +87,7 @@ Evaluate the PR against all of these. **Every missed required check is a FAIL.**
 
 5. **Threat modeling and reliability** — Ask what could go wrong in production: race conditions, degraded-data masking bugs, missing-permission paths, crashes on first launch, lifecycle bugs in long-running activities, stale caches, unbounded retries, timeouts, idempotency failures, and inconsistent recovery after cancellation.
 
-6. **Code style and maintainability** — Check compliance with the formatter / linter declared in `STACK.md` and `CLAUDE.md → Code conventions`. Enforce small types, clear naming, immutable bindings where practical, no broad type erasure, comments that explain why, and no cleverness without measurable benefit.
+6. **Code style and maintainability** — Check compliance with the formatter / linter declared in `STACK.md` and `CLAUDE.md → Code conventions`. Enforce small types, clear naming, immutable bindings where practical, no broad type erasure, and no cleverness without measurable benefit. For comments, apply `CLAUDE.md → Code conventions → Comments`: each comment states a constraint a reader would otherwise break, reads correctly from that file alone, and carries no history, no rationale, and no reference that fails to resolve inside the repository.
 
 7. **Concurrency / async safety** — Check `CLAUDE.md → Concurrency`: critical-path isolation; thread-safe primitives for shared mutable state; structured concurrency; cancellation cooperation; thread-safety at boundaries; no sync-over-async on the critical path; no lower-level concurrency primitives unless the underlying API requires it and is bridged immediately.
 

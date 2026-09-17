@@ -35,6 +35,7 @@ Verify each against the diff or runtime. The concrete technology behind each ite
 - accessibility considered for any user-facing surface;
 - privacy declarations updated when required-reason / required-data APIs changed;
 - no debug output, stub `TODO`s, or commented-out code left behind;
+- comments meet `CLAUDE.md → Code conventions → Comments` — each states a constraint and reads correctly from its file alone; no history narration, no rationale that belongs in the issue or the PR, no issue / PR / commit reference the comment depends on. Check the reverse too: a contract the code relies on is still documented;
 - no reintroduced storage primitive forbidden by `STACK.md`; no new non-first-party dependency without a `STACK.md → Approved Dependencies` entry;
 - background work conforms to what `STACK.md` allows;
 - supply-chain / CI changes are intentional and documented where the rules require;

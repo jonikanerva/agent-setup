@@ -38,10 +38,11 @@ git branch --show-current
 
 ### Step 3: Implement the change
 
-Implement what is described in `$ARGUMENTS`, following the engineering doctrine in `CLAUDE.md` (Architecture, Concurrency, Responsiveness & resource budget, Side effects, Privacy & security, Code conventions, Testing) and the concrete rules in `STACK.md`. Those two files are the source of truth — apply the rules from them directly; they are deliberately not restated here. Two ship-loop reminders:
+Implement what is described in `$ARGUMENTS`, following the engineering doctrine in `CLAUDE.md` (Architecture, Concurrency, Responsiveness & resource budget, Side effects, Privacy & security, Code conventions, Testing) and the concrete rules in `STACK.md`. Those two files are the source of truth — apply the rules from them directly; they are deliberately not restated here. Three ship-loop reminders:
 
 - Every new feature or behavior change has tests; pure domain code gets the deepest, edge-case coverage.
 - Every surface that gains new states gets preview / story / fixture coverage for each applicable declared state.
+- Comments follow `CLAUDE.md → Code conventions → Comments`. Rationale, what changed, and why an alternative lost go in the PR description and the issue below — not in the source.
 
 ### Step 3.1: Autonomy fallback (no AskUserQuestion)
 
