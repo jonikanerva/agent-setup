@@ -127,7 +127,7 @@ Tell the user in Finnish (the only Finnish artifact — everything written to th
 
 ## Rules
 
-- **NEVER** push to `main`.
+- **NEVER** push to `main` — neither a normal push nor a force-push. On your feature branch a force-push is allowed; use `--force-with-lease`, never a bare `--force`.
 - **NEVER** commit secrets, credentials, `.env` files, or values forbidden by `VISION.md → Persistence and Privacy Posture`.
 - **NEVER** merge the PR — that happens after review and manual testing (`gh pr merge` is allowed only when the user explicitly asks).
 - **NEVER** weaken the strictness mode declared in `STACK.md`, the minimum runtime version, or the language version.

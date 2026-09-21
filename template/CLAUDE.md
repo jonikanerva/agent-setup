@@ -30,6 +30,7 @@ Use Simplified Technical English (STE) for English text that users read in the r
 ## Git workflow
 
 - Use `/implement`; never commit or push to `main`. Branches: `feat|fix|chore|docs/<topic>` (≤50 chars, lowercase, hyphens).
+- **No push to `main` — neither a normal push nor a force-push.** On a feature branch a force-push is allowed. Use `--force-with-lease`, never a bare `--force`.
 - Conventional Commits; each agent-authored commit ends with `Co-Authored-By: <agent display name> <noreply@anthropic.com>`.
 - **Merge to `main` with a merge commit — never squash** (enforced in repo settings). Delete the branch after merge.
 - Link the issue with `Closes #<N>`. Every PR description covers why, what, the rules at play, and the decision-filter outcome.
@@ -145,10 +146,10 @@ Valid but deliberate: measurable need, clear benefit, isolated exception, docume
 
 ## Safeguards
 
-Enforce these rules with Claude user or project settings when available: block force-push and pushes to `main`; deny recursive deletion and hard reset; refuse `.env` reads; block direct `claude` CLI calls from Bash; and allow `gh pr merge` only after an explicit user request. `template/.claude/settings.json` is the reference configuration. These doctrine rules remain mandatory when the reference settings are not installed. Never open `.env` files through another channel. Never put secrets, credentials, or tokens in the repository or logs.
+Protect `main` in the repository settings: no direct push and no force-push. That protection is the real gate. Enforce these rules with Claude user or project settings when available: deny pushes to `main`; deny recursive deletion and hard reset; refuse `.env` reads; block direct `claude` CLI calls from Bash; and allow `gh pr merge` only after an explicit user request. `template/.claude/settings.json` is the reference configuration. These doctrine rules remain mandatory when the reference settings are not installed. Never open `.env` files through another channel. Never put secrets, credentials, or tokens in the repository or logs.
 
 ## Decision rights
 
-- **Auto-allow**: read-only commands, the `STACK.md` build/test/lint commands, feature-branch ops (create, commit, push origin `<branch>`), PR creation, `gh pr view`/`comment`/`diff`/`review`, `gh issue view`/`list`/`comment`, `STACK.md` edits.
+- **Auto-allow**: read-only commands, the `STACK.md` build/test/lint commands, feature-branch ops (create, commit, push origin `<branch>`, force-push with `--force-with-lease`), PR creation, `gh pr view`/`comment`/`diff`/`review`, `gh issue view`/`list`/`comment`, `STACK.md` edits.
 - **Ask first**: edits to `VISION.md` or `CLAUDE.md`, creating/restructuring issues, `gh api` calls changing repo settings. `gh pr merge` only when explicitly asked.
-- **Never**: force push, push to `main`, bypass hooks (`--no-verify`), `rm -rf` in the project, or persist/transmit data forbidden by `VISION.md → Persistence and Privacy Posture`.
+- **Never**: push to `main` (normal or force), bare `git push --force` on any branch, bypass hooks (`--no-verify`), `rm -rf` in the project, or persist/transmit data forbidden by `VISION.md → Persistence and Privacy Posture`.

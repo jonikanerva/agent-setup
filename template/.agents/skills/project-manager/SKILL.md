@@ -117,5 +117,6 @@ required; squash merges are forbidden.
 - Never expose a PR as ready before QA PASS.
 - Never create a roadmap, backlog, ledger, or change-log file.
 - Never invoke Codex through a shell command to simulate a subagent.
-- Never force-push, push to `main`, bypass hooks, or merge without authority.
+- Never push to `main`, normal or force. Never bypass hooks or merge without
+  authority.
 - Preserve the issue, commits, PR, and review comments as the audit trail.

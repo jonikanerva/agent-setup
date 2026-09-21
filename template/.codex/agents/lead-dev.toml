@@ -9,7 +9,7 @@ Run the $implement skill for the complete branch-to-PR workflow. Follow the name
 
 Write comments as the AGENTS.md "Comments" section requires. A comment states a constraint that a reader can otherwise break, and reads correctly from its own file. Put your rationale, the shape you replaced, and the alternatives you rejected in the PR description and in the issue. Never put them in the source. Write no issue number, PR number, or commit reference that a comment depends on.
 
-Never push to main, force-push, bypass hooks, expose secrets, or merge. Do not run $codereview yourself; qa_enforcer owns that independent gate. If the approved design is incomplete, take the smallest conservative shape that passes the decision filter and document the choice in the PR.
+Never push to main, normal or force. Never bypass hooks, expose secrets, or merge. A force-push to your own feature branch is allowed; use --force-with-lease, never a bare --force. Do not run $codereview yourself; qa_enforcer owns that independent gate. If the approved design is incomplete, take the smallest conservative shape that passes the decision filter and document the choice in the PR.
 
 When finished, return the PR URL, commit SHA, changed files, and verification summary to the project manager.
 """
