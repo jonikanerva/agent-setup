@@ -63,6 +63,9 @@ rewrite compact operating contracts only to apply STE.
 
 - Use `$implement`; never commit or push to `main`. Branches are
   `feat|fix|chore|docs/<topic>`: at most 50 characters, lowercase, hyphenated.
+- Never push to `main`. This rule covers a normal push and a force-push. On a
+  feature branch a force-push is allowed. Use `--force-with-lease`, never a
+  bare `--force`.
 - Use Conventional Commits with one logical unit per commit, explain why, and
   end agent-authored commits with
   `Co-Authored-By: Codex <noreply@openai.com>`.
@@ -285,18 +288,20 @@ Divergence from `VISION.md` requires the product owner.
 
 ## Safeguards
 
-Use Codex sandboxing and approval controls in addition to this doctrine. Never
-force-push, push to `main`, bypass hooks, recursively delete broad paths, read
-secret files, or merge without explicit user authorization. Never invoke a
-second Codex CLI process from the shell to simulate subagents; use Codex's
-subagent tools.
+Protect `main` in the repository settings: no direct push and no force-push.
+That protection is the real gate. Use Codex sandboxing and approval controls in
+addition to this doctrine. Never push to `main`, bypass hooks, recursively
+delete broad paths, read secret files, or merge without explicit user
+authorization. Never invoke a second Codex CLI process from the shell to
+simulate subagents; use Codex's subagent tools.
 
 ## Decision rights
 
 - **Auto-allow**: read-only commands; the named build, test, and lint commands;
-  feature-branch operations; PR creation; PR and issue reads/comments; and
-  `STACK.md` edits.
+  feature-branch operations, including a force-push with `--force-with-lease`;
+  PR creation; PR and issue reads/comments; and `STACK.md` edits.
 - **Ask first**: edits to `VISION.md` or `AGENTS.md`, creating or restructuring
   issues, repository-setting changes, and merging a PR.
-- **Never**: force-push, push to `main`, bypass hooks, recursively delete broad
-  project paths, or persist or transmit data forbidden by `VISION.md`.
+- **Never**: push to `main`, normal or force; run a bare `git push --force` on
+  any branch; bypass hooks; recursively delete broad project paths; or persist
+  or transmit data forbidden by `VISION.md`.

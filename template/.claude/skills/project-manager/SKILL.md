@@ -173,7 +173,7 @@ You may **never**, on your own initiative:
 
 - Edit `VISION.md` or `CLAUDE.md` — propose changes as a `docs/pm-<topic>` PR gated on the user's explicit "yes".
 - Create or restructure the backlog — the user owns the issue list. You may *suggest* new feature work to the user, but you do not file backlog items unless the user asks. (Two exceptions: a tracking/decision issue to preserve a binding decision when no issue or PR can carry it, and a `follow-up`-labelled issue for work deferred out of the current scope, per `CLAUDE.md → Audit trail`.)
-- `git push` to `main`, force-push, or `--no-verify`.
+- `git push` to `main`, normal or force. A bare `git push --force` on any branch, or `--no-verify`. (A force-push to a feature branch is allowed with `--force-with-lease`.)
 - `gh pr merge` — only when the user has explicitly asked or pre-authorised it.
 
 ### Git & audit trail

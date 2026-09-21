@@ -87,8 +87,9 @@ isolated contexts.
 - The user owns product direction, backlog changes, and merge authority.
 - Read-only roles never edit product code.
 - `lead-dev` implements; `qa-enforcer` owns the semantic review gate.
-- Force-push, direct pushes to `main`, destructive deletion, hook bypasses, and
-  autonomous merges are forbidden.
+- Direct pushes to `main` are forbidden, normal and force. Destructive
+  deletion, hook bypasses, and autonomous merges are forbidden.
+- A force-push to a feature branch is allowed. Use `--force-with-lease`.
 
 ## Verification
 
@@ -106,5 +107,5 @@ There is no application build. Before committing setup changes:
   user requested the change.
 - Ask before editing product vision, restructuring the backlog, changing
   repository settings, or merging.
-- Never force-push, push to `main`, bypass hooks, read secret files, or merge
-  without explicit user authorization.
+- Never push to `main`, normal or force. Never bypass hooks, read secret files,
+  or merge without explicit user authorization.

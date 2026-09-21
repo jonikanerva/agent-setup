@@ -28,7 +28,10 @@ Inspect the current branch and `git log main..HEAD --oneline`.
 - On `main`, create `feat|fix|chore|docs/<topic>` with lowercase hyphenated
   text and a maximum total length of 50 characters.
 - On an existing feature branch, continue only when it belongs to this task.
-- Never commit or push to `main` and never force-push.
+- Never commit or push to `main`. This rule covers a normal push and a
+  force-push.
+- A force-push to your feature branch is allowed. Use `--force-with-lease`,
+  never a bare `--force`.
 
 ## 3. Implement
 
