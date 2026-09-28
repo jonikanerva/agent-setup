@@ -62,7 +62,9 @@ Review all of these:
     over 5 lines is a signal only: clear it by naming the constraint in each
     line. Never ask for a contract to be deleted to reach the budget, and
     report a missing contract as a defect.
-13. `$FORMAT_CMD` is idempotent and `$VERIFY_CMD` passes without new warnings.
+13. `$FORMAT_CMD` is idempotent. The PR states the `$VERIFY_CMD` summary line
+    (or the stamp line) for its head. Do not run `$VERIFY_CMD` in this review:
+    `qa_enforcer` runs it once per PR, after a PASS review.
 14. Branch, commits, issue linkage, PR body, and audit trail follow AGENTS.md.
 
 ## Finding format

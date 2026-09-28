@@ -82,7 +82,14 @@ correctness conflict, stop before implementation and report the blocker.
 
 Spawn `lead_dev` with the approved scope, architecture, UX constraints, and
 adversarial outcome. Instruct it to run `$implement` once and return the PR URL,
-commit SHA, and verification result. Wait for completion.
+the pushed head SHA, and the `$VERIFY_CMD` summary line (the stamp line when
+`STACK.md` defines one). Wait for completion.
+
+Before `qa_enforcer` starts, compare three values: the head SHA that `lead_dev`
+reports, the head in the summary or stamp line, and the PR head
+(`gh pr view <N> --json headRefOid`). All three must name the same commit, and
+the line must show a pass. If they differ, send `lead_dev` back to run
+`$VERIFY_CMD` on the pushed head.
 
 The implementation must use a feature branch, never `main`. The PR links the
 issue with `Closes #<N>` when it resolves one. Do not let `lead_dev` run its own
@@ -91,10 +98,12 @@ semantic review.
 ### 4. Review to PASS
 
 Spawn `qa_enforcer` with the PR URL and implementation summary. It runs
-`$codereview` and returns PASS or FAIL.
+`$codereview` and returns PASS or FAIL. It runs `$VERIFY_CMD` only in the round
+that it passes: once, last, after the other gates.
 
 On FAIL, send every blocking finding to `lead_dev`, wait for fixes and fresh
-verification, then send the updated PR to `qa_enforcer` for a new round. Limit
+verification on the new head, compare the heads again, then send the updated
+PR to `qa_enforcer` for a new round. Limit
 the PR to three FAIL rounds. After the third FAIL, stop and report that human
 attention is required; do not present the PR as ready.
 
@@ -106,6 +115,9 @@ Only after QA PASS, report in Finnish:
 Issue <#N or prompt> resolved — PR ready for your review: <url>.
 Team codereview: PASS.
 ```
+
+Also list each owner-run check that is `triggered, pending owner run`, with its
+command from `STACK.md`, so the user can run it.
 
 Do not merge unless the user explicitly authorized merging. Merge commits are
 required; squash merges are forbidden.

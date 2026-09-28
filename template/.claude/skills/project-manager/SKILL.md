@@ -139,11 +139,13 @@ Right-size the depth, not the roster. A one-line typo-fix issue still convenes t
 
 ### Step B4: Implement (`dev`)
 
-`SendMessage` to `dev` to run `/implement` with the (possibly narrowed) issue scope as the argument, plus the `arch` design and any `da` scope cuts. `dev` runs the full feature-branch ship loop (branch → code → `$VERIFY_CMD` → commit → push → PR). The PR description must link the issue with `Closes #<N>` (when there is an issue) so merging the PR closes it and the issue thread carries the outcome. Wait for `dev` to report the PR URL.
+`SendMessage` to `dev` to run `/implement` with the (possibly narrowed) issue scope as the argument, plus the `arch` design and any `da` scope cuts. `dev` runs the full feature-branch ship loop (branch → code → lint and build → commit → `$VERIFY_CMD` → push → PR). The PR description must link the issue with `Closes #<N>` (when there is an issue) so merging the PR closes it and the issue thread carries the outcome. Wait for `dev` to report the PR URL, the pushed head SHA, and the `$VERIFY_CMD` summary line (the stamp line when `STACK.md` defines one).
+
+Before `qa` starts, compare three values: the head SHA that `dev` reports, the head in the summary or stamp line, and the PR head (`gh pr view <N> --json headRefOid`). All three must name the same commit, and the line must show a pass. If they differ, send `dev` back to run `$VERIFY_CMD` on the pushed head.
 
 ### Step B5: Review to PASS (`qa`)
 
-`SendMessage` to `qa` to run `/codereview` on the PR. If `qa` returns FAIL, send the findings back to `dev` ("address every finding from `/codereview`, then push and re-run `/codereview`"). Repeat. **Maximum 3 review rounds.**
+`SendMessage` to `qa` to run `/codereview` on the PR. `qa` runs `$VERIFY_CMD` only in the round that it passes: once, last, after the other gates. If `qa` returns FAIL, send the findings back to `dev` ("address every finding from `/codereview`, run `$VERIFY_CMD` on the new head, then push"). Compare the heads again (Step B4), then send `qa` the next round. Repeat. **Maximum 3 review rounds.**
 
 If `qa` still returns FAIL after 3 rounds, do **not** surface the PR as ready. Comment on the issue with the failing PR link and a one-line summary of the blocking findings (the `/codereview` comments on the PR are the full audit trail), tell the user in Finnish that this issue needs a human look, and — if running a batch — continue to the next issue.
 
@@ -152,6 +154,8 @@ If `qa` still returns FAIL after 3 rounds, do **not** surface the PR as ready. C
 **Only once `qa` returns PASS** do you bring the PR to the user. This is the design intent: the user never sees a PR until the team has signed off. Tell the user in Finnish:
 
 > issue #<N> ratkaistu — PR valmis sinun code reviewiisi: <url>. Tiimin /codereview on PASS.
+
+Also list each owner-run check that is `triggered, pending owner run`, with its command from `STACK.md`, so the user can run it.
 
 Then:
 

@@ -38,11 +38,12 @@ If any answer is `no`, this PR documents the conflict in the **Why** section abo
 
 ## Verification
 
-- [ ] `$VERIFY_CMD` (per `STACK.md → Build & verify commands`) ran and is green.
+- [ ] `$VERIFY_CMD` (per `STACK.md → Build & verify commands`) ran once on the pushed head and is green: `<summary line, or the stamp line when STACK.md defines one>`.
 - [ ] `$FORMAT_CMD` is idempotent (re-running produces no diff).
 - [ ] Tests added or updated for new logic.
 - [ ] Previews / stories / fixtures cover the new states.
 - [ ] Privacy declaration updated if a new required-reason / required-data API was adopted.
+- [ ] Owner-run checks (per `STACK.md`): `none triggered`, `none declared`, or each triggered check as `ran on <SHA>: PASS` or `triggered, pending owner run`.
 - [ ] The issue this PR resolves is linked with `Closes #<N>` above. Any binding decision introduced (if any) is stated in plain language in this description and the issue.
 
 ## States handled

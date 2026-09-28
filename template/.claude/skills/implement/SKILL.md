@@ -54,19 +54,21 @@ If the task is unclear or ambiguous:
 
 **Do not call `AskUserQuestion`.** The autonomous flow depends on this.
 
-### Step 4: Run verification
+### Step 4: Run the per-commit checks
 
 ```
-$VERIFY_CMD
+$FORMAT_CMD
+$LINT_CMD
+$BUILD_CMD
 ```
 
-The exact command is declared in `STACK.md`. **All must pass.**
+The exact commands are declared in `STACK.md`. **All must pass before each commit.**
 
-If verification fails:
+If a check fails:
 
 1. Read the error output carefully.
 2. Fix the underlying issue — do NOT suppress warnings with concurrency / type-check escape hatches (`STACK.md → Stack-specific reject-list additions` names the ones banned for this stack; the doctrine forbids them generally).
-3. Re-run `$VERIFY_CMD`.
+3. Re-run the check that failed.
 4. Repeat until all checks pass.
 5. **Maximum 10 fix attempts.** If still failing on attempt 11, do not loop indefinitely — create a `chore/abandoned-<task>` branch with the work-in-progress, push it, and describe the failure mode and what was tried in the draft PR (or on the existing PR). The PR / branch on GitHub is the audit trail for the next teammate to pick up. Do **not** call `AskUserQuestion`.
 
@@ -85,11 +87,18 @@ Write commit messages that:
 
 Each commit must be one complete logical unit. If multiple logical changes were made, create separate commits — one per logical unit.
 
-### Step 6: Push
+### Step 6: Verify and push
+
+Run `$VERIFY_CMD` once, on the exact committed tree that you push: commit every change first, so the working tree is clean. Then push.
 
 ```
+$VERIFY_CMD
 git push -u origin <branch-name>
 ```
+
+- If `$VERIFY_CMD` fails, fix the cause, commit the fix (Steps 4 and 5), and run `$VERIFY_CMD` again. These attempts count toward the limit in Step 4.
+- Do not run `$VERIFY_CMD` again on a tree that already passed it.
+- Record the pushed head SHA (`git rev-parse HEAD`) and the `$VERIFY_CMD` summary line, or the stamp line when `STACK.md` defines one.
 
 ### Step 7: Create or update PR
 
@@ -105,7 +114,7 @@ gh pr list --head <branch-name> --json number,url --jq '.[0]'
 - **What** — brief technical summary of changes.
 - **VISION decision filter** — all four questions answered verbatim with a one-line rationale each.
 - **Rules involved** — name the doctrine and `STACK.md` rules touched (e.g. "concurrency: cancellation", "responsiveness budget", "side effects: service boundary").
-- **Verification** — `$VERIFY_CMD` passed; any preview / story states added; tests added; privacy declaration updated if applicable.
+- **Verification** — the `$VERIFY_CMD` summary line (or stamp line) for the pushed head; each owner-run check that `STACK.md` triggers for this diff, as `ran on <SHA>: PASS` or `triggered, pending owner run`; any preview / story states added; tests added; privacy declaration updated if applicable.
 - **States handled** — if the change affects UI, list the states handled (loading, success, empty, degraded, permission-blocked, error, plus product-specific).
 
 Keep the title under 70 characters.
@@ -121,7 +130,7 @@ gh pr comment <number> --body "<what changed and why>"
 Tell the user in Finnish (the only Finnish artifact — everything written to the repo or GitHub is English):
 
 - Summary of what was implemented.
-- Verification results (all passing).
+- Verification results: the pushed head SHA and the `$VERIFY_CMD` summary line (all passing).
 - PR URL.
 - `/codereview` runs next, but it is **not** part of this skill — do not run it from here. In the team flow `/project-manager` dispatches `qa-enforcer` to run it (the PR is surfaced to the user only after the team's `/codereview` is PASS). If a human invoked `/implement` directly, suggest they run `/codereview` when ready.
 
