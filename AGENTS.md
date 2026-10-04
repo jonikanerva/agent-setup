@@ -8,10 +8,12 @@ Read README.md first. This repository contains final, static Claude Code and
 Codex project guidance. It is not an application. Preserve explicit host
 artifacts; do not add a generator, build step, or hidden source format.
 
-The shared quality source is template/DOCTRINE.md. Product intent and concrete
+The shared doctrine distributed to target projects is template/DOCTRINE.md.
+Product intent and concrete
 technology are distributed separately as template/VISION.md and stacks/.
-The templates describe downstream defaults. They do not override the owner's
-instructions for the current change to this repository.
+The templates describe downstream defaults, not this repository's maintenance
+process. Maintain this static bundle with lightweight checks and PRs. Do not
+apply the distributed delivery workflow or ADR process to setup maintenance.
 
 ## Distribution
 
@@ -28,7 +30,7 @@ Global updates must preserve a legacy project's approval and merge rules.
 
 Maintain the same authority and evidence rules in both host trees. Keep native
 syntax explicit: Claude Markdown agents and slash skills; Codex TOML agents
-and dollar-prefixed skills. Five specialists remain available, but the lead
+and dollar-prefixed skills. In target projects, five specialists remain available, but the lead
 chooses the roster. The lead may implement. Material changes require a
 reviewer who did not implement them in a separate context.
 
@@ -53,8 +55,9 @@ instead of an application VISION.md or STACK.md.
   Co-Authored-By: Codex <noreply@openai.com>.
 - Keep coherent commits and use merge commits, never squash.
 - Feature-branch force-pushes use --force-with-lease, never bare force.
-- Keep backlog and history in GitHub. Do not add roadmap, backlog, ledger,
-  or changelog files. Significant decisions may use short docs/adr/ records.
+- Keep setup decisions and history in GitHub PRs and discussions. Do not add
+  local ADR, roadmap, backlog, ledger, or changelog files. The distributed
+  ADR policy applies to target projects only.
 - Do not modify other projects or live user settings without authorisation.
 - Never weaken protections, bypass hooks, read secrets, recursively delete
   broad paths, or overwrite another contributor's work.
@@ -71,12 +74,12 @@ Before committing:
 2. Run python3 bin/test-setup.py. It exercises both hosts in temporary
    AGENT_SETUP_HOME directories and checks malformed artifacts.
 3. Inspect git diff --check and the complete diff.
-4. Keep README.md accurate and evaluate docs/workflow-scenarios.md for changed
-   policies. Distinguish policy inspection from actual host execution.
+4. Keep README.md accurate. Use docs/workflow-scenarios.md when useful for
+   a workflow change; there is no mandatory agent-team review for setup edits.
 
 These scripts do not generate or rewrite distributed artifacts. They do not
-execute application-profile commands or prove model compliance. Independent
-review must assess doctrine alignment, host parity, authority, and evidence.
+execute application-profile commands or prove model compliance. Keep the two
+host distributions consistent and follow the owner's review instructions.
 
 ## Decision rights
 

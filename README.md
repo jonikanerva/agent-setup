@@ -5,6 +5,10 @@
 This repository distributes static project guidance for Claude Code and Codex.
 Every file is the final artifact. There is no generator or hidden source format.
 
+The doctrine and delivery workflows below describe how agents work in target
+projects. They are not this source repository's maintenance process. Setup
+changes use lightweight file checks and GitHub PRs; no local ADR is required.
+
 - [DOCTRINE.md](template/DOCTRINE.md) defines shared quality principles P1–P9.
 - [VISION.md](template/VISION.md) defines product intent and constraints.
 - A [stack profile](stacks/STACK-TEMPLATE.md) becomes the project's `STACK.md`.
@@ -77,7 +81,6 @@ template/
   .agents/skills/       # Codex workflows
   .github/pull_request_template.md
 stacks/                # Concrete example profiles
-docs/adr/              # Significant setup decisions
 docs/workflow-scenarios.md
 docs/workflow-trial-inputs.md
 bin/                   # Linking and validation; no artifact generation
@@ -188,10 +191,12 @@ release and recovery responsibilities.
 
 ## Decisions and writing
 
-Keep backlog and history in GitHub issues, coherent commits, PRs, and reviews.
-Do not create roadmap, backlog, ledger, or changelog files. Use `docs/adr/`
-only for significant durable decisions. Keep ADRs short and read them as needed.
-See [the autonomous delivery decision](docs/adr/0001-autonomous-delivery.md).
+In target projects, the distributed doctrine permits short `docs/adr/` records
+for significant durable decisions, read only as needed. Backlog and history
+remain in GitHub.
+
+In this setup repository, record decisions in PR descriptions and discussions.
+Do not add local ADR, roadmap, backlog, ledger, or changelog files.
 
 Use ASD-STE100 writing principles for English artifacts: short sentences,
 active voice, and consistent terms. Domain vocabulary remains unchanged.
@@ -211,7 +216,7 @@ references, and validates shell syntax. The regression suite tests malformed
 artifacts and isolated linking for both hosts, including safe pruning.
 Tests use a temporary `AGENT_SETUP_HOME`; they do not alter live links.
 
-Inspect the complete diff and evaluate both host distributions against
+Inspect the diff. When useful for a workflow change, evaluate both hosts against
 [the shared scenarios](docs/workflow-scenarios.md). Use the separate
 [trial inputs](docs/workflow-trial-inputs.md) for fresh-context decision trials;
 keep the scoring rubric out of the evaluator's input. Retain the invocation,
