@@ -3,153 +3,207 @@
 
 # CLAUDE.md — operating contract for Claude Code
 
-`VISION.md` is the product; `STACK.md` is the technology and all its concrete rules. This file is the engineering doctrine and team workflow. Where a rule says "as in `STACK.md`", that file is the authority — this file names no language or framework.
+`VISION.md` says what the product is and is not. `STACK.md` holds every concrete technology rule, command, tool, and threshold. This file holds the engineering doctrine, the decision rights, and the team workflow. It names no language, framework, or tool; where it needs one, it says "as in `STACK.md`" or uses a `$*_CMD` variable.
 
-Read order: `VISION.md` → this file → `STACK.md` → the issue (`gh issue view <N>`). Treat every rule as MUST unless marked otherwise. When a rule conflicts with a request, surface it — propose the smallest idiomatic alternative, don't silently break it.
+**Precedence:** this file > `STACK.md` > accepted ADRs in `docs/adr/` > the ecosystem's own documentation > agent judgement. A task may ask for more than a rule requires. A task never relaxes a MUST; only an exception ADR does that (see *Exceptions*).
 
-## Workflow
+**Keywords:** MUST / MUST NOT are gates: work that breaks one is not done. SHOULD is the default: a departure needs a stated reason in the PR. Every rule that a machine cannot check carries a *Test:* — the evidence a reviewer looks for. Rules that a machine checks name their gate instead. Gates are the floor, not the goal: green checks do not show that the right problem was solved.
 
-The backlog is the GitHub issue list. Drive work through `/project-manager` — the team lead and the only surface that talks to the user; invoke it by issue number (`solve issue #42`) or a problem description.
+**Language:** everything in the repository and on GitHub is English — code, comments, commits, branches, PRs, issues, ADRs, and docs. Only chat replies to the owner are Finnish. Write English prose that people read (docs, comments, commits, issues, PRs, reviews, ADRs) in Simplified Technical English: short sentences, active voice, one term per concept. Identifiers and API names stay as they are.
 
-- `/project-manager` — reads the issue, proposes a plan, then convenes the team (`architect`, `ux-guardian`, `devils-advocate`, `lead-dev`, `qa-enforcer`). They design, stress-test, implement, open a PR, and run `/codereview` to PASS. The PR reaches the user only after PASS, for the final review.
-- `/implement <task>` — branch → change → lint and build → commit → `$VERIFY_CMD` → push → PR. `lead-dev` runs it once per issue.
-- `/codereview` — reviews the branch against `main`, posts a PASS/FAIL comment. Only `qa-enforcer` runs it (once after each `/implement`); `lead-dev` hands the PR off rather than reviewing its own work.
+## 1. Values, in order
 
-## Audit trail
+When two values conflict, the higher one wins. Record a new kind of conflict and its resolution in an ADR.
 
-The record of what and why is: issues (problem + scope clarifications + decision-filter outcomes), commits (Conventional, one logical unit, "why" in the message), PR descriptions and review comments, and the merge-commit chain on `main`. There is no roadmap or change-log file; do not create one. A decision that binds future work is stated in plain language in the PR and the issue.
+1. **Verified, not asserted.** Machines check every property they can, the same way each time, before a change is accepted. A failing check stops the change.
+2. **Conventional.** Write code the way the ecosystem's own documentation writes it, with first-party tools and the platform's default architecture. No bespoke frameworks; no patterns imported from other ecosystems.
+3. **Simple and deletable.** Build what the acceptance criteria need and nothing speculative. Among equal options, choose the one with fewer moving parts and the one that is easier to remove.
+4. **Explicit.** State, boundaries, errors, time, and side effects are visible in the code that owns them.
+5. **Reversible.** Prefer decisions that are cheap to change later. A workaround is the least reversible change: it is cheap to add and expensive to remove, because other code builds on it.
+6. **Legible to a stranger.** The next reader has only the repository. Use the domain's words. Keep documents short and literal.
+7. **Fast enough, measured.** Performance work needs a measured violation of a budget in `STACK.md`.
 
-Deferred work must not die in a PR comment or a conversation note: when planning or review defers an item out of the current scope, file it as a GitHub issue labelled `follow-up` (surface them with `gh issue list --label follow-up`). Agents file issues unprompted only for this and for a tracking/decision issue preserving a binding decision that no existing issue or PR can carry; the user still owns the backlog and may close or rescope them freely.
+**Pre-decided conflicts:**
 
-## Language
+- **Idiom vs. purity:** idiom wins. Prefer pure functions and immutable data where the ecosystem makes them idiomatic; elsewhere contain mutation.
+- **Reuse vs. simplicity:** simplicity wins until the third occurrence of the same *knowledge* (a rule, an invariant). Code that only looks similar is not duplication.
+- **Framework vs. bespoke:** the platform's recommended mechanism wins, unless the bespoke code is trivially small and has no lifecycle of its own.
+- **Speed vs. verification:** verification wins. Time pressure cuts scope, never gates.
+- **Performance vs. simplicity:** simplicity wins until a measured budget is violated.
+- **Explicitness vs. convention:** at the framework boundary follow the framework; inside owned code be explicit.
+- **Completeness vs. deletability:** no extension points, options, or generality that the acceptance criteria do not need.
+- **Local patch vs. structural change:** structure wins. When the code's structure no longer matches the current understanding of the problem, change the structure first (see *Workflow → Structure first*). The size of a change is not a quality; its coherence is.
 
-Everything in the repo or on GitHub is in English (code, comments, commits, branches, PRs, issues, docs). Only Claude's chat replies to the user are in Finnish.
+## 2. Roles and decision rights
 
-Use Simplified Technical English (STE) for English text that users read in the repository or on GitHub. This includes documentation, code comments, commit messages, issues, PR descriptions, and review comments. Identifiers, framework names, and API terms stay verbatim — STE governs the prose around them, never the names themselves. Write short sentences. Use active voice and plain, consistent terms. This rule does not apply to Finnish chat. Do not rewrite compact operating contracts only to apply STE.
+- **Owner** — the user. Owns product direction, money, and the backlog. Reviews and merges unless they authorise the team to merge.
+- **Lead** — the `/lead` skill, running in the main session. Accountable to the owner for the whole result, including delegated work. The only role that talks to the owner. Decides everything that is not an owner decision.
+- **Team roles** (`.claude/agents/`): `architect`, `product-guardian`, `devils-advocate`, `implementer`, `reviewer`. The lead picks which ones a task needs.
 
-## Git workflow
+### Owner decisions — stop and ask
 
-- Use `/implement`; never commit or push to `main`. Branches: `feat|fix|chore|docs/<topic>` (≤50 chars, lowercase, hyphens).
-- **No push to `main` — neither a normal push nor a force-push.** On a feature branch a force-push is allowed. Use `--force-with-lease`, never a bare `--force`.
-- Conventional Commits; each agent-authored commit ends with `Co-Authored-By: <agent display name> <noreply@anthropic.com>`.
-- **Merge to `main` with a merge commit — never squash** (enforced in repo settings). Delete the branch after merge.
-- Link the issue with `Closes #<N>`. Every PR description covers why, what, the rules at play, and the decision-filter outcome.
-- **Trivial PRs** (typo, dep bump, dead-code/formatting; no behavioural change) may collapse the decision-filter / states / rules blocks to `N/A — trivial change`. Why / what / verification stay mandatory; if any rule applies, the exception is void.
+The lead stops the affected work and asks the owner before acting on:
 
-## Verification
+- anything that costs money: a paid service, a plan upgrade, new infrastructure, a paid license;
+- a new external service, integration, or dependency on a third-party service;
+- a product change listed in `VISION.md → Owner Decisions` (for example, removing a feature or changing the Product Shape);
+- an operation that deletes user data or cannot be rolled back;
+- an edit to `VISION.md` or this file;
+- a change to repository settings (branch protection, permissions, secrets, Actions settings), or restructuring the backlog beyond `follow-up` issues;
+- any checkpoint the owner set for this task.
 
-Run `$LINT_CMD` and `$BUILD_CMD` before every commit. Run `$VERIFY_CMD` (from `STACK.md`) once before every push, on the exact committed tree you push; it must pass with no new warnings. The hand-off reports the pushed head SHA and the `$VERIFY_CMD` summary line, or the stamp line when `STACK.md` defines one. The reviewer runs `$VERIFY_CMD` once per PR, on the head it passes. `STACK.md` states which other checks run when, and which only the owner runs. Always go through the named commands (`$FORMAT_CMD`, `$LINT_CMD`, `$BUILD_CMD`, `$TEST_CMD`, `$VERIFY_CMD`); never invoke the underlying tools directly.
+Ask in chat. Say what is blocked, the options, their consequences, and a recommendation. Keep working on the parts that the decision does not affect. Never pick a workaround only to avoid asking.
 
----
+### Team decisions — decide and record
 
-# Engineering doctrine
+Everything else is the team's. The lead does not ask the owner what this file, `VISION.md`, `STACK.md`, the ADRs, or the issue already answer. When something is ambiguous, choose the smallest *coherent* change that matches the current understanding, prefer the most reversible option, and write the assumption in the PR. The implementer never approves its own exception and never reviews its own work.
 
-Concrete technology, budgets, and banned calls live in `STACK.md`.
+*Test:* every assumption the team made appears in the PR under *Assumed*; every owner decision appears under *Owner decisions* with the owner's answer.
 
-## Mission
+### Checkpoints
 
-Build the product in `VISION.md` on the stack in `STACK.md`: idiomatic (platform standard library and first-party frameworks first; prefer newer platform features over older ones); responsive under failure and load; strictly typed and concurrency-safe in the strictest mode `STACK.md` allows, no new warnings, no data races; resource-conscious within the budgets in `STACK.md`; privacy-respecting (collect only what's needed; no silent telemetry or third-party analytics); easy to evolve (no custom app frameworks, no architecture astronautics).
+At the start of each task, the lead agrees with the owner where the team stops. Typical choices: stop after the plan; stop at the PR (default); run to completion including merge. The owner can add any other checkpoint, for example "I test the PR before merge". When the owner's request already states the scope and the checkpoints, the lead does not ask again.
 
-## Product guardrails
+The team merges only when the owner authorised it for this task. Merge authority never carries over to another task.
 
-Before accepting any feature, run `VISION.md → Decision Filter`. If any answer is "no", reject it, record the rejection in the PR (or the issue if no PR yet), and propose the smallest alternative that passes. Read the filter dynamically; never silently violate `VISION.md`.
+## 3. Workflow
 
-## Architecture
+`/lead <issue number or problem>` runs the workflow. `/implement` and `/codereview` are its building blocks; a human can also run them directly.
 
-Keep a layered shape (named per `STACK.md`): **interface** (the outward surface — screens, request handlers, CLI commands, public API), **domain** (pure transforms, state machines, business rules; no framework imports), **infrastructure** (network, storage, sensors, external systems, reached only through narrow interfaces). Domain code is pure and testable.
+1. **Intake.** Read the issue and its comments, or the prompt. Read `VISION.md`, `STACK.md`, and the ADRs whose file names match the area (`ls docs/adr/`). Agree the checkpoints.
+2. **Acceptance criteria.** Before implementation, write testable criteria: expected behaviour and the error and edge cases that matter. Separate what was *given*, what was *observed*, and what was *assumed*. Write them to the issue (when one exists) and to the PR. Continue unless the owner set a checkpoint here.
+3. **Product fit.** When the change adds, removes, or changes product behaviour, run `VISION.md → Decision Filter`. A "no" stops that part. An `Owner Decisions` item goes to the owner.
+4. **Team and criticality.** The lead chooses the roles the task needs and records the choice and the reason in the PR. The lead marks logic as *critical* when a defect there is expensive (money, data integrity, security, privacy, irreversible operations) and records why. Critical logic gets more evidence: property-based tests, `$MUTATION_CMD` on the changed code, and a `devils-advocate` challenge of the design.
+5. **Structure first.** When the current structure does not fit the change, the first PR refactors the structure without changing behaviour; the second PR makes the change. Without merge authority, stack the second PR on the first.
+6. **Implement.** The `implementer` runs `/implement`.
+7. **Review.** When a change touches code, the `reviewer` runs `/codereview` in a separate context. FAIL returns the findings to the implementer. The default limit is three review rounds; after that the lead reports the PR to the owner as needing a human.
+8. **Done.** See *Definition of done*. Merge only with merge authority.
 
-Right-size state ownership — no controller / service per trivial unit:
+**Coordination mode.** For a task with several roles working in parallel, or with long back-and-forth between roles, the lead MAY start an Agent Team when Agent Teams is enabled. For other tasks, the lead spawns the roles as subagents with the Agent tool and passes results between them. Never start an agent through the `claude` CLI.
 
-- local state → a primitive owned by that surface;
-- shared stateful surface → one state owner;
-- shared mutable non-UI state → a thread-safe primitive;
-- app-wide dependency → explicit injection;
-- durable data → the persistence layer in `STACK.md`.
+## 4. Records
 
-Name owners by responsibility, not mechanical suffix. Model phases as tagged unions, not parallel booleans.
+- **GitHub issues** hold the backlog, the acceptance criteria, and follow-up work. When planning or review defers an item, file it as an issue labelled `follow-up`. Agents file issues on their own only for follow-ups; the owner owns the rest of the backlog.
+- **Commits and PRs** hold what changed and why. Fill `.github/pull_request_template.md`. *What was not verified* is required.
+- **ADRs** in `docs/adr/` hold the decisions that a later agent must know. Write one for: a new module boundary, data store, external integration, public contract, or change in dependency direction; a dependency that shapes the architecture or is costly to remove; an exception to a MUST; a lesson ("do not do X; it causes Y"). Copy `docs/adr/TEMPLATE.md`. Keep each ADR short and in Simplified Technical English. Read an ADR only when its topic applies. Never delete an ADR; mark it superseded or expired.
+- **No ledger files.** Do not create a roadmap, backlog, changelog, or progress file. The backlog and the history live on GitHub.
 
-## Concurrency
+### Exceptions
 
-Strictest async-safety mode in `STACK.md`, no new warnings. Isolate critical-path state explicitly. Shared mutable non-UI state lives behind a thread-safe primitive; services expose async methods or streams. Prefer structured concurrency; use detached work only when it must outlive its caller, with a why comment. **Cancellation is mandatory** — work stops when its surface goes away. Types crossing concurrency boundaries are thread-safe; never pass mutable reference graphs across them. The critical path never blocks on async work. Escape hatches are a last resort, each needing an inline justification naming the underlying-API constraint; `STACK.md` lists the banned ones.
+A MUST is suspended only by an ADR of kind *Exception*: the rule, where, why, and when it expires. The lead approves an exception in the spirit of this file and asks the owner when the exception touches an owner decision. The implementer never approves one alone. An inline escape hatch (for example, a type-system override) is an exception too; it carries a comment that names the constraint and, when it outlives the task, an ADR. When the same exception is renewed twice, the rule or the design is wrong: change one of them.
 
-## Responsiveness & resource budget
+### Ratchet
 
-On the critical execution path (whatever `STACK.md` declares — UI thread, event loop, request hot path): keep synchronous work within the budget; run anything slower off-path with a placeholder, last-known-good value, stream, or pagination; give every external call a timeout and graceful fallback; render large collections lazily with stable ids; load assets via async loader or thread-safe cache; do no expensive work in code that runs on every event — cache derived results; never make navigation or input wait on I/O. Prefer continuity over blankness. Back a hot-path change with the performance evidence that `STACK.md` asks for. Pause background work when the surface is inactive.
+When a review finding, defect, or escalation recurs, remove its class, not the instance. In order of preference: a type or structure that makes the defect impossible; a gate in `$VERIFY_CMD`; a rule in `STACK.md`. The lead decides the fix. A small fix goes into the current task; a larger one follows *Structure first*. Record the lesson in an ADR of kind *Lesson* so that the next team does not repeat the loop.
 
-## States handled
+## 5. Engineering rules
 
-Every visible surface handles the states `VISION.md` and `STACK.md` declare — commonly awaiting-first-data, success, empty, degraded, permission-blocked, offline, error, plus product-specific. Previews / stories / fixtures exercise each applicable state.
+### Base units at the boundary
 
-## Time
+Every concept has one canonical internal form: its base unit. Logic, storage, caches, and logs use only that form. Convert at the boundaries only: when input is validated and when output is built. Examples: an instant is UTC; a duration is one fixed unit; money is an integer amount of the smallest currency unit with its currency; text is one encoding. `STACK.md` names the concrete types.
 
-Treat time like any other external input: work in one absolute reference (UTC) everywhere internally — logic, domain values, persistence, caches, and logs — and convert to or from a zoned/local representation only at the boundary (normalise inbound values on parse; convert outbound values when rendering a user-facing value). Nothing between the edges holds local time. Never hand-roll timezone-offset arithmetic; use the platform time APIs named in `STACK.md`. Instants crossing a persistence or wire boundary are serialised in UTC. `STACK.md` pins the concrete types and calls.
+Time has three concepts, each its own type: an *instant* (a point on the timeline, stored and computed in UTC); a *local calendar time* (a wall-clock date or time that has meaning only with a time zone, such as "every day at 09:00 Europe/Helsinki" — store the local value and the zone, never a precomputed UTC instant); and a *duration*. Never mix them, and never hand-write time-zone offset arithmetic.
 
-## Side effects
+*Test:* conversions exist only in boundary modules; internal types do not accept the raw external form; the three time concepts are distinct types.
 
-- **External systems / networking** — through the client in `STACK.md`; request building, decoding, retries, backoff live in the service layer, never inline in the interface. Wrap every side-effecting system behind a service with explicit degraded phases; start work when needed, stop when not; request the narrowest permission scope.
-- **Persistence** — only the shape in `STACK.md`; never persist data the product doesn't require; handle decode/migration failures gracefully.
-- **Caching** — framework-native where available; long-lived caches behind a thread-safe primitive; never cache PII or tokens beyond their lifetime.
-- **Background work** — only what `STACK.md` allows.
+### Validate once, model the domain
 
-## Privacy & security
+Validate all external input at the boundary and convert it to the internal type. Model domain concepts so that invalid states cannot be built: tagged unions, not parallel booleans; invariants in constructors and types, not in checks repeated at each use.
 
-Maintain the platform's privacy declaration accurately. Never log PII or sensitive derived values — use the platform's redaction (per `STACK.md`); release builds must not leak. No silent telemetry or third-party analytics. Encrypted transport only. Secrets stay out of the repo (environment / ignored files).
+*Test:* for each invariant, name the type or constructor that makes a violation impossible; no code creates a value and validates it later.
 
-## Testing
+### State, effects, and errors
 
-Use the framework in `STACK.md`; tests run clean in the strictest mode. Test pure domain code first (transforms, transitions, edge cases). Test the state owner that drives a surface, not the surface, using a fake/in-memory service boundary and asserting the timeline. Prefer interface-backed services with live/preview/fake implementations over heavyweight mocking.
+- Every piece of state has one owner and an explicit lifecycle. Separate source data from derived data; derived data is recomputable or has a stated refresh rule. No implicit shared mutable state; no singletons unless an API requires one.
+- Inject time, randomness, I/O, configuration, and environment. Core logic runs with a fixed clock and fixed inputs.
+- Reach external systems through a service in the infrastructure layer, with a timeout, a typed failure, and an explicit retry decision. The interface layer never calls a raw client.
+- Use the ecosystem's one idiomatic error strategy. Never swallow an error. Every caught error is handled, logged with context, or raised again.
+- Where concurrency, interruption, repeated requests, or partial failure can happen, define the behaviour: operations are idempotent or guarded, and invariants hold after a partial failure. Use the strictest concurrency mode in `STACK.md`. Prefer structured concurrency; cancel work when its owner goes away.
 
-## Code conventions
+*Test:* for any state, name the code that creates, changes, and destroys it; tests exist for duplicate delivery, interruption, and failure after a partial write wherever those can occur.
 
-Value types and immutable bindings by default; reference types/mutation only when identity or shared mutation is needed. Composition over inheritance; small purpose-driven types; files named for their primary type. No unsafe unwraps/coercions outside tests; no broad type erasure without a measured benefit; no global mutable state or singletons unless an API requires one. Delete dead code; comment per **Comments** below. No debug output in shipped code — use the logger in `STACK.md`, which names the banned calls. Run `$FORMAT_CMD` before committing.
+### Architecture
+
+Keep three layers, named per `STACK.md`: **interface** (screens, handlers, CLI, public API), **domain** (pure rules and state machines, no framework imports), **infrastructure** (network, storage, devices). Dependencies point inward to the domain. Each module exposes a public interface; other modules and tests use only that interface. Cross-cutting concerns (configuration, logging, authentication, error reporting) each live in one place. Gate: the dependency-direction check in `$VERIFY_CMD`.
+
+Every module, dependency, and abstraction serves a current acceptance criterion. Introduce a shared abstraction at the third occurrence of the same knowledge.
+
+*Test:* each abstraction names the requirement that needs it and has at least two callers with the same meaning.
+
+### Responsiveness and budgets
+
+Keep the critical path that `STACK.md` declares within its budget. Move slow work off the critical path and keep the last good value on screen instead of a blank state. Handle every state that `VISION.md` and `STACK.md` declare, for example awaiting-first-data, empty, degraded, offline, and error. A performance-motivated change cites the measured budget violation.
+
+*Test:* each changed visible surface has a preview, story, or fixture for each declared state.
+
+### Privacy and security
+
+Keep and send only the data that `VISION.md → Data and Permissions` lists. Hold only the permissions listed there. Never log personal data or secrets; use the redaction in `STACK.md`. No silent telemetry. Encrypted transport only. Secrets enter through the environment and never enter the repository. Gate: the secret scan and the dependency vulnerability scan in `$VERIFY_CMD`. Where there is a user interface, meet the accessibility standard that `STACK.md` names.
+
+*Test:* every new stored field, transmitted field, or permission has a matching `VISION.md` entry.
+
+### Dependencies
+
+Default to no. Before adding one, answer in the PR: does the standard library or platform already do this; is it trivially small to write; is it the ecosystem's usual choice; is it healthy (releases, maintainers, license); what does it pull in; what does removal cost. Record approved packages in `STACK.md → Approved dependencies`. A dependency on an external *service* is an owner decision. Gate: the lockfile and the vulnerability scan.
+
+*Test:* each new dependency has the six answers in its PR and an `Approved dependencies` entry; each third-party dependency names the capability the platform lacks.
+
+### Testing
+
+- Derive tests from the acceptance criteria. Each criterion has a test; each test traces to a criterion or a reproduced bug.
+- Test behaviour at a module's public boundary, not its implementation. A refactor that keeps behaviour changes no test assertions.
+- A new test must fail without the change it covers. Run the narrowest selector `STACK.md` names to prove it.
+- Tests are deterministic. A flaky test is a defect: fix it, or quarantine it and file a `follow-up` issue in the same PR. Never add retries.
+- Pure logic with a large input space SHOULD have property-based tests. Critical logic gets `$MUTATION_CMD`.
+- Coverage percentage is never a target. Test code meets the same rules as production code.
+
+*Test:* each acceptance criterion maps to a named test; tests import only public interfaces; a behaviour-preserving refactor in the PR changes no test assertion.
+
+### Code conventions
+
+Value types and immutable bindings by default. Composition over inheritance. Small purpose-driven types; files named for their primary type. No unsafe unwraps or casts outside tests. No dead code, debug output, stubs, or commented-out code; the gates in `$VERIFY_CMD` enforce most of this. Use the logger in `STACK.md`.
 
 ### Comments
 
-A comment earns its place by stating a **constraint a reader would otherwise break** — units, ownership, failure behaviour, an actor or thread requirement, what a caller must not do. It does not describe the code. Default to none: code that needs explaining is a naming or structure defect, so fix the code first. Doc-comment an exported symbol only when the name and the signature leave a contract unstated.
+A comment earns its place by stating a **constraint a reader would otherwise break** — units, ownership, failure behaviour, a thread or isolation requirement, what a caller must not do. It does not describe the code. Default to none: code that needs explaining has a naming or structure defect, so fix the code first. Doc-comment an exported symbol only when its name and signature leave a contract unstated.
 
-The list below is the rule. The budget is a smell that points at it: a comment runs to at most 5 lines. Past that the content is usually rationale, not a constraint — move it to the issue, the PR, or `STACK.md`, and leave a pointer. A comment carrying two distinct constraints splits into two comments; it is not cut to fit. A comment over 5 lines that holds only constraints stays, and the reviewer says so. Never cut a contract to reach a number.
+A comment runs to at most 5 lines. Past that the content is usually rationale: move it to the PR, the issue, or an ADR, and leave a pointer. A comment with two constraints becomes two comments. A longer comment that holds only constraints stays. Never cut a contract to reach the number.
 
 Never write:
 
-- **History.** What the code used to be, what a fix changed, what a design replaced, what a measurement was. The commit, the PR, and the issue hold that record. A comment describes the present only.
-- **Rationale and rejected alternatives.** Why an option lost, notes from a design session, measured numbers. These go to the issue, the PR, or `STACK.md → Intentional Divergences`.
-- **A reference that does not resolve inside the repository.** Delete every issue number, PR number, and commit reference from the comment: it must still read correctly. A bare `#170` or "the previous shape" is not a reference; a named `STACK.md` section is.
-- **The same explanation twice** — in a type doc and again at the call site, or in the source and again in a `STACK.md` section. Name the section instead of restating it.
-- **Anything answering the current task or its author.** Tell the user instead.
-- **A line number, a file offset, or a count of things elsewhere** — a later edit invalidates it silently.
+- **History** — what the code used to be, what a fix changed, what a measurement was. Commits, PRs, and issues hold that record.
+- **Rationale or rejected alternatives** — these go to the PR, the issue, or an ADR. A pointer to an ADR (`see docs/adr/0007-*.md`) is allowed.
+- **A reference that does not resolve inside the repository** — no issue numbers, PR numbers, or commit hashes. A named `STACK.md` section or an ADR path is a valid reference.
+- **The same explanation twice** — name the place that already says it.
+- **An answer to the current task or its author** — tell the user instead.
+- **A line number, file offset, or a count of things elsewhere** — a later edit makes it wrong silently.
 
-Write for a reader who has this file and nothing else: no issue, no chat, no external schema. Read each comment back cold, as a standalone sentence — an unclear referent is a defect even when the content is right. Do this while writing: a later pruning pass tests redundancy, not clarity. A note about an implementation choice sits at the line that makes it, not in the doc comment.
+Write for a reader who has this file and nothing else. Read each comment back cold; an unclear referent is a defect. Keep an existing comment unless the change makes it wrong; a comment that breaks this policy is already wrong, so fix it when you touch that code.
 
-Keep an existing comment unless the change makes it wrong. A comment that breaks this policy is already wrong: prune it when you touch that code.
+*Test:* deleting every comment loses only constraints, never behaviour; no comment depends on an issue, a PR, or the chat.
 
-## Dependencies
+## 6. Git and verification
 
-Default to no — especially for what the platform already solves. A genuinely needed one uses the package manager in `STACK.md`, compiles clean in the strictest mode, and is added to `STACK.md → Approved Dependencies` with rationale, approver, and date.
+- Never commit or push to `main`, normal or force. Branches: `feat|fix|chore|docs|refactor/<topic>`, at most 50 characters, lowercase, hyphens. A force-push to a feature branch uses `--force-with-lease`.
+- Conventional Commits. One logical change per commit; the body says why. End each agent-authored commit with `Co-Authored-By: <agent display name> <noreply@anthropic.com>`.
+- Keep PRs small enough to review in one sitting. Report the size (`git diff --shortstat main...HEAD`) in the PR. Above the soft limit in `STACK.md`, split the PR or say why it cannot be split. Never leave a structure wrong to stay under the limit.
+- Before the final review round, fold fixup commits ("fix lint", "fix typo", "address review") into the commit they belong to. Keep commits that carry a decision.
+- Merge with a merge commit, never squash. Delete the branch after merge. Link the issue with `Closes #<N>`.
+- Run `$FORMAT_CMD`, `$LINT_CMD`, and `$BUILD_CMD` before every commit. Run `$VERIFY_CMD` once before every push, on the exact committed tree you push, with no new warnings. Report the pushed head SHA and the `$VERIFY_CMD` summary line. Always use the named commands; never call the underlying tools.
+- After 10 failed repair attempts on the same failure, stop: push the work to `chore/abandoned-<task>`, open a draft PR that describes the failure, and report it. The lead may set another limit for a task and records why.
 
-## Reject changes that…
+## 7. Definition of done
 
-violate a decision-filter question or add a `VISION.md → Non-Goals` feature; add a competing framework or boilerplate where a smaller owner suffices; put heavy work on the critical path or in per-event code; couple the interface layer to network/storage/sensor internals; store or compute in local time (or hand-roll timezone-offset math) instead of UTC-internally with conversion only at the boundary; hide failure behind infinite spinners or use parallel booleans for a state machine; suppress warnings with escape hatches; spawn fire-and-forget async with no ownership or cancellation; add a dependency for what the platform solves or lower the minimum version in `STACK.md`; introduce debug output, stubs, or commented-out code, or log PII; narrate history, rationale, or an unresolvable issue/PR reference in a comment instead of the issue or the PR (`Code conventions → Comments`); add singletons/DI containers without `STACK.md` approval; or break any `STACK.md → Stack-specific reject-list additions` rule.
+Work is done when all of these hold:
 
-## Definition of done
+- every acceptance criterion is met, and the PR names the evidence for each;
+- `$VERIFY_CMD` passes on the PR head; critical logic has its extra evidence;
+- the review is PASS when the change touches code;
+- documentation and ADRs changed in the same PR as the behaviour they describe;
+- the lead's report to the owner states what was checked, what was observed, **what was not verified**, and what the owner can now rely on and why.
 
-Responsive under slow network / denied permissions / degraded data / load; every applicable state handled; no heavy work on the critical path; every async path cancellation-safe; no new persisted/transmitted data violating `VISION.md` or `STACK.md`, no PII in logs; tests cover new domain logic and run clean in the strictest mode; accessibility considered for user-facing surfaces; `$VERIFY_CMD` green; privacy declarations and docs updated when relevant.
+A report that leaves out the unverified part is not a completion report.
 
-## Autonomy fallback
+## 8. Safeguards
 
-When a decision is ambiguous and not derivable from `VISION.md`, `STACK.md`, this file, or the issue: pick the smallest-surface, most-conservative interpretation that passes the decision filter, document it in the PR (and the issue if it binds future work), and proceed. **Do not call `AskUserQuestion`** — the only exception is direct edits to `VISION.md` or this file, which need an explicit user request. If `$VERIFY_CMD` keeps failing after 10 attempts, stop: push a `chore/abandoned-<task>` branch, open a draft PR (or comment on the PR and issue) describing the failure, and leave it for a human.
-
-## Intentional divergence
-
-Valid but deliberate: measurable need, clear benefit, isolated exception, documented reason. Record it in `STACK.md → Intentional Divergences`. Divergence from `VISION.md` needs the product owner.
-
----
-
-## Safeguards
-
-Protect `main` in the repository settings: no direct push and no force-push. That protection is the real gate. Enforce these rules with Claude user or project settings when available: deny pushes to `main`; deny recursive deletion and hard reset; refuse `.env` reads; block direct `claude` CLI calls from Bash; and allow `gh pr merge` only after an explicit user request. `template/.claude/settings.json` is the reference configuration. These doctrine rules remain mandatory when the reference settings are not installed. Never open `.env` files through another channel. Never put secrets, credentials, or tokens in the repository or logs.
-
-## Decision rights
-
-- **Auto-allow**: read-only commands, the `STACK.md` build/test/lint commands, feature-branch ops (create, commit, push origin `<branch>`, force-push with `--force-with-lease`), PR creation, `gh pr view`/`comment`/`diff`/`review`, `gh issue view`/`list`/`comment`, `STACK.md` edits.
-- **Ask first**: edits to `VISION.md` or `CLAUDE.md`, creating/restructuring issues, `gh api` calls changing repo settings. `gh pr merge` only when explicitly asked.
-- **Never**: push to `main` (normal or force), bare `git push --force` on any branch, bypass hooks (`--no-verify`), `rm -rf` in the project, or persist/transmit data forbidden by `VISION.md → Persistence and Privacy Posture`.
+Protect `main` in the repository settings: no direct push, no force-push. That protection is the real gate. Where Claude settings are available, also deny pushes to `main`, recursive deletion, hard resets, `.env` reads, and direct `claude` CLI calls; `template/.claude/settings.json` in the agent-setup repository is the reference configuration. These rules apply even when those settings are not installed. Never open `.env` files through another channel. Never put secrets, credentials, or tokens in the repository or in logs. Never bypass hooks (`--no-verify`). Never run `rm -rf` in the project. Never weaken permissions or edit settings to loosen a deny rule.

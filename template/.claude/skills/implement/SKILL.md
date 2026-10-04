@@ -1,145 +1,74 @@
 ---
 name: implement
 description: >
-  Full implement-and-ship workflow. Use when asked to implement a feature,
-  fix a bug, or make any code change that should be shipped as a PR.
+  Implement an agreed change on a feature branch and ship it as a PR: branch,
+  change, tests, per-commit checks, $VERIFY_CMD, push, PR. Use for any code
+  change that ships as a PR. Never merges.
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Agent
-argument-hint: <description of what to implement>
+argument-hint: <what to implement, or the lead's hand-off>
 ---
 
-# Implement and Ship Workflow
+# Implement and ship
 
-Complete workflow for implementing a change and shipping it as a PR. The task description comes from `$ARGUMENTS`.
+The task comes from `$ARGUMENTS`. `CLAUDE.md` is the contract; `STACK.md` holds every command and tool. Report to the user in Finnish. Write everything in the repository and on GitHub in English, in Simplified Technical English.
 
-Communicate in Finnish with the user. Write all repository and GitHub artifacts in English per `CLAUDE.md → Language`. Use Simplified Technical English for user-facing prose.
+## 1. Scope
 
-## Procedure
+Collect the scope, the acceptance criteria, the design, the criticality, and the ADRs to write. When the lead did not provide acceptance criteria, write them first (expected behaviour plus the error and edge cases that matter) with *Given*, *Observed*, and *Assumed* separated.
 
-Follow these steps in order. Do not skip steps.
+Stop and report to the lead (or the user, when there is no lead) when the task needs an owner decision (`CLAUDE.md → Owner decisions`) or when the current structure does not fit the change. A structural change goes first, in its own refactoring PR on a `refactor/<topic>` branch.
 
-### Step 1: Run the VISION decision filter
+## 2. Branch
 
-Before writing any code, read `VISION.md → Decision Filter` and answer all four questions verbatim.
+Run `git branch --show-current`.
 
-If the answer to any question is "no", **stop and surface the conflict in the PR description** (or, if no PR exists yet, on the issue that proposed the change) — list the proposed change and which decision-filter answer was "no". If the rejection establishes a binding constraint future agents must respect, also state it in the relevant issue. Then propose the smallest framework-native alternative that passes the filter — that becomes the new task. Do NOT silently violate `VISION.md`.
+- On `main`: create `feat|fix|chore|docs|refactor/<topic>` (at most 50 characters, lowercase, hyphens).
+- On a feature branch that belongs to this task: stay, and read `git log main..HEAD --oneline`.
+- For a change stacked on an unmerged refactoring PR: branch from that PR's branch and set the PR base to it.
 
-Also scan `CLAUDE.md → Reject changes that…` and `STACK.md → Stack-specific reject-list additions`. If the task falls into any rejected category, stop, document, and rewrite the task to the smallest acceptable shape.
+Never commit or push to `main`.
 
-### Step 2: Ensure feature branch
+## 3. Change
 
-```
-git branch --show-current
-```
+- Write tests from the acceptance criteria. Run the narrowest test selector in `STACK.md` and see each new test fail before the change and pass after it.
+- Implement the smallest coherent change that meets the criteria and fits the design.
+- For critical logic: add property-based tests where the input space is large, and run `$MUTATION_CMD` on the changed code. Kill the surviving mutants that matter or explain them in the PR.
+- Add a preview, story, or fixture for each declared state of a changed visible surface.
+- Write the ADRs the task needs from `docs/adr/TEMPLATE.md`.
+- Update documentation in the same change as the behaviour.
 
-- If on `main`: create and switch to a feature branch. Derive the branch name from the task: `feat/<slug>`, `fix/<slug>`, `chore/<slug>`, `docs/<slug>`. Max 50 characters, lowercase, hyphens only.
-- If already on a feature branch: stay on it. Run `git log main..HEAD --oneline` to understand the current state.
+## 4. Commit
 
-**NEVER commit or push to `main` directly.** Hooks and the deny-list will block this, but do not rely on them — use the right branch.
+Before each commit, run `$FORMAT_CMD`, `$LINT_CMD`, and `$BUILD_CMD`. All must pass. Fix the cause; never suppress a diagnostic without an exception (`CLAUDE.md → Exceptions`).
 
-### Step 3: Implement the change
+Stage only the files of this change; never `git add -A` or `git add .`. Never commit `.env` files or secrets. Conventional Commits, one logical change per commit, the body says why, and the `Co-Authored-By` trailer from `CLAUDE.md`.
 
-Implement what is described in `$ARGUMENTS`, following the engineering doctrine in `CLAUDE.md` (Architecture, Concurrency, Responsiveness & resource budget, Side effects, Privacy & security, Code conventions, Testing) and the concrete rules in `STACK.md`. Those two files are the source of truth — apply the rules from them directly; they are deliberately not restated here. Three ship-loop reminders:
+After 10 failed repair attempts on the same failure, push the work to `chore/abandoned-<task>`, open a draft PR that describes the failure and what you tried, and report it. Do not loop.
 
-- Every new feature or behavior change has tests; pure domain code gets the deepest, edge-case coverage.
-- Every surface that gains new states gets preview / story / fixture coverage for each applicable declared state.
-- Comments follow `CLAUDE.md → Code conventions → Comments`. Rationale, what changed, and why an alternative lost go in the PR description and the issue below — not in the source.
+## 5. Verify and push
 
-### Step 3.1: Autonomy fallback (no AskUserQuestion)
-
-If the task is unclear or ambiguous:
-
-1. Pick the smallest-surface, most-conservative interpretation that satisfies the `VISION.md` decision filter.
-2. Document the choice in the PR description (alternatives considered + rationale). If it introduces a binding constraint for future agents, also state it in the relevant issue.
-3. Proceed.
-
-**Do not call `AskUserQuestion`.** The autonomous flow depends on this.
-
-### Step 4: Run the per-commit checks
-
-```
-$FORMAT_CMD
-$LINT_CMD
-$BUILD_CMD
-```
-
-The exact commands are declared in `STACK.md`. **All must pass before each commit.**
-
-If a check fails:
-
-1. Read the error output carefully.
-2. Fix the underlying issue — do NOT suppress warnings with concurrency / type-check escape hatches (`STACK.md → Stack-specific reject-list additions` names the ones banned for this stack; the doctrine forbids them generally).
-3. Re-run the check that failed.
-4. Repeat until all checks pass.
-5. **Maximum 10 fix attempts.** If still failing on attempt 11, do not loop indefinitely — create a `chore/abandoned-<task>` branch with the work-in-progress, push it, and describe the failure mode and what was tried in the draft PR (or on the existing PR). The PR / branch on GitHub is the audit trail for the next teammate to pick up. Do **not** call `AskUserQuestion`.
-
-### Step 5: Commit
-
-Stage only the files related to this change. **NEVER** use `git add -A` or `git add .`.
-
-**NEVER** commit `.env` files, credentials, or secrets.
-
-Write commit messages that:
-
-- Follow Conventional Commits: `<type>(<scope>): <summary>`.
-- Are concise (1-2 sentences).
-- Focus on "why" not "what".
-- Are in English.
-
-Each commit must be one complete logical unit. If multiple logical changes were made, create separate commits — one per logical unit.
-
-### Step 6: Verify and push
-
-Run `$VERIFY_CMD` once, on the exact committed tree that you push: commit every change first, so the working tree is clean. Then push.
+Commit everything first, so the tree is clean. Run `$VERIFY_CMD` once on that exact tree, then push:
 
 ```
 $VERIFY_CMD
-git push -u origin <branch-name>
+git push -u origin <branch>
 ```
 
-- If `$VERIFY_CMD` fails, fix the cause, commit the fix (Steps 4 and 5), and run `$VERIFY_CMD` again. These attempts count toward the limit in Step 4.
-- Do not run `$VERIFY_CMD` again on a tree that already passed it.
-- Record the pushed head SHA (`git rev-parse HEAD`) and the `$VERIFY_CMD` summary line, or the stamp line when `STACK.md` defines one.
+If it fails, fix, commit, and run it again; the attempts count toward the limit. Do not run it again on a tree that already passed. Record `git rev-parse HEAD` and the summary line.
 
-### Step 7: Create or update PR
+Before the final review round, fold fixup commits ("fix lint", "fix typo", "address review") into the commits they belong to without an editor: create them with `git commit --fixup=<sha>`, then run `GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash main`. Run `$VERIFY_CMD` on the new head, and push with `--force-with-lease`.
 
-Check if a PR already exists for this branch:
+## 6. PR
 
-```
-gh pr list --head <branch-name> --json number,url --jq '.[0]'
-```
+Check for an existing PR: `gh pr list --head <branch> --json number,url`.
 
-**If no PR exists**, create one using `gh pr create --title "<title>" --body "<body>"`. When the change resolves a GitHub issue, include `Closes #<N>` in the body so merging closes the issue and the issue thread carries the outcome. Follow `.github/pull_request_template.md` when the project has that file. Otherwise use this structure:
+- None: `gh pr create`. Fill `.github/pull_request_template.md` when the project has it. Otherwise cover: why, acceptance criteria with evidence, what changed, team and criticality, decisions (ADRs, owner decisions, assumptions), verification on the head SHA, and *What was not verified*. Add `Closes #<N>` when the PR resolves an issue. Title under 70 characters.
+- Exists: update the description so that it is still true, and add a comment that says what changed in this round.
 
-- **Why** — motivation; which `VISION.md` / `CLAUDE.md` / `STACK.md` rule is at play.
-- **What** — brief technical summary of changes.
-- **VISION decision filter** — all four questions answered verbatim with a one-line rationale each.
-- **Rules involved** — name the doctrine and `STACK.md` rules touched (e.g. "concurrency: cancellation", "responsiveness budget", "side effects: service boundary").
-- **Verification** — the `$VERIFY_CMD` summary line (or stamp line) for the pushed head; each owner-run check that `STACK.md` triggers for this diff, as `ran on <SHA>: PASS` or `triggered, pending owner run`; any preview / story states added; tests added; privacy declaration updated if applicable.
-- **States handled** — if the change affects UI, list the states handled (loading, success, empty, degraded, permission-blocked, error, plus product-specific).
+List each owner-run check that `STACK.md` triggers for this diff as `ran on <SHA>: PASS` or `triggered, pending owner run`. Do not run an owner-run check unless the owner asked for it.
 
-Keep the title under 70 characters.
+## 7. Report
 
-**If a PR already exists**, add a comment summarising what changed:
+Return the PR URL, the pushed head SHA, and the `$VERIFY_CMD` summary line. `/codereview` comes next and is not part of this skill. In the team flow the lead sends the reviewer. When a human ran `/implement` directly, suggest `/codereview`.
 
-```
-gh pr comment <number> --body "<what changed and why>"
-```
-
-### Step 8: Report to user
-
-Tell the user in Finnish (the only Finnish artifact — everything written to the repo or GitHub is English):
-
-- Summary of what was implemented.
-- Verification results: the pushed head SHA and the `$VERIFY_CMD` summary line (all passing).
-- PR URL.
-- `/codereview` runs next, but it is **not** part of this skill — do not run it from here. In the team flow `/project-manager` dispatches `qa-enforcer` to run it (the PR is surfaced to the user only after the team's `/codereview` is PASS). If a human invoked `/implement` directly, suggest they run `/codereview` when ready.
-
-## Rules
-
-- **NEVER** push to `main` — neither a normal push nor a force-push. On your feature branch a force-push is allowed; use `--force-with-lease`, never a bare `--force`.
-- **NEVER** commit secrets, credentials, `.env` files, or values forbidden by `VISION.md → Persistence and Privacy Posture`.
-- **NEVER** merge the PR — that happens after review and manual testing (`gh pr merge` is allowed only when the user explicitly asks).
-- **NEVER** weaken the strictness mode declared in `STACK.md`, the minimum runtime version, or the language version.
-- If `$VERIFY_CMD` does not pass within 10 attempts, do NOT push or create the PR — abandon the branch per Step 4.
-- If the VISION decision filter fails, do NOT implement — document, surface, and rewrite the task to the smallest acceptable shape.
-- **NEVER** call `AskUserQuestion`.
+Never merge, never push to `main`, never use `--no-verify`, and never lower the strictness mode or minimum runtime version in `STACK.md`.

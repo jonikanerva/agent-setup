@@ -1,102 +1,72 @@
 ---
 name: codereview
-description: Independently review the complete current branch against main and post an audit-grade PASS or FAIL review to its PR. Use only for the QA-owned merge gate after implementation.
+description: Independently review the current branch's PR against main and post a PASS/FAIL review comment. Focuses on judgement that machines cannot make; relies on $VERIFY_CMD for mechanical checks. Use for the reviewer gate after implementation.
 ---
 
-# Code Review Gate
+Review the PR for the current branch against `main`. Run in a separate reviewer subagent: do not rely on the implementation conversation. Derive everything from the repository, the issue, the PR, and the evidence. Report progress to the user in Finnish; write the review in English, in Simplified Technical English.
 
-Review the complete branch against `main` as an independent QA pass. Do not
-rely on implementation-chat context. Derive scope and intent from the issue,
-PR, branch history, diff, checks, and governance files. Never edit product or
-governance files, commit, push, or merge.
+## 1. Read
 
-The PR review is English. Use Simplified Technical English for the review
-prose. Progress and the result returned to the user are Finnish.
+- `gh pr view --comments`, `gh pr diff`, `gh pr checks`, and `git log main..HEAD --oneline`.
+- The linked issue with comments (`Closes #<N>`). Its acceptance criteria are the scope contract. When neither the issue nor the PR has acceptance criteria, that is a finding.
+- `VISION.md`, `AGENTS.md`, `STACK.md`, and the ADRs that the PR adds, changes, or touches by area.
+- The surrounding code of every changed path: callers, state owners, boundaries, tests.
 
-## Evidence to read
+If no PR exists, create a minimal one from the latest commit and continue. Do not ask the user.
 
-- `VISION.md`, `AGENTS.md`, `STACK.md`, and `README.md`.
-- The complete PR description, comments, checks, and diff.
-- `git log main..HEAD --oneline` and the surrounding code for changed paths.
-- The linked issue and comments when the PR resolves an issue.
-- Current official documentation for any finding that depends on external
-  tool, platform, framework, API, GitHub, or security-standard behavior.
+## 2. Confirm the gates
 
-If no PR exists, create the minimal PR required to preserve the audit trail,
-but do not broaden its scope.
+The gates own mechanical conformance. Do not repeat their work. Check only:
 
-## Review standard
+- The PR states a `$VERIFY_CMD` summary line for the current head SHA, and CI checks on that head pass.
+- No gate was disabled, weakened, or bypassed in the diff (lint rules, thresholds, ignore lists, `$VERIFY_CMD` scripts) without an Exception ADR.
+- Critical logic, as marked in the PR, has its `$MUTATION_CMD` result and property-based tests where the input space is large.
 
-Every rule-backed defect, regression risk, missing required evidence,
-security or privacy issue, production failure mode, required-test gap,
-unsupported dependency, build-system change, or scope mismatch is a blocking
-FAIL. Omit subjective style preferences and alternatives without a concrete
-local rule or material risk.
+A missing or weakened gate is a finding.
 
-Review all of these:
+## 3. Judge
 
-1. Scope matches issue and PR description; removals, migrations, dependencies,
-   generated files, and CI changes are disclosed.
-2. Every VISION decision-filter answer remains yes and no non-goal is added.
-3. Functional behavior handles invalid, empty, repeated, partial-failure, and
-   compatibility cases that apply.
-4. Security and privacy boundaries, permission scope, secrets, logs,
-   persistence, transport, and telemetry comply.
-5. Production failure modes cover concurrency, cancellation, timeouts, stale
-   data, retries, idempotency, resource load, and recovery as applicable.
-6. Architecture preserves interface, domain, and infrastructure boundaries and
-   right-sized state ownership.
-7. Critical-path, background-work, and resource budgets in STACK.md hold.
-8. Changed visible surfaces cover every declared state, accessibility path, and
-   documented design threshold.
-9. Tests cover new domain rules, state timelines, edge cases, and meaningful
-   async behavior.
-10. Dependencies, lockfiles, CI permissions, generated artifacts, and supply
-    chain changes are approved and intentional.
-11. No dead code, duplicated existing helper, placeholder, debug output,
-    commented-out code, unsafe escape hatch, or forbidden marker remains.
-12. Comments follow `AGENTS.md → Code conventions → Comments`. Each comment
-    states a constraint and reads correctly from its own file. No comment
-    narrates history, holds rationale that belongs in the issue or the PR, or
-    depends on an issue number, a PR number, or a commit reference. A comment
-    over 5 lines is a signal only: clear it by naming the constraint in each
-    line. Never ask for a contract to be deleted to reach the budget, and
-    report a missing contract as a defect.
-13. `$FORMAT_CMD` is idempotent. The PR states the `$VERIFY_CMD` summary line
-    (or the stamp line) for its head. Do not run `$VERIFY_CMD` in this review:
-    `qa_enforcer` runs it once per PR, after a PASS review.
-14. Branch, commits, issue linkage, PR body, and audit trail follow AGENTS.md.
+Answer these questions. Each FAIL finding must point to evidence.
 
-## Finding format
+1. **Right problem.** Does the change meet every acceptance criterion? Does it do anything the criteria do not ask for? Do the *Given / Observed / Assumed* lists hold up against the code?
+2. **Simplest solution.** Is there a clearly smaller or more conventional solution that meets the same criteria? Does the change add an abstraction, option, or extension point that no criterion needs? Is a shared abstraction introduced before the third occurrence of the same knowledge?
+3. **Right structure.** Does the structure match the current understanding of the problem, or does the change patch over a structure that no longer fits (`AGENTS.md → Pre-decided conflicts → Local patch vs. structural change`)? Are layers, ownership, and boundaries right?
+4. **Correctness under stress.** Invalid input, empty data, repeated requests, interruption, partial failure, concurrency, cancellation, timeouts, and compatibility — wherever they can occur. Do base units and the three time concepts hold?
+5. **Tests.** Do the tests derive from the acceptance criteria and assert behaviour at the public boundary? Would they fail if the behaviour broke? Is anything critical untested?
+6. **Security and privacy.** Data and permissions match `VISION.md → Data and Permissions`. No personal data or secrets in logs. Authorization and input handling are sound. Use OWASP, CWE, or WCAG references only when they apply.
+7. **Records.** ADRs exist for decisions that need one (`AGENTS.md → Records`). Exceptions have an Exception ADR. Owner decisions were escalated, not decided by the team. The PR states *What was not verified*.
+8. **Comments.** Comments follow `AGENTS.md → Comments`. A missing constraint is a defect as much as a narrating comment.
+9. **Regret.** What will the team regret in six months? Name it only with a concrete reason.
 
-Every blocking finding must contain:
+For critical logic, argue the opposing case before you conclude.
+
+Verify every claim about external tool, framework, or standard behaviour against current official documentation. If you cannot verify it, put it under *Verification notes*, not as a finding.
+
+## 4. Verdict
+
+- **FAIL** when any finding shows a broken acceptance criterion, a correctness, security, or privacy risk, a missing required record, a weakened gate, or a clearly simpler solution that the PR must take.
+- **PASS** otherwise. Do not fail a PR for taste. Do not add "nit" or "suggestion" items; a point is a finding or it is left out.
+
+In the PASS round only, run `$VERIFY_CMD` once on the PR head, in a detached worktree or the review location that `STACK.md` names. If it fails, the verdict is FAIL.
+
+Finding format:
 
 ```md
-### <check>: <short title>
+### <question>: <short title>
 
 - **Location:** `<file>:<line>` or a PR metadata location
-- **Evidence:** <what the diff and surrounding code prove>
-- **Impact:** <production or workflow consequence>
-- **Local rule:** `<VISION.md / AGENTS.md / STACK.md section>`
-- **External reference:** <current official URL when relevant, otherwise N/A>
-- **Minimum fix:** <smallest resolving change>
-- **Verification:** <test or command proving the fix>
+- **Evidence:** <what the code or PR shows>
+- **Impact:** <the consequence>
+- **Rule:** <`AGENTS.md` / `STACK.md` / `VISION.md` section or ADR, or the acceptance criterion>
+- **Minimum fix:** <the smallest change that resolves it>
 ```
 
-Do not assert external behavior that current official documentation does not
-establish. Put unresolved factual uncertainty in a Verification notes section
-unless a local rule requires the missing evidence, in which case it is a FAIL.
+## 5. Post
 
-## Post the review safely
+1. `PR=$(gh pr view --json number -q .number)` and `HEAD_SHA=$(gh pr view --json headRefOid -q .headRefOid)`.
+2. Write the body to a new, uniquely named file in the scratchpad or `$TMPDIR`, for example `review-pr${PR}-${HEAD_SHA:0:12}-$(date +%s).md`. Never reuse a file.
+3. The body starts with `**Verdict: PASS**` or `**Verdict: FAIL**` and ends with `Reviewed: PR #<PR> @ <HEAD_SHA> (round <R>)`.
+4. Post with `gh pr review "$PR" --comment --body-file <file>`.
+5. Fetch the newest review back and check the verdict, the PR number, and the SHA. If one is wrong, edit that review to `MIS-POSTED — DISREGARD.` and post a corrected one.
 
-1. Resolve the PR number and current HEAD SHA first.
-2. Write the body to a fresh uniquely named file in an allowed temporary
-   directory. Never reuse a fixed review filename.
-3. Begin with exactly `**Verdict: PASS**` or `**Verdict: FAIL**`.
-4. End with `Reviewed: PR #<PR> @ <HEAD_SHA> (round <R>)`.
-5. Post with `gh pr review <PR> --comment --body-file <file>`.
-6. Fetch the newest review and verify its verdict, PR number, and SHA. If they
-   do not match, edit it to mark it mis-posted and post a corrected fresh body.
-
-PASS requires zero blocking findings across every check. Return the verdict,
-finding count, and review URL to `qa_enforcer`. Do not merge.
+Every round gets its own comment. Report the verdict, the number of findings, and the review link in Finnish.

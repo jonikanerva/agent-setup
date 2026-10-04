@@ -47,7 +47,7 @@
       "WebFetch(domain:opentelemetry.io)",
       "WebFetch(domain:w3.org)",
       "WebFetch(domain:www.w3.org)",
-      "Skill(project-manager)",
+      "Skill(lead)",
       "Skill(implement)",
       "Skill(codereview)"
     ],
@@ -101,7 +101,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cmd=$(jq -r \".tool_input.command\"); if echo \"$cmd\" | grep -q \"gh pr create\"; then echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PostToolUse\\\",\\\"additionalContext\\\":\\\"PR created. The /codereview gate is next: in the team flow qa-enforcer runs it (lead-dev does not). If you opened this PR by hand, run /codereview yourself.\\\"}}\"; fi'"
+            "command": "bash -c 'cmd=$(jq -r \".tool_input.command\"); if echo \"$cmd\" | grep -q \"gh pr create\"; then echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PostToolUse\\\",\\\"additionalContext\\\":\\\"PR created. The /codereview gate is next when the change touches code: in the team flow the reviewer runs it (the implementer does not). If you opened this PR by hand, run /codereview yourself.\\\"}}\"; fi'"
           }
         ]
       }

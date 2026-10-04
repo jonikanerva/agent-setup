@@ -1,97 +1,69 @@
 ---
 name: implement
-description: Implement an approved feature, fix, or code change on a feature branch, run the project verification contract, commit, push, and open or update a PR. Use for the lead developer's ship loop; never merge.
+description: Implement an agreed change on a feature branch and ship it as a PR - branch, change, tests, per-commit checks, $VERIFY_CMD, push, PR. Use for any code change that ships as a PR. Never merges.
 ---
 
-# Implement and Ship
+# Implement and ship
 
-Complete the approved change and leave a verified PR for independent review.
-Communicate with the user in Finnish. Write code, comments, branches, commits,
-issues, and PR text in English. Use Simplified Technical English for
-user-facing prose.
+The task comes from the request or the lead's hand-off. `AGENTS.md` is the contract; `STACK.md` holds every command and tool. Report to the user in Finnish. Write everything in the repository and on GitHub in English, in Simplified Technical English.
 
-## 1. Validate scope
+## 1. Scope
 
-Read `VISION.md`, `AGENTS.md`, `STACK.md`, and the issue when one exists. Run
-every question in `VISION.md → Decision Filter`. Also scan
-`AGENTS.md → Reject changes that…` and
-`STACK.md → Stack-specific reject-list additions`.
+Collect the scope, the acceptance criteria, the design, the criticality, and the ADRs to write. When the lead did not provide acceptance criteria, write them first (expected behaviour plus the error and edge cases that matter) with *Given*, *Observed*, and *Assumed* separated.
 
-If the approved task fails a rule, do not silently implement it. Record the
-conflict in the existing issue or PR and reduce the task to the smallest shape
-that passes. Do not create an issue when the user supplied the task directly.
+Stop and report to the lead (or the user, when there is no lead) when the task needs an owner decision (`AGENTS.md → Owner decisions`) or when the current structure does not fit the change. A structural change goes first, in its own refactoring PR on a `refactor/<topic>` branch.
 
-## 2. Ensure a feature branch
+## 2. Branch
 
-Inspect the current branch and `git log main..HEAD --oneline`.
+Run `git branch --show-current`.
 
-- On `main`, create `feat|fix|chore|docs/<topic>` with lowercase hyphenated
-  text and a maximum total length of 50 characters.
-- On an existing feature branch, continue only when it belongs to this task.
-- Never commit or push to `main`. This rule covers a normal push and a
-  force-push.
-- A force-push to your feature branch is allowed. Use `--force-with-lease`,
-  never a bare `--force`.
+- On `main`: create `feat|fix|chore|docs|refactor/<topic>` (at most 50 characters, lowercase, hyphens).
+- On a feature branch that belongs to this task: stay, and read `git log main..HEAD --oneline`.
+- For a change stacked on an unmerged refactoring PR: branch from that PR's branch and set the PR base to it.
 
-## 3. Implement
+Never commit or push to `main`.
 
-Follow the approved architecture and the engineering doctrine in `AGENTS.md`.
-Obtain every concrete technology choice and command from `STACK.md`; never
-substitute an underlying tool for a named command.
+## 3. Change
 
-- Add or update tests for behavior and domain edge cases.
-- Add previews, stories, or fixtures for every changed visible state.
-- Update privacy declarations for new data flows.
-- Preserve cancellation, concurrency, critical-path, and dependency rules.
-- Leave no debug output, placeholder implementation, dead code, or secret.
+- Write tests from the acceptance criteria. Run the narrowest test selector in `STACK.md` and see each new test fail before the change and pass after it.
+- Implement the smallest coherent change that meets the criteria and fits the design.
+- For critical logic: add property-based tests where the input space is large, and run `$MUTATION_CMD` on the changed code. Kill the surviving mutants that matter or explain them in the PR.
+- Add a preview, story, or fixture for each declared state of a changed visible surface.
+- Write the ADRs the task needs from `docs/adr/TEMPLATE.md`.
+- Update documentation in the same change as the behaviour.
 
-When an ambiguity is not resolved by the approved scope or governance, choose
-the smallest conservative shape that passes the decision filter and document
-the decision in the PR.
+## 4. Commit
 
-## 4. Check each commit
+Before each commit, run `$FORMAT_CMD`, `$LINT_CMD`, and `$BUILD_CMD`. All must pass. Fix the cause; never suppress a diagnostic without an exception (`AGENTS.md → Exceptions`).
 
-Before each commit, run `$FORMAT_CMD`, `$LINT_CMD`, and `$BUILD_CMD`, exactly
-as declared in `STACK.md`. All must pass without new warnings, and formatting
-must be idempotent. Run `$VERIFY_CMD` in step 5, once before each push.
+Stage only the files of this change; never `git add -A` or `git add .`. Never commit `.env` files or secrets. Conventional Commits, one logical change per commit, the body says why, and the `Co-Authored-By` trailer from `AGENTS.md`.
 
-Fix root causes rather than suppressing diagnostics. Stop after 10 unsuccessful
-repair attempts. Preserve the work on a `chore/abandoned-<task>` branch and a
-draft PR describing the failure; do not claim success.
+After 10 failed repair attempts on the same failure, push the work to `chore/abandoned-<task>`, open a draft PR that describes the failure and what you tried, and report it. Do not loop.
 
-## 5. Commit and push
+## 5. Verify and push
 
-Stage only task-related files; never use `git add .` or `git add -A`. Use one
-logical Conventional Commit per unit, explain why, and append
-`Co-Authored-By: Codex <noreply@openai.com>`. Never include `.env`, credentials,
-tokens, or other secrets.
+Commit everything first, so the tree is clean. Run `$VERIFY_CMD` once on that exact tree, then push:
 
-Before each push, run `$VERIFY_CMD` once on the exact committed tree that you
-push: commit every change first, so the working tree is clean. It must pass
-without new warnings. If it fails, fix the cause, commit the fix, and run it
-again; these attempts count toward the limit in step 4. Do not run it again on
-a tree that already passed it. Record the pushed head SHA and the
-`$VERIFY_CMD` summary line, or the stamp line when `STACK.md` defines one. Push
-only the feature branch.
+```
+$VERIFY_CMD
+git push -u origin <branch>
+```
 
-Do not run an owner-run check that `STACK.md` reserves for the owner unless the
-owner asks for it in the current task. For a mutation check, run the narrowest
-test selector that `STACK.md` names, else `$TEST_CMD`.
+If it fails, fix, commit, and run it again; the attempts count toward the limit. Do not run it again on a tree that already passed. Record `git rev-parse HEAD` and the summary line.
 
-## 6. Open or update the PR
+Before the final review round, fold fixup commits ("fix lint", "fix typo", "address review") into the commits they belong to without an editor: create them with `git commit --fixup=<sha>`, then run `GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash main`. Run `$VERIFY_CMD` on the new head, and push with `--force-with-lease`.
 
-Check whether the current branch already has a PR. Create one when absent; add
-an update comment when it already exists. Keep the title under 70 characters.
+## 6. PR
 
-Follow `.github/pull_request_template.md` when the project has that file.
-Otherwise include why, what, decision-filter answers, rules involved,
-verification, states handled, and any autonomy fallback. Add `Closes #<N>`
-when the PR resolves an issue. List each owner-run check that `STACK.md`
-triggers for the diff as `ran on <SHA>: PASS` or
-`triggered, pending owner run`.
+Check for an existing PR: `gh pr list --head <branch> --json number,url`.
 
-Return the PR URL, the pushed head SHA, changed files, and the `$VERIFY_CMD`
-summary line (the stamp line when `STACK.md` defines one) to the project
-manager. After the hand-off, push nothing until the project manager sends
-findings. Do not run `$codereview`; `qa_enforcer` owns that gate. Never
-merge.
+- None: `gh pr create`. Fill `.github/pull_request_template.md` when the project has it. Otherwise cover: why, acceptance criteria with evidence, what changed, team and criticality, decisions (ADRs, owner decisions, assumptions), verification on the head SHA, and *What was not verified*. Add `Closes #<N>` when the PR resolves an issue. Title under 70 characters.
+- Exists: update the description so that it is still true, and add a comment that says what changed in this round.
+
+List each owner-run check that `STACK.md` triggers for this diff as `ran on <SHA>: PASS` or `triggered, pending owner run`. Do not run an owner-run check unless the owner asked for it.
+
+## 7. Report
+
+Return the PR URL, the pushed head SHA, and the `$VERIFY_CMD` summary line. `$codereview` comes next and is not part of this skill. In the team flow the lead sends the reviewer. When a human ran `$implement` directly, suggest `$codereview`.
+
+Never merge, never push to `main`, never use `--no-verify`, and never lower the strictness mode or minimum runtime version in `STACK.md`.

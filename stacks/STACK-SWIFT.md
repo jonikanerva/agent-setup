@@ -41,22 +41,52 @@
 | Logging             | `os.Logger` per subsystem / category; `OSSignposter` for hot paths            | No `print()` in shipped code                                                                   |
 | Telemetry           | MetricKit                                                                     | No third-party analytics                                                                       |
 | Testing             | Swift Testing (`@Test`, `@Suite`, `#expect`); XCTest / XCUI for end-to-end UI |                                                                                                |
-| Formatting          | `swift-format` with repo `.swift-format`                                      | No SwiftLint                                                                                   |
+| Formatting          | `swift-format` with repo `.swift-format`                                      | SwiftLint only for complexity metrics (§3)                                                     |
 | Build               | Xcode 26+, Swift 6 language mode, complete strict concurrency                 |                                                                                                |
 
 ---
 
 ## 3. Build & verify commands
 
-| Variable      | Command                                     |
-| ------------- | ------------------------------------------- |
-| `$FORMAT_CMD` | `make format`                               |
-| `$LINT_CMD`   | `make lint`                                 |
-| `$BUILD_CMD`  | `make build`                                |
-| `$TEST_CMD`   | `make test`                                 |
-| `$VERIFY_CMD` | `make test-all` (lint → build → unit tests) |
+| Variable        | Command                                                        |
+| --------------- | -------------------------------------------------------------- |
+| `$FORMAT_CMD`   | `make format`                                                  |
+| `$LINT_CMD`     | `make lint`                                                    |
+| `$BUILD_CMD`    | `make build`                                                   |
+| `$TEST_CMD`     | `make test`                                                    |
+| `$VERIFY_CMD`   | `make test-all` (every gate below, in table order)             |
+| `$MUTATION_CMD` | `make mutate FILES=<files>` (Muter, critical logic only)       |
 
-The `Makefile` in this profile is the single source of truth. Never invoke `swift-format` or `xcodebuild` directly from commits, CI, or agent scripts.
+**Narrowest test selector:** `make test ONLY=<Target>/<Suite>/<test>` (maps to `xcodebuild test -only-testing:`).
+
+The `Makefile` in this profile is the single source of truth. Never invoke `swift-format`, `swiftlint`, `xcodebuild`, `gitleaks`, or `muter` directly from commits, CI, or agent scripts.
+
+### Gates in `$VERIFY_CMD`
+
+| Gate | Tool and threshold | Contract rule |
+| ---- | ------------------ | ------------- |
+| Format check | `swift-format lint --strict` with the repo `.swift-format` | Code conventions |
+| Strict types and concurrency | the §1 build settings; warnings are errors (`SWIFT_TREAT_WARNINGS_AS_ERRORS = YES`) | Validate once, model the domain |
+| Lint | `swift-format` rules (no SwiftLint style rules) | Code conventions |
+| Complexity | SwiftLint with `only_rules` limited to metrics: `cyclomatic_complexity` 10, `function_body_length` 60, `type_body_length` 300, `file_length` 400 (errors, not warnings) | Simple and deletable |
+| Dead code | compiler unused-value and unreachable-code warnings as errors | Code conventions |
+| Dependency direction | one SwiftPM target per layer; the domain target declares no dependency on UI or infrastructure targets, so the compiler rejects a wrong import | Architecture |
+| Secret scan | `gitleaks git --log-opts=origin/main..HEAD` and `gitleaks dir .` | Privacy and security |
+| Vulnerability scan | none in the ecosystem for SwiftPM; Approved dependencies is empty by default | Dependencies |
+| Commit messages | `commitlint` is not part of this toolchain; see Gaps | Git and verification |
+| Tests | `xcodebuild test` (Swift Testing) | Testing |
+
+SwiftLint runs here for complexity metrics only; `swift-format` stays the formatter and style linter. The thresholds are the common defaults that flag code most reviewers find hard to follow. Raise one only through an Exception ADR for the named file.
+
+**Gaps (covered by review):**
+
+- **Project-wide dead code** (unused types and functions across files): no maintained open-source tool. The reviewer checks that changed code removes what it makes unused.
+- **Vulnerability scan:** no SwiftPM advisory scanner; every dependency needs an approved entry and an ADR, and the reviewer checks advisories for any dependency the PR adds or updates.
+- **Commit messages:** the reviewer checks Conventional Commits in `git log main..HEAD`.
+
+**Change size soft limit:** 400 changed lines, excluding `Package.resolved`, `.xcstrings`, and generated project files.
+
+**Owner-run checks:** on-device performance checks against §4 budgets — triggered by changes to the critical path; run by the owner on a physical device.
 
 ---
 
@@ -73,11 +103,11 @@ The `Makefile` in this profile is the single source of truth. Never invoke `swif
 ## 5. Persistence shape
 
 - **Storage primitive:** `UserDefaults` via a `Codable` wrapper.
-- **Persisted entities:** declared by `VISION.md → Persistence and Privacy Posture`. Default is "as little as possible" — typically a single struct.
+- **Persisted entities:** declared by `VISION.md → Data and Permissions`. Default is "as little as possible" — typically a single struct.
 - **Schema migration policy:** decode failures = "no value". A future schema bump forces a re-pick rather than crashing.
-- **Forbidden persistence:** anything declared forbidden in `VISION.md → Persistence and Privacy Posture`.
+- **Forbidden persistence:** anything declared forbidden in `VISION.md → Data and Permissions`.
 
-SwiftData is **not** the default. Reintroducing `@Model` / `ModelContainer` / `@Query` requires an Intentional Divergences entry below with measurement-backed justification.
+SwiftData is **not** the default. Reintroducing `@Model` / `ModelContainer` / `@Query` requires an ADR with measurement-backed justification.
 
 ---
 
@@ -85,20 +115,23 @@ SwiftData is **not** the default. Reintroducing `@Model` / `ModelContainer` / `@
 
 | Dependency                       | Version | Why it earns its place | Approver | Date |
 | -------------------------------- | ------- | ---------------------- | -------- | ---- |
-| _(none — Apple frameworks only)_ | —       | —                      | —        | —    |
+| _(none at runtime — Apple frameworks only)_ | —       | —                      | —        | —    |
+| SwiftLint (dev tool, via `mise.toml` or Homebrew pin) | `0.6x` | Complexity-metrics gate | (default) | (template) |
+| gitleaks (dev tool, via `mise.toml`) | `8.x` | Secret-scan gate | (default) | (template) |
+| Muter (dev tool) | latest release | `$MUTATION_CMD` | (default) | (template) |
 
 ---
 
 ## 7. Stack-specific reject-list additions
 
 - `ObservableObject`, `@StateObject`, `@ObservedObject`, `@EnvironmentObject`, `@Published` in **new** code — Observation framework only.
-- SwiftData primitives (`@Model`, `ModelContainer`, `@Query`) — not used unless an Intentional Divergence exists.
+- SwiftData primitives (`@Model`, `ModelContainer`, `@Query`) — not used unless an ADR permits them.
 - `@unchecked Sendable`, `nonisolated(unsafe)`, `@preconcurrency`, `MainActor.assumeIsolated` without an inline-justified, audited reason.
 - `DispatchQueue.main.async` "to fix a warning" — fix isolation properly.
 - `print()` in shipped code; `os.Logger` lines that interpolate PII values without `.private`.
 - `AnyView`, broad type erasure, reflection tricks unless there is a measured benefit.
 - Force-unwraps (`!`) and `try!` outside tests and `#Preview`.
-- Persisting or computing with local-time / calendar-component values instead of a `Date` instant; manual UTC-offset arithmetic; a `DateFormatter` / `Calendar` without an explicit `timeZone` in logic (see §10).
+- Storing an *instant* as calendar components or a formatted local string; storing a *local calendar time* as a precomputed `Date`; manual UTC-offset arithmetic; a `DateFormatter` / `Calendar` without an explicit `timeZone` in logic (see §10).
 - New SwiftPM packages without a `Section 6 → Approved Dependencies` entry approved in advance.
 
 ---
@@ -119,18 +152,21 @@ SwiftData is **not** the default. Reintroducing `@Model` / `ModelContainer` / `@
 
 ---
 
-## 10. Time & timezones
+## 10. Base units & time
 
-Time is treated exactly like any other external input: **UTC everywhere internally, converted only at the boundary.** This is the same "validate/narrow at the edge" discipline the rest of this profile applies to data, applied to instants.
+The operating contract's *Base units at the boundary* rule, pinned for this stack. `Codable` decoding at the network and persistence boundaries produces these forms; nothing between the boundaries holds another form.
 
-- **Internal representation:** all timestamps in logic, `UserDefaults`/persistence, caches, and logs are `Date` **instants** — an absolute point on the timeline, timezone-free by construction. Never store or compute with calendar components (year/month/day/hour) or formatted local-time strings; those carry an implicit zone.
-- **Conversion happens only at the two edges:** decoding an inbound value → parse to a `Date` immediately (`ISO8601DateFormatter`, which defaults to GMT, or `Date(timeIntervalSince1970:)`); building a user-facing value → convert to the display timezone at the last moment. Nothing in between holds local time.
-- **Serialization:** `Codable` encodes `Date` deterministically (`.iso8601` strategy, which is UTC). For any hand-built wire/persisted string use `ISO8601DateFormatter` (GMT) — never a locale/zone-dependent `DateFormatter`.
-- **Display boundary only:** `Calendar`, `TimeZone`, and `Date.FormatStyle` / `DateFormatter` are used **only** when producing a value for the UI, and always with an explicit `timeZone` (usually `.current` / `.autoupdatingCurrent`) and `Calendar` — never implicitly in logic. Prefer SwiftUI's `Text(date, format:)` / `.formatted(...)` at the view layer.
-- **"Now":** `Date.now` / `Date()`. Never hand-roll `TimeInterval` offset math to fake a timezone.
-- **Tests:** inject a clock or a fixed `Date` rather than reading `Date.now`; no timezone-dependent assertions (a test that passes only in one region is a bug).
+| Concept | Internal base unit | Boundary conversion |
+| ------- | ------------------ | ------------------- |
+| Instant | `Date` (an absolute point, zone-free) | Decode with `.iso8601` / `ISO8601DateFormatter` (GMT) or `Date(timeIntervalSince1970:)`; encode with `.iso8601` |
+| Local calendar time | `DateComponents` (only the fields that matter, e.g. hour and minute) **plus** a `TimeZone` identifier, stored together | Resolve to a `Date` with `Calendar` and the stored `TimeZone` only when an instant is needed (scheduling a notification, comparing) |
+| Duration | `Duration` (or `TimeInterval` in seconds where an API requires it) | Convert at the API that requires another unit |
+| Money | `Decimal` minor units or `Int` minor units + ISO-4217 code — never `Double` | `FormatStyle.Currency` at the view layer only |
 
-> The language-neutral UTC-in-logic / convert-at-edges rule lives in `CLAUDE.md → Time`; this section pins the concrete Swift mechanics.
+- **Clock:** inject a clock (`any Clock<Duration>` for sleeping and timing; a `() -> Date` provider for "now"). Tests use a fixed date and a test clock.
+- **Display:** `Text(date, format:)` / `.formatted(...)` at the view layer, with an explicit or `.autoupdatingCurrent` time zone and calendar — never implicitly in logic.
+- **Banned:** see §7 — calendar-component math on instants, zone-dependent `DateFormatter` for wire or stored strings, hand-written `TimeInterval` offset arithmetic.
+- **Tests:** no time-zone-dependent assertions; cover a daylight-saving transition for every local-calendar-time feature.
 
 ---
 
@@ -147,12 +183,4 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 
 ## 12. Best practices source
 
-`architect` and `ux-guardian` fetch Apple's current documentation and HIG before every design and review pass, and cite the doc / HIG section in their reports. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with `developer.apple.com` via WebFetch as fallback. Training-data memory is not an acceptable source for API syntax or HIG specifics.
-
----
-
-## 13. Intentional Divergences
-
-| Date     | CLAUDE.md rule | Divergence | Reason |
-| -------- | -------------- | ---------- | ------ |
-| _(none)_ | —              | —          | —      |
+`architect` and `product-guardian` fetch Apple's current documentation and HIG before every design and review pass, and cite the doc / HIG section in their reports. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with `developer.apple.com` via WebFetch as fallback. Training-data memory is not an acceptable source for API syntax or HIG specifics.

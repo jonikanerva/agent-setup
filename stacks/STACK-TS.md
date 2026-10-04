@@ -47,15 +47,41 @@
 
 ## 3. Build & verify commands
 
-| Variable      | Command                                             |
-| ------------- | --------------------------------------------------- |
-| `$FORMAT_CMD` | `pnpm format`                                       |
-| `$LINT_CMD`   | `pnpm lint`                                         |
-| `$BUILD_CMD`  | `pnpm build`                                        |
-| `$TEST_CMD`   | `pnpm test`                                         |
-| `$VERIFY_CMD` | `pnpm test-all` (type-check → lint → build → tests) |
+| Variable        | Command                                                                 |
+| --------------- | ----------------------------------------------------------------------- |
+| `$FORMAT_CMD`   | `pnpm format`                                                           |
+| `$LINT_CMD`     | `pnpm lint`                                                             |
+| `$BUILD_CMD`    | `pnpm build`                                                            |
+| `$TEST_CMD`     | `pnpm test`                                                             |
+| `$VERIFY_CMD`   | `pnpm test-all` (every gate below, in table order)                      |
+| `$MUTATION_CMD` | `pnpm mutate -- --mutate <files>` (StrykerJS, incremental, critical logic only) |
 
-Bootstrap the environment with `mise install` (provisions the pinned Node/pnpm versions) before running any command above. The `package.json` scripts are the single source of truth. Never invoke `eslint`, `tsc`, `vitest`, or `vite` directly from commits, CI, or agent scripts.
+**Narrowest test selector:** `pnpm test -- <file> -t "<test name>"`.
+
+Bootstrap the environment with `mise install` (provisions the pinned Node, pnpm, and gitleaks versions) before running any command above. The `package.json` scripts are the single source of truth. Never invoke `eslint`, `tsc`, `vitest`, `vite`, `knip`, `depcruise`, `stryker`, or `gitleaks` directly from commits, CI, or agent scripts.
+
+### Gates in `$VERIFY_CMD`
+
+| Gate | Tool and threshold | Contract rule |
+| ---- | ------------------ | ------------- |
+| Format check | `prettier --check .` | Code conventions |
+| Strict types | `tsc -b` with the §1 strictness flags | Validate once, model the domain |
+| Lint | ESLint flat config, `@typescript-eslint/strict-type-checked` | Code conventions |
+| Complexity | ESLint core: `complexity: 10`, `max-depth: 4`, `max-lines-per-function: 60` (blank lines and comments skipped; off for `*.test.ts` describe blocks), `max-lines: 400` | Simple and deletable |
+| Dead code | `knip` (unused files, exports, dependencies) | Code conventions |
+| Dependency direction | `dependency-cruiser` with layer rules: `packages/shared` imports neither app; domain modules import no framework, network, or storage module | Architecture |
+| Secret scan | `gitleaks git --log-opts=origin/main..HEAD` and `gitleaks dir .` | Privacy and security |
+| Vulnerability scan | `pnpm audit --prod --audit-level high` | Dependencies |
+| Commit messages | `commitlint --from origin/main` with `@commitlint/config-conventional` | Git and verification |
+| Tests | `vitest run` | Testing |
+
+**Why these thresholds:** complexity 10 and depth 4 are the common defaults that flag functions most reviewers find hard to follow; 60 lines per function and 400 per file keep a unit readable without scrolling and still allow table-driven code. Raise a threshold only through an Exception ADR for the named file.
+
+**Gaps:** none.
+
+**Change size soft limit:** 400 changed lines, excluding `pnpm-lock.yaml`, snapshots, and generated files.
+
+**Owner-run checks:** none declared.
 
 ---
 
@@ -76,9 +102,9 @@ Bootstrap the environment with `mise install` (provisions the pinned Node/pnpm v
 - **Storage primitive:** declared per project. Common defaults:
   - Backend: SQLite via Drizzle ORM, or PostgreSQL via Drizzle if multi-instance.
   - Frontend: IndexedDB via idb, or `localStorage` for tiny single-user state.
-- **Persisted entities:** declared by `VISION.md → Persistence and Privacy Posture`.
+- **Persisted entities:** declared by `VISION.md → Data and Permissions`.
 - **Schema migration policy:** numbered migrations under `apps/api/db/migrations/` (or equivalent). Drizzle generates them; agents review them before applying.
-- **Forbidden persistence:** anything declared forbidden in `VISION.md → Persistence and Privacy Posture`.
+- **Forbidden persistence:** anything declared forbidden in `VISION.md → Data and Permissions`.
 
 ---
 
@@ -100,6 +126,12 @@ Default answer to "should we add a library?" is **no**. The lists below are inte
 | `@typescript-eslint/*`   | `^8`    | TS-aware lint rules                                   | (default) | (template) |
 | `prettier`               | `^3`    | Formatter                                             | (default) | (template) |
 | `typescript`             | `^6.0`  | Language                                              | (default) | (template) |
+| `fast-check`             | `^4`    | Property-based tests for critical pure logic          | (default) | (template) |
+| `knip`                   | `^6`    | Dead-code gate (dev only)                             | (default) | (template) |
+| `dependency-cruiser`     | `^18`   | Dependency-direction gate (dev only)                  | (default) | (template) |
+| `@commitlint/cli` + `@commitlint/config-conventional` | `^21` | Commit-message gate (dev only)   | (default) | (template) |
+| `@stryker-mutator/core` + `@stryker-mutator/vitest-runner` | `^10` | `$MUTATION_CMD` (dev only) | (default) | (template) |
+| `gitleaks` (via `mise.toml`, not npm) | `8.x` | Secret-scan gate                       | (default) | (template) |
 
 ---
 
@@ -108,9 +140,9 @@ Default answer to "should we add a library?" is **no**. The lists below are inte
 - `any` (explicit or implicit via `@typescript-eslint/no-explicit-any`) without an inline `// reason: ...` justification.
 - `as` casts that bypass type checking — use `satisfies` or a runtime guard.
 - `// @ts-ignore` / `// @ts-expect-error` without an inline explanation that names the underlying constraint.
-- `moment` / `moment.js` — use `Temporal` (proposal) via polyfill or `date-fns` if approved.
-- Local-time storage or computation, and manual UTC-offset arithmetic — timezone conversion happens only at the request-parse / response-build edges (see §10).
-- `new Date(...)`-based local-time math or storing `Date`/timestamps that implicitly carry a local offset; formatting to a local-time string anywhere except the display boundary.
+- `moment` / `moment.js` — use `Temporal` (native where the runtime ships it, else an approved polyfill).
+- Mixing the time concepts: storing an *instant* in local time, storing a *local calendar time* as a precomputed UTC instant, or manual UTC-offset arithmetic. Conversion happens only at the boundary (see §10).
+- `new Date(...)`-based local-component math; `Date.parse` on a local-format string; formatting to a local-time string anywhere except the display boundary; `number` floating-point arithmetic on money.
 - Full-import of `lodash` (`import _ from 'lodash'`) — import single functions only, or use the standard library equivalent.
 - Raw `fetch` without zod-validated response parsing for any external network call.
 - `console.log` / `console.warn` / `console.error` in shipped code — use the `pino` logger.
@@ -137,17 +169,21 @@ Default answer to "should we add a library?" is **no**. The lists below are inte
 
 ---
 
-## 10. Time & timezones
+## 10. Base units & time
 
-Time is treated exactly like any other external input: **UTC everywhere internally, converted only at the boundary.** This is the same "validate/narrow at the edge" discipline this profile applies to data, applied to instants.
+The operating contract's *Base units at the boundary* rule, pinned for this stack. Zod schemas at the HTTP, env, and storage boundaries convert to these forms; nothing between the boundaries holds another form.
 
-- **Internal representation:** all timestamps in logic, API payloads, persistence, caches, and logs are **UTC instants** — a `Date` (which is an absolute epoch instant, not a wall-clock time) or a UTC `Temporal.Instant` / ISO-8601 string with a `Z` offset. Values that carry an implicit local offset are forbidden (see §7).
-- **Conversion happens only at the two edges:** parsing an inbound request/payload → normalise to a UTC instant immediately (validate with Zod, e.g. `z.string().datetime()` / `z.coerce.date()`); building an outbound response → serialise as UTC ISO-8601 (`.toISOString()`); rendering a user-facing value → convert to the target timezone at the last moment (`Intl.DateTimeFormat` with an explicit `timeZone`). Nothing in between ever holds local time.
-- **Mechanics:** prefer `Temporal` (via the approved polyfill) or `date-fns` for date math; never hand-roll `timedelta`/offset arithmetic. When using `Date`, only ever read/write epoch milliseconds or ISO-8601-with-`Z`; never `Date.parse` a local-format string and never assemble a date from local components for logic.
-- **Wire format:** the API contract exchanges UTC ISO-8601 strings (`Z` suffix); the frontend converts to the user's timezone for display only.
-- **Tests:** freeze/inject the clock (a fixed `Date` / Vitest fake timers) rather than reading wall-clock time; no timezone-dependent assertions.
+| Concept | Internal base unit | Boundary conversion |
+| ------- | ------------------ | ------------------- |
+| Instant | `Temporal.Instant` or epoch milliseconds as a branded `number`; wire form is ISO-8601 with `Z` | Parse with `z.iso.datetime()` → instant; serialise with `.toString()` / `.toISOString()` |
+| Local calendar time | `Temporal.PlainDateTime` / `PlainDate` / `PlainTime` **plus** an IANA zone string, stored together | Resolve to an instant with `.toZonedDateTime(zone)` only when an instant is needed (scheduling, comparison) |
+| Duration | `Temporal.Duration`, or integer milliseconds as a branded `number` | Parse ISO-8601 durations at the boundary |
+| Money | integer minor units (`bigint` or safe integer) + ISO-4217 currency code | Format with `Intl.NumberFormat` at the display edge only |
 
-> The language-neutral UTC-in-logic / convert-at-edges rule lives in `CLAUDE.md → Time`; this section pins the concrete TypeScript mechanics.
+- **Clock:** inject a `Clock` interface (`now(): Temporal.Instant`); tests use a fixed clock or Vitest fake timers.
+- **Display:** convert to the viewer's zone at the last moment with `Intl.DateTimeFormat` and an explicit `timeZone`.
+- **Banned:** see §7 — local-component `Date` math, `Date.parse` on local strings, hand-written offset arithmetic, floating-point money.
+- **Tests:** no time-zone-dependent assertions; cover a daylight-saving transition for every local-calendar-time feature.
 
 ---
 
@@ -164,12 +200,4 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 
 ## 12. Best practices source
 
-`architect` and `ux-guardian` consult current MDN and framework documentation before design and review verdicts on API-level questions, and cite the section. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with MDN via WebFetch as fallback. Training-data memory is not an acceptable source for API signatures or accessibility specifics.
-
----
-
-## 13. Intentional Divergences
-
-| Date     | CLAUDE.md rule | Divergence | Reason |
-| -------- | -------------- | ---------- | ------ |
-| _(none)_ | —              | —          | —      |
+`architect` and `product-guardian` consult current MDN and framework documentation before design and review verdicts on API-level questions, and cite the section. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with MDN via WebFetch as fallback. Training-data memory is not an acceptable source for API signatures or accessibility specifics.

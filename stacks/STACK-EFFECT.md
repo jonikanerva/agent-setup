@@ -11,7 +11,7 @@
 - **Shape:** backend service (`apps/server`, `@effect/platform` HttpApi) + browser SPA (`apps/web`, React + Vite), sharing one contract package.
 - **Critical execution path:** server — request decode → scope narrowing → use case → typed response or typed error; web — route match → query/client cache → typed view model → React render.
 - **Applicable states:** web surfaces handle awaiting-first-data, success, empty, degraded, offline, error (plus product-specific); API responses are typed success / typed error.
-- **Intended for:** stateless, external-data-driven products where data is decoded, narrowed, and filtered at the schema boundary. **Not the default for:** SEO-first or SSR-required sites, or products needing durable business data, accounts, workflows, payments, or background jobs as core behaviour — those need a persistent variant of this profile, recorded via §13.
+- **Intended for:** stateless, external-data-driven products where data is decoded, narrowed, and filtered at the schema boundary. **Not the default for:** SEO-first or SSR-required sites, or products needing durable business data, accounts, workflows, payments, or background jobs as core behaviour — those need a persistent variant of this profile, recorded in an ADR.
 
 ### Monorepo layout
 
@@ -33,7 +33,7 @@ repo/
   pnpm-lock.yaml
 ```
 
-### Package boundaries (enforced with `no-restricted-imports` lint rules)
+### Package boundaries (enforced by the dependency-cruiser gate, §3)
 
 - `packages/api-contract` is the **only** package shared by server and web: Effect Schema definitions, HttpApi route/group definitions, DTOs, typed public errors, public enums/discriminated unions, generated OpenAPI artifacts. It MUST NOT import server runtime, React, browser APIs, Node-only APIs, cache implementations, or UI code.
 - `packages/domain` contains pure business rules and use cases. It MUST NOT import React, browser APIs, server runtime, `fetch`, clock/time APIs, cache, filesystem, or HTTP modules directly — those capabilities are Effect services provided via `Layer` and declared in `R`.
@@ -44,7 +44,7 @@ repo/
 
 ## 1. Language & Runtime
 
-- **Primary language:** TypeScript 6.x stable line. The TypeScript 7 native preview MUST NOT be used in mainline; migrating requires a §13 entry after a CI compatibility trial.
+- **Primary language:** TypeScript 6.x stable line. The TypeScript 7 native preview MUST NOT be used in mainline; migrating requires an ADR after a CI compatibility trial.
 - **Strictness mode:** ESLint with `@typescript-eslint/strict-type-checked`, plus this non-negotiable `tsconfig` baseline:
 
 ```json
@@ -84,7 +84,7 @@ repo/
 | Frontend UI            | React 19 + React DOM                    | Function components only                                               |
 | Frontend build         | Vite                                    | SPA build and dev server                                               |
 | Routing                | TanStack Router                         | Type-safe SPA routing                                                  |
-| SSR escape hatch       | TanStack Start                          | Conditional only; requires a §13 entry (see §2.3)                      |
+| SSR escape hatch       | TanStack Start                          | Conditional only; requires an ADR (see §2.3)                           |
 | Client cache           | TanStack Query                          | Query cache, background refetch, controlled technical persistence      |
 | Styling                | Tailwind CSS v4 via `@tailwindcss/vite` | Utility-first styling with Vite integration                            |
 | Unit/integration tests | Vitest                                  | Pure functions, Effects, Layers, API handlers                          |
@@ -145,15 +145,15 @@ type RemoteView<A, E> =
 
 - The mapping from TanStack Query result to `RemoteView` is centralized and tested; components MUST NOT scatter ad hoc `isLoading` / `isError` / `data?.length === 0` branching when the shared view model exists.
 - TanStack Query owns client data fetching — no `useEffect` for server-state fetching. Query keys are typed, stable, and derived from decoded route/search parameters; query functions call typed API clients, never raw `fetch` from components.
-- Client persistence is **technical cache only**, never product state: opt-in per query; persisted keys MUST NOT contain user identifiers; persisted values MUST be schema-narrowed, in-scope public data with `maxAge` and `schemaVersion` (bust the cache on version change); never persist raw upstream responses, and never persist error objects unless explicitly safe and schema-defined. Must align with `VISION.md → Persistence and Privacy Posture`.
+- Client persistence is **technical cache only**, never product state: opt-in per query; persisted keys MUST NOT contain user identifiers; persisted values MUST be schema-narrowed, in-scope public data with `maxAge` and `schemaVersion` (bust the cache on version change); never persist raw upstream responses, and never persist error objects unless explicitly safe and schema-defined. Must align with `VISION.md → Data and Permissions`.
 
 ### 2.3 TanStack Start (SSR) policy
 
-TanStack Start is not a default dependency. Adopting it requires a §13 entry naming at least one explicit product need: SEO, social sharing previews, a first-render latency target the SPA cannot meet, edge rendering, a server-side session/auth model, or an SSR-required integration. Until then, TanStack Router runs in SPA mode.
+TanStack Start is not a default dependency. Adopting it requires an ADR naming at least one explicit product need: SEO, social sharing previews, a first-render latency target the SPA cannot meet, edge rendering, a server-side session/auth model, or an SSR-required integration. Until then, TanStack Router runs in SPA mode.
 
 ### 2.4 `@effect/platform` HttpApi risk acceptance
 
-Parts of the Effect platform ecosystem move faster than the core `effect` package; HttpApi is accepted with mitigations: exact versions pinned in `pnpm-lock.yaml`; `@effect/platform` / `@effect/platform-node` versions chosen for Effect v3 compatibility (do not assume they share `effect`'s major version); the three packages upgrade together in one dependency PR; OpenAPI output is snapshot-tested; every public endpoint has contract tests plus at least one golden-path test through the derived/generated client. Any HttpApi API-surface change gets a §13 entry.
+Parts of the Effect platform ecosystem move faster than the core `effect` package; HttpApi is accepted with mitigations: exact versions pinned in `pnpm-lock.yaml`; `@effect/platform` / `@effect/platform-node` versions chosen for Effect v3 compatibility (do not assume they share `effect`'s major version); the three packages upgrade together in one dependency PR; OpenAPI output is snapshot-tested; every public endpoint has contract tests plus at least one golden-path test through the derived/generated client. Any HttpApi API-surface change gets an ADR.
 
 ### 2.5 Testing policy
 
@@ -187,19 +187,46 @@ Bootstrap the environment with `mise install` (provisions the pinned Node/pnpm v
 | `$SMOKE_CMD`         | `pnpm test:smoke`    |
 | `$VERIFY_CMD`        | `pnpm verify`        |
 | `$VERIFY_CI_CMD`     | `pnpm verify:ci`     |
+| `$MUTATION_CMD`      | `pnpm mutate -- --mutate <files>` (StrykerJS, incremental, critical logic only) |
+
+**Narrowest test selector:** `pnpm test:unit -- <file> -t "<test name>"`.
 
 Recommended script semantics:
 
 ```txt
-pnpm verify     = format check → typecheck → lint → build → unit tests
+pnpm verify     = format check → typecheck → lint (incl. complexity) → dead code → dependency direction
+                  → secret scan → vulnerability scan → commit lint → build → unit tests
 pnpm verify:ci  = verify → property tests → contract tests → selected browser smoke/e2e tests
 ```
+
+### Gates in `$VERIFY_CMD`
+
+| Gate | Tool and threshold | Contract rule |
+| ---- | ------------------ | ------------- |
+| Format check | `prettier --check .` | Code conventions |
+| Strict types | `tsc -b` with the §1 baseline | Validate once, model the domain |
+| Lint | ESLint flat config, `typescript-eslint` strict type-checked | Code conventions |
+| Complexity | ESLint core: `complexity: 10`, `max-depth: 4`, `max-lines-per-function: 60` (blank lines and comments skipped; off for test describe blocks), `max-lines: 400` | Simple and deletable |
+| Dead code | `knip` (unused files, exports, dependencies) | Code conventions |
+| Dependency direction | `dependency-cruiser` encoding the §0 package boundaries (replaces hand-kept `no-restricted-imports` lists) | Architecture |
+| Secret scan | `gitleaks git --log-opts=origin/main..HEAD` and `gitleaks dir .` | Privacy and security |
+| Vulnerability scan | `pnpm audit --prod --audit-level high` | Dependencies |
+| Commit messages | `commitlint --from origin/main` with `@commitlint/config-conventional` | Git and verification |
+| Tests | `vitest run` (unit) | Testing |
+
+Thresholds follow `STACK-TS.md`: the common defaults that flag code most reviewers find hard to follow. Raise one only through an Exception ADR for the named file.
+
+**Gaps:** none.
+
+**Change size soft limit:** 400 changed lines, excluding `pnpm-lock.yaml`, OpenAPI snapshots, and generated files.
+
+**Owner-run checks:** none declared.
 
 ---
 
 ## 4. Performance budgets
 
-Starting points; product-specific budgets in `VISION.md` or a §13 entry override them.
+Starting points; product-specific budgets in `VISION.md` or an ADR override them.
 
 - **API handler overhead:** p99 < 100 ms, p50 < 30 ms (excluding upstream calls). End-to-end p95 including upstream calls is product-specific.
 - **Every upstream call** MUST have: a timeout; a typed failure; a retry policy or an explicit no-retry rationale; bounded concurrency (no unbounded fan-out); structured logging without raw payloads.
@@ -210,9 +237,9 @@ Starting points; product-specific budgets in `VISION.md` or a §13 entry overrid
 
 ## 5. Persistence shape
 
-- **Server default:** in-memory Effect `Cache` only — TTL-bounded, no manual invalidation without a documented reason, no database, no on-disk persistence, no per-visitor state. If durable persistence becomes necessary, this profile is no longer sufficient — create a persistent variant profile and record the change via §13.
+- **Server default:** in-memory Effect `Cache` only — TTL-bounded, no manual invalidation without a documented reason, no database, no on-disk persistence, no per-visitor state. If durable persistence becomes necessary, this profile is no longer sufficient — create a persistent variant profile and record the change in an ADR.
 - **Client default:** TanStack Query in-memory cache; optional technical persistence only per §2.2 and only if `VISION.md` allows it; no product state, no user preferences, no account/session state, no user identifiers in cache keys.
-- **Forbidden persistence:** anything declared forbidden in `VISION.md → Persistence and Privacy Posture` (accounts, per-user state, PII, device/session identifiers, telemetry, raw upstream payloads, …) — that list is product/privacy policy owned by `VISION.md`, not restated here.
+- **Forbidden persistence:** anything declared forbidden in `VISION.md → Data and Permissions` (accounts, per-user state, PII, device/session identifiers, telemetry, raw upstream payloads, …) — that list is product/privacy policy owned by `VISION.md`, not restated here.
 
 ---
 
@@ -244,6 +271,11 @@ Default answer to "should we add a library?" is **no**. New entries require a `S
 | `typescript-eslint`                      | stable, explicit semver                                    | `/typescript-eslint/typescript-eslint`  | Typed lint gates                                            |
 | `prettier`                               | stable, explicit semver                                    | `/prettier/prettier`                    | Formatter                                                   |
 | `pnpm`                                   | stable, explicit semver                                    | `/pnpm/pnpm`                            | Package manager                                             |
+| `knip`                                   | stable, explicit semver (dev)                              | —                                       | Dead-code gate                                              |
+| `dependency-cruiser`                     | stable, explicit semver (dev)                              | —                                       | Dependency-direction gate                                   |
+| `@commitlint/cli` + `@commitlint/config-conventional` | stable, explicit semver (dev)                 | —                                       | Commit-message gate                                         |
+| `@stryker-mutator/core` + `@stryker-mutator/vitest-runner` | stable, explicit semver (dev)            | —                                       | `$MUTATION_CMD`                                             |
+| `gitleaks` (via `mise.toml`, not npm)    | `8.x`                                                      | —                                       | Secret-scan gate                                            |
 
 **Documentation lookups.** Model priors drift toward older or beta APIs — Effect APIs especially. Before writing integration-seam code (Layer wiring, HttpApi handlers, Query persistence, Router search-param validation, Vite/Tailwind plugin wiring) or doing a major upgrade, check the current official docs rather than writing from memory. When the Context7 MCP server is available, use it with targeted, version-pinned queries (the IDs above; target Effect v3). If the docs, this file, and local code disagree, stop and document the mismatch — if a package API differs from what this file expects, update this file before continuing.
 
@@ -251,7 +283,7 @@ Default answer to "should we add a library?" is **no**. New entries require a `S
 
 ## 7. Stack-specific reject-list additions
 
-The following are forbidden unless a §13 entry explicitly permits them:
+The following are forbidden unless an Exception ADR explicitly permits them:
 
 - explicit or implicit `any`; `as unknown as`; casts that bypass type checking instead of Schema guards or `satisfies`;
 - `// @ts-ignore` / `// @ts-expect-error` without a precise inline reason naming the underlying TypeScript limitation, and a tracking issue;
@@ -261,7 +293,7 @@ The following are forbidden unless a §13 entry explicitly permits them:
 - `console.*` in shipped code;
 - class-based React components;
 - `useEffect` for server-state data fetching;
-- reading wall-clock time directly (`Date.now()` / `new Date()`) in domain logic instead of the `Clock` capability; naive/local-time instants or manual UTC-offset arithmetic (see §10);
+- reading wall-clock time directly (`Date.now()` / `new Date()`) in domain logic instead of the `Clock` capability; mixing the time concepts (an instant stored in local time, a local calendar time stored as a precomputed instant) or manual UTC-offset arithmetic (see §10);
 - raw `fetch` from React components;
 - hand-rolled error-to-response glue in HttpApi handlers;
 - Effect v4 beta APIs; the TypeScript 7 preview in mainline;
@@ -275,7 +307,7 @@ The following are forbidden unless a §13 entry explicitly permits them:
 
 - **Logger:** Effect logging (`Effect.log*`) or a structured logger wired through Effect services. No `console.*` in shipped code.
 - **Log content:** structured and redacted — no raw upstream payloads, secrets, PII, user identifiers, or device identifiers; no stack traces in public responses.
-- **Telemetry / analytics:** policy is owned by `VISION.md → Persistence and Privacy Posture`; anything approved there is wired as an approved dependency (§6) with redaction and retention configured in code.
+- **Telemetry / analytics:** policy is owned by `VISION.md → Data and Permissions`; anything approved there is wired as an approved dependency (§6) with redaction and retention configured in code.
 
 ---
 
@@ -286,17 +318,21 @@ The following are forbidden unless a §13 entry explicitly permits them:
 
 ---
 
-## 10. Time & timezones
+## 10. Base units & time
 
-Time is treated exactly like any other external input: **UTC everywhere internally, converted only at the boundary** — the same decode/narrow-at-the-edge discipline §2.1 applies to data, applied to instants.
+The operating contract's *Base units at the boundary* rule, pinned for this stack. Effect Schema at the HttpApi and upstream boundaries decodes into these forms (§2.1); nothing between the boundaries holds another form.
 
-- **Internal representation:** all instants in domain logic, cache entries, API payloads, and logs are **UTC** — `DateTime.Utc` (Effect's `DateTime` module) or a UTC ISO-8601 string with a `Z` offset. Values carrying an implicit local offset are forbidden.
-- **Conversion happens only at the two edges:** decode inbound values to UTC at the Schema boundary (`Schema.Date` / a UTC-normalising schema); serialise outbound values as UTC ISO-8601 (`Z` suffix) in the API contract; convert to the target timezone only when rendering a user-facing value in the SPA (`Intl.DateTimeFormat` with an explicit `timeZone`). Nothing in between holds local time.
-- **The clock is a capability, not ambient.** Read "now" through Effect's `Clock` (`DateTime.now`, `Clock.currentTimeMillis`) declared in `R`, never `Date.now()` / `new Date()` in domain code — see §2.1. This is what makes time deterministic under test.
-- **Tests:** exercise TTL, retry, timeout, and refresh windows with `TestClock` (already required by §2.5) rather than wall-clock waits; no timezone-dependent assertions.
-- **Never** hand-roll offset/`timedelta` arithmetic for timezone conversion; go through `DateTime` / `Intl`.
+| Concept | Internal base unit | Boundary conversion |
+| ------- | ------------------ | ------------------- |
+| Instant | `DateTime.Utc`; wire form is ISO-8601 with `Z` | Decode with a UTC-normalising schema (`Schema.DateTimeUtc`); encode as ISO-8601 `Z` in the API contract |
+| Local calendar time | a local date/time value **plus** an IANA zone (`DateTime.Zoned` when resolved) | Resolve to an instant with the stored zone only when an instant is needed |
+| Duration | `Duration` (Effect) | Decode with `Schema.Duration`-family schemas at the boundary |
+| Money | integer minor units + ISO-4217 currency code, as a branded schema | Format with `Intl.NumberFormat` in the SPA only |
 
-> The language-neutral UTC-in-logic / convert-at-edges rule lives in `CLAUDE.md → Time`; this section pins the concrete Effect/TypeScript mechanics.
+- **Clock:** the clock is a capability. Read "now" through Effect's `Clock` / `DateTime.now` declared in `R`, never `Date.now()` / `new Date()` in domain code (§2.1).
+- **Display:** convert to the viewer's zone at the last moment in the SPA with `Intl.DateTimeFormat` and an explicit `timeZone`.
+- **Tests:** exercise TTL, retry, timeout, and refresh windows with `TestClock` (§2.5); no time-zone-dependent assertions; cover a daylight-saving transition for every local-calendar-time feature.
+- **Never** hand-write offset arithmetic; go through `DateTime` / `Intl`.
 
 ---
 
@@ -313,12 +349,4 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 
 ## 12. Best practices source
 
-`architect` and `ux-guardian` consult current Effect, MDN, and framework documentation before design and review verdicts on API-level questions, and cite the section. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with `effect.website` / MDN via WebFetch as fallback. Training-data memory is not an acceptable source for API signatures or accessibility specifics.
-
----
-
-## 13. Intentional Divergences
-
-| Date     | CLAUDE.md rule | Divergence | Reason |
-| -------- | -------------- | ---------- | ------ |
-| _(none)_ | —              | —          | —      |
+`architect` and `product-guardian` consult current Effect, MDN, and framework documentation before design and review verdicts on API-level questions, and cite the section. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with `effect.website` / MDN via WebFetch as fallback. Training-data memory is not an acceptable source for API signatures or accessibility specifics.

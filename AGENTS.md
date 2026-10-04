@@ -16,13 +16,15 @@ model and supported hosts.
 ## Distribution model
 
 Link global roles and skills before you configure a project. Then copy only
-the product contract, one stack profile, and the selected host contract:
+the product contract, one stack profile, the ADR template, and the selected
+host contract:
 
 ```sh
 bin/link-global.sh
 PROJECT_DIR="/path/to/project"
 cp template/VISION.md "$PROJECT_DIR/VISION.md"
 cp stacks/STACK-TS.md "$PROJECT_DIR/STACK.md"
+mkdir -p "$PROJECT_DIR/docs/adr" && cp template/docs/adr/TEMPLATE.md "$PROJECT_DIR/docs/adr/"
 cp template/CLAUDE.md "$PROJECT_DIR/CLAUDE.md"
 cp template/AGENTS.md "$PROJECT_DIR/AGENTS.md"
 ```
@@ -40,7 +42,8 @@ this repository.
 - `template/CLAUDE.md` and `template/.claude/` are the Claude distribution.
 - `template/AGENTS.md`, `template/.codex/agents/`, and
   `template/.agents/skills/` are the Codex distribution.
-- `template/VISION.md`, `template/.github/`, and `stacks/` are shared.
+- `template/VISION.md`, `template/docs/adr/`, `template/.github/`, and
+  `stacks/` are shared.
 
 The two hosts use different agent and orchestration formats. Keep both outputs
 static and explicit in Git. Share concepts and policy, but do not hide their
@@ -50,46 +53,54 @@ differences behind generated files or runtime indirection.
 
 The operating contracts, agents, and skills are technology-neutral. Concrete
 technology belongs in `STACK.md` alone. Refer to commands only through
-`$FORMAT_CMD`, `$LINT_CMD`, `$BUILD_CMD`, `$TEST_CMD`, and `$VERIFY_CMD`, which
-each stack profile defines in its Build & verify commands section.
+`$FORMAT_CMD`, `$LINT_CMD`, `$BUILD_CMD`, `$TEST_CMD`, `$VERIFY_CMD`, and
+`$MUTATION_CMD`, which each stack profile defines in its Build & verify
+commands section.
 
-Never hard-code a language, framework, package manager, or build command into
-the operating contracts, agents, or skills.
+Never hard-code a language, framework, tool, package manager, or build command
+into the operating contracts, agents, or skills.
+
+Mechanical checks belong in the `$VERIFY_CMD` gates of each stack profile. The
+review skill judges only what machines cannot.
 
 ## Workflow parity
 
 Both hosts expose the same five roles and three workflows:
 
-- Roles: architect, UX guardian, devil's advocate, lead developer, QA enforcer.
-- Workflows: project manager, implementation, and code review.
-- Sequence: plan and approve; UX and architecture review; stress-test;
-  implementation; QA-owned code review to PASS; human review and merge.
+- Roles: architect, product guardian, devil's advocate, implementer, reviewer.
+- Workflows: lead, implementation, and code review.
+- Sequence: agree checkpoints; write acceptance criteria; the lead sizes the
+  team; design and challenge as needed; refactoring PR first when the
+  structure does not fit; implementation; independent review to PASS when code
+  changes; merge only with merge authority for the task.
 
 Host-specific syntax is intentional: Claude uses slash commands and Markdown
 agent manifests; Codex uses dollar-prefixed skills, TOML custom agents, and
-subagent delegation. Do not copy host-specific tool names into the other host's
-files.
+subagent delegation. Do not copy host-specific tool names into the other
+host's files. Codex custom agents read `AGENTS.md` explicitly, because Codex
+does not document that subagents load it.
 
 ## Invariants to keep consistent
 
 When changing policy, search both host trees and update every affected static
-file. The files are deliberately self-contained because agents may run in
-isolated contexts.
+file.
 
 - Repository and GitHub artifacts are English; user chat is Finnish.
-- New user-facing English uses Simplified Technical English. Write short
-  sentences. Use active voice and plain, consistent terms. Do not rewrite
-  compact operating contracts only to apply STE.
-- Never commit or push to `main`; use `feat|fix|chore|docs/<topic>` branches.
-- Conventional Commits with the host-specific co-author trailer; merge commits,
-  never squash.
-- Issues, commits, PR descriptions, and review comments are the audit trail.
-- The user owns product direction, backlog changes, and merge authority.
-- Read-only roles never edit product code.
-- `lead-dev` implements; `qa-enforcer` owns the semantic review gate.
+- New user-facing English, including ADRs, uses Simplified Technical English.
+- Never commit or push to `main`; use `feat|fix|chore|docs|refactor/<topic>`
+  branches. A force-push to a feature branch uses `--force-with-lease`.
+- Conventional Commits with the host-specific co-author trailer; fold fixup
+  commits before the final review; merge commits, never squash.
+- GitHub issues hold the backlog and acceptance criteria; PRs hold changes and
+  what was not verified; `docs/adr/` holds decisions, exceptions, and lessons.
+  No roadmap, backlog, changelog, or progress files.
+- Owner decisions stop the affected work and go to the owner in chat; the team
+  decides and records everything else. The team merges only with merge
+  authority for that task.
+- Read-only roles never edit product code. The implementer never reviews its
+  own work or approves its own exception.
 - Direct pushes to `main` are forbidden, normal and force. Destructive
-  deletion, hook bypasses, and autonomous merges are forbidden.
-- A force-push to a feature branch is allowed. Use `--force-with-lease`.
+  deletion and hook bypasses are forbidden.
 
 ## Verification
 

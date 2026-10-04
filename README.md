@@ -6,31 +6,63 @@ This repository provides a static agent setup for Claude Code and Codex.
 
 The setup contains:
 
-- Five roles: architect, UX guardian, devil's advocate, lead developer, and QA
-  enforcer.
-- Three workflows: project manager, implementation, and code review.
+- Five roles: architect, product guardian, devil's advocate, implementer, and
+  reviewer.
+- Three workflows: lead, implementation, and code review.
 - A technology-neutral operating contract for each tool.
 - A product contract template in `VISION.md`.
+- An ADR template for decisions, exceptions, and lessons.
 - Technology profiles that become a project's `STACK.md`.
 
-The project manager uses all five roles for each delivery task. The roles
-review product fit, architecture, scope, implementation, and quality. The
-project manager shows the pull request only after the code review reports PASS.
-The user reviews and merges the pull request.
+## How the team works
+
+The lead is the only role that talks to you. At the start of each task, the
+lead agrees the checkpoints with you. For example, the team can stop at the
+plan, stop at the pull request, or run to completion and merge. The team merges
+only when you allow it for that task.
+
+The team makes its own decisions. The lead stops and asks you only for owner
+decisions:
+
+- anything that costs money;
+- a new external service or integration;
+- a product change listed in `VISION.md → Owner Decisions`;
+- an operation that deletes user data or cannot be rolled back;
+- a checkpoint that you set for the task.
+
+While the lead waits for your answer, the team continues with the work that
+the decision does not affect.
+
+The lead writes acceptance criteria before implementation. The lead chooses the
+roles that each task needs. A review in a separate context is mandatory for
+every change to code. When the current structure does not fit a change, the
+team first refactors the structure in its own pull request.
+
+Machines check what machines can check. Each stack profile lists the gates in
+`$VERIFY_CMD`: format, types, lint, complexity, dead code, dependency
+direction, secrets, vulnerabilities, commit messages, and tests. The reviewer
+judges the rest: the right problem, the simplest solution, the right
+structure, test adequacy, and risk. For critical logic the team adds
+property-based tests, mutation testing, and a devil's advocate challenge.
+
+Each pull request states what was not verified. Decisions, exceptions, and
+lessons go into short ADR files in `docs/adr/`.
 
 ## Technical basis
 
 The Claude implementation uses these Claude Code features:
 
-- [Agent Teams](https://code.claude.com/docs/en/agent-teams) provide the team
-  lead, independent teammates, shared tasks, and direct messages.
 - [Custom subagents](https://code.claude.com/docs/en/sub-agents) define the five
-  reusable roles and their tool access.
+  reusable roles and their tool access. Subagents load the project
+  `CLAUDE.md`.
 - [Skills](https://code.claude.com/docs/en/skills) define the three reusable
   workflows.
+- [Agent Teams](https://code.claude.com/docs/en/agent-teams) are optional. The
+  lead can start a team for a task with much parallel work. For other tasks the
+  lead uses subagents.
 
-Claude Code marks Agent Teams as experimental. You must enable Agent Teams
-before you use the Claude workflow.
+Claude Code marks Agent Teams as experimental. The workflow works without
+Agent Teams. Enable Agent Teams when you want the lead to have that option.
 
 The Codex implementation uses these Codex features:
 
@@ -41,10 +73,10 @@ The Codex implementation uses these Codex features:
 - [AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
   provides the project operating contract.
 
-The two tools use different coordination systems. Claude teammates can share
-tasks and send direct messages. The Codex primary agent starts subagents and
-collects their results. Both implementations use the same roles, order, and
-quality gates.
+The two tools use different coordination systems. In Claude, the lead uses
+subagents or, when enabled, an Agent Team. The Codex primary agent starts
+subagents and collects their results. Both implementations use the same roles,
+decision rights, and quality gates.
 
 ## Repository layout
 
@@ -56,6 +88,9 @@ template/
     settings.json     # Reference project settings for Claude
   .codex/agents/      # Codex role definitions
   .agents/skills/     # Codex workflows
+  .github/
+    pull_request_template.md
+  docs/adr/TEMPLATE.md  # ADR template
   CLAUDE.md           # Claude project contract
   AGENTS.md           # Codex project contract
   VISION.md           # Product contract template
@@ -72,7 +107,8 @@ bin/
 
 Do not copy the complete `template/` directory into a project. The global link
 installs the roles and workflows. Each project needs only `VISION.md`, one
-`STACK.md`, and the operating contract for the selected tool.
+`STACK.md`, the ADR template, the pull request template, and the operating
+contract for the selected tool.
 
 ## Requirements
 
@@ -113,8 +149,8 @@ The command creates these links:
 The command does not replace a real file or directory. The command can replace
 only a symlink. The command does not change Claude or Codex user settings.
 
-For Claude, merge this setting into your existing
-`~/.claude/settings.json` file:
+Optional: to let the Claude lead start Agent Teams, merge this setting into
+your existing `~/.claude/settings.json` file:
 
 ```json
 {
@@ -124,8 +160,8 @@ For Claude, merge this setting into your existing
 }
 ```
 
-Do not replace other settings in the file. Claude Agent Teams do not start
-without this setting.
+Do not replace other settings in the file. Without this setting, the lead uses
+subagents only.
 
 The file `template/.claude/settings.json` contains reference permission rules
 and hooks. The link command does not install those settings. Merge the required
@@ -153,6 +189,14 @@ cp stacks/STACK-TS.md "$PROJECT_DIR/STACK.md"
 
 Use `STACK-TEMPLATE.md` when no example matches the project.
 
+Copy the ADR template and the pull request template:
+
+```sh
+mkdir -p "$PROJECT_DIR/docs/adr" "$PROJECT_DIR/.github"
+cp template/docs/adr/TEMPLATE.md "$PROJECT_DIR/docs/adr/TEMPLATE.md"
+cp template/.github/pull_request_template.md "$PROJECT_DIR/.github/"
+```
+
 Copy the contract for the selected tool.
 
 For Claude Code:
@@ -169,24 +213,26 @@ cp template/AGENTS.md "$PROJECT_DIR/AGENTS.md"
 
 Copy both contracts when the project uses both hosts.
 
-Edit `VISION.md` and `STACK.md`. Replace every placeholder. Define all named
-build and verification commands in `STACK.md`.
+Edit `VISION.md` and `STACK.md`. Replace every placeholder. Define all six
+named commands in `STACK.md` and set up the gates that it lists.
 
 ### 3. Start the workflow
 
 For Claude Code, run:
 
 ```text
-/project-manager solve issue #1
+/lead solve issue #1
 ```
 
 For Codex, run:
 
 ```text
-$project-manager solve issue #1
+$lead solve issue #1
 ```
 
-You can also give the project manager a direct problem description.
+You can also give the lead a direct problem description. Say the checkpoints
+in the same message when you know them, for example "run to completion and
+merge" or "stop at the pull request".
 
 ## Updates
 
@@ -199,6 +245,10 @@ Run the link command again after you add or remove a role or skill:
 ```sh
 bin/link-global.sh --host all --prune
 ```
+
+The `--prune` option also removes links to roles and skills that were renamed
+or removed, for example the old `project-manager`, `lead-dev`, `qa-enforcer`,
+and `ux-guardian` links.
 
 The copied project contracts do not update automatically. Review contract
 changes and copy the new version into each project when required.
@@ -213,8 +263,9 @@ changes and copy the new version into each project when required.
 | `STACK-PY.md` | Strict Python and Home Assistant custom integrations |
 | `STACK-TEMPLATE.md` | A new stack that has no existing profile |
 
-Each profile defines the project shape, runtime, frameworks, commands, budgets,
-persistence, dependencies, logging, lifecycle, time rules, and reject rules.
+Each profile defines the project shape, runtime, frameworks, commands, gates,
+budgets, persistence, dependencies, logging, lifecycle, base units and time,
+and reject rules.
 
 ## Writing standard
 
@@ -231,9 +282,10 @@ only to apply this rule.
 This repository does not use a generator. Git contains every final agent and
 skill file. A pull request shows the exact setup that each tool loads.
 
-Some rules appear in more than one file. The repetition is intentional. Each
-agent can run in an isolated context. Claude and Codex also use different file
-formats.
+Claude subagents load the project `CLAUDE.md`, so the Claude roles and skills
+refer to the contract and do not repeat it. Codex roles tell the agent to read
+`AGENTS.md` first. Claude and Codex use different file formats, so some text
+appears in both host trees.
 
 Run the static checks after a change:
 

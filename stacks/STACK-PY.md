@@ -95,9 +95,38 @@ Bootstrap the environment with `mise install` (provisions the pinned tools/runti
 | `$LINT_CMD`   | `uv run ruff check . && uv run mypy custom_components`                         |
 | `$BUILD_CMD`  | `uv run python -m compileall -q custom_components` (syntax gate — there is no compile step) |
 | `$TEST_CMD`   | `uv run pytest`                                                                |
-| `$VERIFY_CMD` | `uv run ruff format --check . && uv run ruff check . && uv run mypy custom_components && uv run pytest` (format-check → lint → type-check → tests) |
+| `$VERIFY_CMD` | `mise run verify` (every gate below, in table order) |
+| `$MUTATION_CMD` | `uv run mutmut run "<module glob>"` (critical logic only) |
+
+**Narrowest test selector:** `uv run pytest <file>::<test>`.
 
 > Python has no build artifact, so `$BUILD_CMD` maps to a **bytecode-compile syntax gate** over the integration package. The ecosystem's structural gates — `hassfest` and HACS validation — cannot run locally in a custom-integration repo (`script.hassfest` lives in the Home Assistant core repository), so they run in CI as the `home-assistant/actions/hassfest` and `hacs/action` GitHub Actions. `$VERIFY_CMD` is what any agent must run and report on before claiming completion; the PR must additionally pass the hassfest and HACS-validate actions in CI.
+
+### Gates in `$VERIFY_CMD`
+
+The `verify` task in `mise.toml` runs these in order. It is the one entry point for the full gate set, because `gitleaks` is a mise-provisioned binary and not a `uv` package; the other commands above stay plain `uv run` calls, and the `verify` task calls the same commands. Tool configuration lives in `pyproject.toml`.
+
+| Gate | Tool and threshold | Contract rule |
+| ---- | ------------------ | ------------- |
+| Format check | `ruff format --check .` | Code conventions |
+| Strict types | `mypy --strict custom_components` with the §1 flags | Validate once, model the domain |
+| Lint | `ruff check .` with HA core's rule set | Code conventions |
+| Complexity | ruff `C901` (`max-complexity = 10`), `PLR0912` (`max-branches = 12`), `PLR0915` (`max-statements = 50`), `PLR0913` (`max-args = 6`, HA callbacks included) | Simple and deletable |
+| Dead code | ruff `F401`/`F841` for local dead code; `vulture custom_components --min-confidence 80` with a whitelist for HA entry points (`async_setup_entry`, platform hooks, config-flow steps) | Code conventions |
+| Dependency direction | `lint-imports` (import-linter) with a `layers` contract: platform files → `coordinator` → `api` → `models`; `models` and pure modules import nothing from `homeassistant` | Architecture |
+| Secret scan | `gitleaks git --log-opts=origin/main..HEAD` and `gitleaks dir .` | Privacy and security |
+| Vulnerability scan | `pip-audit --strict` over the dev environment and the `manifest.json` requirements | Dependencies |
+| Commit messages | `cz check --rev-range origin/main..HEAD` (commitizen) | Git and verification |
+| Tests | `pytest` | Testing |
+| Syntax | `python -m compileall -q custom_components` (`$BUILD_CMD`) | Git and verification |
+
+The thresholds are the common defaults that flag code most reviewers find hard to follow; `max-args` is 6 because HA callbacks take `hass` and the entry. Raise one only through an Exception ADR for the named file.
+
+**Gaps:** none locally; `hassfest` and HACS validation run in CI only (see above).
+
+**Change size soft limit:** 400 changed lines, excluding `uv.lock`, snapshots, and translations.
+
+**Owner-run checks:** a smoke test on a real Home Assistant instance with the target device — triggered by changes to `api.py`, `config_flow.py`, or `coordinator.py`.
 
 ---
 
@@ -118,9 +147,9 @@ Bootstrap the environment with `mise install` (provisions the pinned tools/runti
   2. **`Store`** (`homeassistant.helpers.storage.Store`, versioned JSON) for small integration-owned state that must survive restarts.
   3. **`RestoreEntity`** for restoring last known entity state across restarts.
 - **Do not** write your own files, open databases, or persist to arbitrary paths. Do not stash mutable runtime state in module globals — use `entry.runtime_data`.
-- **Persisted entities:** declared by `VISION.md → Persistence and Privacy Posture`. Default is "as little as possible."
+- **Persisted entities:** declared by `VISION.md → Data and Permissions`. Default is "as little as possible."
 - **Schema migration policy:** `Store` is versioned; provide an `async_migrate_func`. Config entries use `async_migrate_entry` with a bumped `entry.version`. A decode/migration failure degrades gracefully (re-setup / re-auth), it does not crash.
-- **Forbidden persistence:** anything declared forbidden in `VISION.md → Persistence and Privacy Posture`. Never persist raw upstream payloads, secrets in plaintext beyond the config-entry store, or PII the product does not need.
+- **Forbidden persistence:** anything declared forbidden in `VISION.md → Data and Permissions`. Never persist raw upstream payloads, secrets in plaintext beyond the config-entry store, or PII the product does not need.
 
 ---
 
@@ -148,8 +177,15 @@ Default answer to "should we add a library?" is **no**. Home Assistant enforces 
 | `mypy`                                 | stable, explicit semver | Strict type checking                            |
 | `syrupy`                               | stable, explicit semver | Snapshot tests for diagnostics/entity states    |
 | `freezegun`                            | stable, explicit semver | Deterministic time in tests                     |
+| `hypothesis`                           | stable, explicit semver | Property-based tests for critical pure logic    |
+| `vulture`                              | stable, explicit semver | Dead-code gate                                  |
+| `import-linter`                        | stable, explicit semver | Dependency-direction gate                       |
+| `pip-audit`                            | stable, explicit semver | Vulnerability-scan gate                         |
+| `commitizen`                           | stable, explicit semver | Commit-message gate                             |
+| `mutmut`                               | stable, explicit semver | `$MUTATION_CMD`                                 |
+| `gitleaks` (via `mise.toml`)           | `8.x`                   | Secret-scan gate                                |
 
-New runtime entries require a `STACK.md` PR (or ADR) with rationale, owner, approver, and date — and a `hassfest`-clean manifest.
+New runtime entries require a `STACK.md` PR (and an ADR when the dependency shapes the architecture) with rationale, owner, approver, and date — and a `hassfest`-clean manifest.
 
 ---
 
@@ -169,7 +205,7 @@ New runtime entries require a `STACK.md` PR (or ADR) with rationale, owner, appr
 - **`ObservableObject`-equivalent anti-patterns:** ad-hoc `is_loading` / `has_error` flags scattered across entities instead of deriving availability/state from the coordinator.
 - **Wildcard imports** (`from x import *`) and dependencies not listed + pinned in `manifest.json`.
 - **Naive `datetime` objects** anywhere in logic, storage, caches, or logs; `datetime.utcnow()` / `datetime.now()` without an explicit timezone (both produce naive or local-drifting values). See §10.
-- **Local-time storage or computation, and manual UTC-offset arithmetic** — timezone conversion happens only at the request-parse / response-build edges via `dt_util`.
+- **Mixing the time concepts:** storing an *instant* in local time, storing a *local calendar time* as a precomputed UTC instant, or manual UTC-offset arithmetic. Conversion happens only at the boundary via `dt_util` (§10).
 
 ---
 
@@ -201,21 +237,25 @@ New runtime entries require a `STACK.md` PR (or ADR) with rationale, owner, appr
 
 ---
 
-## 10. Time & timezones
+## 10. Base units & time
 
-Time is treated exactly like any other external input: **UTC everywhere internally, converted only at the boundary.** This is the same "decode/narrow at the edge" discipline that §0 applies to data, applied to instants.
+The operating contract's *Base units at the boundary* rule, pinned for this stack. `api.py` and the config flow convert to these forms; nothing downstream holds another form.
 
-- **Internal representation:** all datetimes in logic, coordinator data, `Store`/persistence, caches, and logs are **timezone-aware UTC**. Naive datetimes are forbidden (see §7).
-- **Conversion happens only at the two edges:** parsing an inbound request/payload → normalise to UTC immediately; building an outbound response / user-facing value → convert to the target timezone at the last moment. Nothing in between ever holds local time.
-- **Python mechanics:** use `datetime.now(UTC)` and aware datetimes. Never `datetime.utcnow()` or `datetime.now()` (both banned — naive/local). Never hand-roll `timedelta` offset math for timezones.
+| Concept | Internal base unit | Boundary conversion |
+| ------- | ------------------ | ------------------- |
+| Instant | timezone-aware UTC `datetime` | `dt_util.parse_datetime()` + `dt_util.as_utc()` inbound; HA localises timestamp entities for display |
+| Local calendar time | `datetime.time` / `datetime.date` **plus** a zone (`ZoneInfo`, usually HA's configured zone) | Combine with the zone and resolve to UTC only when an instant is needed (`dt_util.as_utc`) |
+| Duration | `timedelta` | Parse upstream seconds or ISO-8601 durations in `api.py` |
+| Physical units | HA's native unit for the entity's device class (`UnitOfTemperature`, …) | Convert upstream units in `api.py`; let HA convert for display |
+
+- **Python mechanics:** use `datetime.now(UTC)` / `dt_util.utcnow()` and aware datetimes. Never `datetime.utcnow()` or `datetime.now()` (both banned — naive/local). Never hand-write `timedelta` offset math for time zones.
 - **Home Assistant mechanics:** use `homeassistant.util.dt` (`dt_util`) rather than raw `datetime` for anything time-of-day-aware:
   - `dt_util.utcnow()` for "now";
   - `dt_util.parse_datetime()` / `dt_util.as_utc()` to normalise inbound values to UTC **at the boundary**;
   - `dt_util.as_local()` **only** when producing a user-facing value.
   - HA stores and computes in UTC and renders in the user's configured timezone — do not fight this.
 - **Timestamp entities:** `SensorDeviceClass.TIMESTAMP` (and similar) MUST return timezone-aware UTC datetimes; HA localises them for display.
-
-> The language-neutral UTC-in-logic / convert-at-edges rule lives in `CLAUDE.md → Time`; this section pins the concrete Python/HA mechanics.
+- **Tests:** freeze time with `freezegun` / `async_fire_time_changed`; no time-zone-dependent assertions; cover a daylight-saving transition for every local-calendar-time feature.
 
 ---
 
@@ -228,12 +268,4 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 
 ## 12. Best practices source
 
-`architect` and `ux-guardian` consult the current Home Assistant developer documentation before design and review verdicts, and cite the page. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with `developers.home-assistant.io` via WebFetch as fallback. Training-data memory is not an acceptable source for HA API details.
-
----
-
-## 13. Intentional Divergences
-
-| Date     | CLAUDE.md rule | Divergence | Reason |
-| -------- | -------------- | ---------- | ------ |
-| _(none)_ | —              | —          | —      |
+`architect` and `product-guardian` consult the current Home Assistant developer documentation before design and review verdicts, and cite the page. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with `developers.home-assistant.io` via WebFetch as fallback. Training-data memory is not an acceptable source for HA API details.
