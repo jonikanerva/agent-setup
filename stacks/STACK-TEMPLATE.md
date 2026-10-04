@@ -11,6 +11,9 @@ Policy revision: 2
 
 ## 0. Project shape
 
+- **Project risk rationale:** identify affected people, data, and dependent systems. Record failure consequences, material uncertainty, and reversibility.
+- **Change risk:** assess the surfaces affected by each task against that project rationale. A risk label does not waive required checks or review.
+
 - **Shape:** `<UI app | backend service | CLI | library | …>`
 - **Critical execution path:** `<the surface that must never block — UI thread / event loop / request hot path>`
 - **Applicable states:** `<the states every visible surface handles — commonly awaiting-first-data, success, empty, degraded, permission-blocked, offline, error, plus product-specific>`
@@ -173,13 +176,20 @@ missing post-release evidence blocks a claim of successful release. A future
 production deployment is not a prerequisite for approving its PR.
 Do not report full acceptance from a local subset. Record results for the exact commit and
 environment; missing required evidence blocks acceptance without a reviewed
-§13 exception. Reviewers also assess whether the checks detect meaningful
-violations. Expected results come from requirements, not the implementation.
+§13 exception. Reviewers assess whether checks detect meaningful violations.
+Apply P6 to material claims: retain procedures or scripts,
+safe inputs or reconstruction steps, expected outcomes, and results. Link the
+evidence location from the PR. Trace expectations to original requirements,
+independent source evidence, or labelled provisional assumptions. Passing a
+test of an assumption does not establish its validity. Include challenge
+cases beyond supplied examples. Report unrepeatable claims and their limits;
+they cannot count as passed required checks.
 
 | Doctrine / applicability | Required evidence | Environment / gap to resolve |
 | --- | --- | --- |
 | P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
 | P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Local and CI; declare checks that rely on review |
+| P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
 | P3, P7: security and dependencies | `<pinned secret, dependency-vulnerability, and static-security scanners, commands, and scope>` | Local/CI; document unsupported checks and compensating evidence |
 | P5–P7: interfaces and critical journeys | `<integration, contract, UI/accessibility, performance, migration and recovery checks that apply>` | `<CI, test service, simulator or hardware; pending owner checks>` |
 | P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |

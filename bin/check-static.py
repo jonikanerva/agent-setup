@@ -149,7 +149,8 @@ def settings(text):
 def validate(root):
     for relative in ("README.md", "AGENTS.md", "CLAUDE.md", "template/DOCTRINE.md",
                      "template/VISION.md", "template/.github/pull_request_template.md",
-                     "docs/workflow-scenarios.md", "stacks/STACK-TEMPLATE.md"):
+                     "docs/workflow-scenarios.md", "docs/workflow-trial-inputs.md",
+                     "stacks/STACK-TEMPLATE.md"):
         require(bool(read(root, relative).strip()), f"empty file: {relative}")
     doctrine = read(root, "template/DOCTRINE.md")
     require(len(re.findall(r"^Policy revision: 2$", doctrine, re.M)) == 1,

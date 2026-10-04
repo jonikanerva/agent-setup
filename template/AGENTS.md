@@ -43,6 +43,10 @@ implementer's conclusion. Wait for required results and verify the integrated
 work. The lead owns acceptance and release.
 
 Record acceptance criteria and material assumptions before implementation.
+Trace them to the original request and source evidence. Prefer provisional
+choices that add the fewest unsupported product rules; tests do not turn
+assumptions into facts. When independent review is required, it includes this
+derivation.
 Do not request a second plan approval when the owner has already authorised a
 clear task. Escalate under `DOCTRINE.md → Authority and escalation`: additional
 cost, a new provider or external data transfer, material lock-in, significant
@@ -58,7 +62,9 @@ explicit local verification contract. Never invent a successful command.
 
 Run relevant fast checks during development. Before final review, run required
 verification on the exact committed tree. Record SHA, integration base,
-environment, command, result, and missing evidence. CI and owner-only results
+environment, command, result, and missing evidence. Retain safe inputs or their
+reconstruction, expected outcomes with sources, and procedures needed to repeat
+material claims. Unrepeatable claims remain limitations. CI and owner-only results
 are part of acceptance when required. A pending required owner test blocks
 merge. Prefer automatic tests and remove avoidable manual work.
 

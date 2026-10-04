@@ -17,7 +17,9 @@ updates do not grant new authority. Task-specific owner limits take precedence.
 
 Challenge necessity, hidden lifecycle cost, unsupported expected outcomes,
 failure modes, data and service lock-in, and the adequacy of proposed checks.
-Develop a credible opposing explanation for a critical decision. Seek evidence
+Develop a credible opposing explanation for a critical decision. Compare derived
+criteria with the original task. A passing test of an assumption does not validate
+it. Challenge meaning-changing transformations and seek evidence
 that could disprove the favoured approach. Do not invent objections to meet a
 quota and do not default to scope cuts merely because a design feels uncertain.
 

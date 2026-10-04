@@ -45,6 +45,13 @@ review. Evaluate the relevant VISION decision filter. Resolve material
 uncertainty before committing to a solution. Do not silently drop agreed
 functionality. A clear delivery request does not need a second plan approval.
 
+Trace derived criteria to the original task and source evidence. For provisional
+work, prefer interpretations that add the fewest unsupported product rules and
+state their user-visible effects.
+Identify material assumptions to challenge; passing tests of them does not
+validate them. Apply the project's risk rationale to this change without using
+a risk label to waive checks.
+
 Under revision 2, ask before additional spending, a new external provider or
 data transfer, material lock-in, significant product changes not already
 requested, irreversible production-data changes outside an approved policy,
@@ -84,8 +91,9 @@ For a low-risk change that needs no independent review, the lead verifies the
 result and records why this path applies. The remaining acceptance checks
 still apply; mark independent review not required with that reason.
 
-The reviewer checks criteria, the actual diff, integration, test adequacy, and
-exceptions. Do not hand it the implementer's desired verdict. Do not review
+Give the reviewer the original task and source evidence as well as the derived
+criteria. It checks their agreement, the actual diff, integration, test adequacy,
+and exceptions. Do not hand it the implementer's desired verdict. Do not review
 your own material change. If no independent context is available, report the
 missing review and keep acceptance pending.
 
@@ -120,7 +128,9 @@ release. Verify its version, status, and required post-release checks. Follow
 only authorised recovery procedures on failure. Report missing release access
 or evidence as pending and ask for the needed action; do not claim success.
 
-Report the outcome, PR/review links, verified version, evidence, open
+Lead with the decision or fact the owner most needs, especially a blocker to
+product access, rights, or feasibility. Surface it before dependent work
+continues. Then report the outcome, PR/review links, verified version, evidence, open
 exceptions, and anything unverified. Distinguish a PR ready for owner review
 from a verified production release. Stop after the assigned task. Report
 follow-up needs without creating backlog items or starting another issue

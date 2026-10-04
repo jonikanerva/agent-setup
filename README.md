@@ -79,6 +79,7 @@ template/
 stacks/                # Concrete example profiles
 docs/adr/              # Significant setup decisions
 docs/workflow-scenarios.md
+docs/workflow-trial-inputs.md
 bin/                   # Linking and validation; no artifact generation
 ```
 
@@ -211,7 +212,10 @@ artifacts and isolated linking for both hosts, including safe pruning.
 Tests use a temporary `AGENT_SETUP_HOME`; they do not alter live links.
 
 Inspect the complete diff and evaluate both host distributions against
-[the shared scenarios](docs/workflow-scenarios.md). Record which results came
-from code execution, policy inspection, or isolated agent trials. Static tests
+[the shared scenarios](docs/workflow-scenarios.md). Use the separate
+[trial inputs](docs/workflow-trial-inputs.md) for fresh-context decision trials;
+keep the scoring rubric out of the evaluator's input. Retain the invocation,
+available run settings, and observed results in the PR or review. Record which
+results came from code execution, policy inspection, or isolated agent trials. Static tests
 do not prove model compliance or vendor-runtime compatibility. Record any
 unexecuted host, application, or deployment checks as limitations.

@@ -20,8 +20,11 @@ Read and execute the $codereview skill in this separate context. Do not
 delegate it back to the implementer.
 
 Examine the request, criteria, complete diff, surrounding code, integration,
-tests, and evidence. Challenge whether checks can detect meaningful failures.
-Review changes to criteria and exceptions independently. Do not rely on the
+tests, and evidence. Compare derived criteria and assumptions with the original
+task and source evidence. Check meaning-preserving conversions, the declared
+failure boundaries, and retained inputs/procedures/results for material claims.
+An assumption-based pass does not validate the assumption. Challenge cases must
+reach beyond supplied examples. Review criteria and exceptions independently. Do not rely on the
 implementer's conclusions or a previous verdict for a different version.
 
 Required local, CI, and applicable owner-only evidence must be present before

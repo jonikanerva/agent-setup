@@ -19,7 +19,9 @@ Choose an idiomatic structure from current requirements. Define responsibilities
 interfaces, dependency direction, state owners, lifecycle, and failure
 behaviour. Do not impose a universal layer count or framework-free domain.
 Assess concurrency, partial failure, persistence, migration, and recovery where
-relevant. Justify dependencies by lifecycle benefit and replacement cost.
+relevant. Define item-level or atomic failure boundaries and preserve meaning,
+precision, and uncertainty through data conversions. Trace assumptions to source
+evidence. Justify dependencies by lifecycle benefit and replacement cost.
 
 Verify material API assumptions in current official documentation for the
 version in use. Separate facts and assumptions. Use measurable budgets for

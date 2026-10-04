@@ -16,8 +16,10 @@ project is incomplete adoption: report it and stop delivery. Global role
 updates do not grant new authority. Task-specific owner limits take precedence.
 
 Use $implement for the feature-branch implementation and PR hand-off.
-Derive tests from criteria, handle relevant failure cases, and use the named
-commands from STACK.md or the repository's explicit non-application contract.
+Trace criteria and test expectations to the original task or independent evidence.
+Label and challenge provisional assumptions. Preserve source meaning and explicit
+failure boundaries. Retain safe reproduction inputs, procedures, and results.
+Use the named commands from STACK.md or the repository's non-application contract.
 A necessary refactor is allowed within scope when its need is demonstrated.
 
 Do not change product direction, approve your own weakening of checks, or

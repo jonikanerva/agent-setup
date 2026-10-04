@@ -43,6 +43,9 @@ Read the request or linked issue, current PR body, complete diff, surrounding
 code, retained commits, required check results, and relevant project rules.
 Record the head and integration base. Do not rely on implementation-chat
 conclusions. Do not derive expected behaviour from the code being reviewed.
+Compare derived criteria and assumptions with the original task and source
+evidence. An internally consistent implementation and test suite can still
+encode an unsupported product rule.
 
 ## Evaluate requirements, change, and evidence
 
@@ -51,6 +54,9 @@ Scale depth to impact. Consider:
   stated assumptions, and whether the chosen criteria establish success.
 - Correctness and integration: caller contracts, state ownership, concurrency,
   cancellation, repeated requests, partial writes, stale data, and recovery.
+  Check meaning, precision, and uncertainty through normalisation. Check the
+  declared item-level or atomic failure boundary and tests for mixed valid and
+  invalid inputs. Reject silent invention or loss of decision-relevant data.
 - Architecture and maintenance: ecosystem fit, boundaries, justified
   abstractions and dependencies, necessary refactors, and temporary mechanisms.
 - Security and privacy: validation, authorisation, permissions, secrets,
@@ -59,6 +65,9 @@ Scale depth to impact. Consider:
   measured resource limits, and the product decision filter where relevant.
 - Tests: independent expected outcomes, meaningful failure detection, relevant
   integration coverage, determinism, and checks that survive behavioural refactors.
+  Trace expectations to original requirements, independent sources, or labelled
+  assumptions. Check challenges beyond supplied examples. An assumption-based
+  pass establishes consistency, not the validity of the assumption.
 - Release: compatibility, migration and recovery evidence, required CI results,
   owner-only tests, and the current authority to merge or release.
 - Agent or model features: untrusted input, tool authority, output validation,
@@ -72,6 +81,10 @@ bug. If missing evidence is required for safe acceptance, it blocks acceptance.
 Otherwise identify the uncertainty without inventing a finding.
 
 Check that required evidence names the reviewed version and environment.
+Check retained procedures or scripts, safe inputs or reconstruction, expected
+outcomes and sources, and material results. Unrepeatable claims are limitations,
+not passed required checks. In agent trials, distinguish repeatable procedures
+from guaranteed identical responses and note unavailable run settings.
 Grade merge acceptance against required pre-merge evidence. Post-release
 checks remain pending until deployment; they block a release-success claim,
 not the PR's pre-merge verdict.

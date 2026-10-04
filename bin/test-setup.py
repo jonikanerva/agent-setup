@@ -197,9 +197,16 @@ class FormatTests(unittest.TestCase):
                             CHECK.validate(root)
                     finally:
                         path.write_text(original)
-            (root / "template/DOCTRINE.md").unlink()
-            with self.assertRaisesRegex(ValueError, "missing file: template/DOCTRINE.md"):
-                CHECK.validate(root)
+            for relative in ("template/DOCTRINE.md", "docs/workflow-trial-inputs.md"):
+                with self.subTest(missing=relative):
+                    path = root / relative
+                    original = path.read_text()
+                    try:
+                        path.unlink()
+                        with self.assertRaisesRegex(ValueError, f"missing file: {relative}"):
+                            CHECK.validate(root)
+                    finally:
+                        path.write_text(original)
 
     def test_frontmatter_accepts_emitted_scalars(self):
         value = CHECK.frontmatter('---\nname: sample\ndescription: >\n  Line one.\n  Line two.\nuser-invocable: true\n---\nBody.', "fixture")

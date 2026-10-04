@@ -14,20 +14,28 @@ MUST and MUST NOT define requirements. SHOULD defines a default that needs a
 reason to depart from. MAY permits a choice within established authority.
 Derive concrete checks from these principles in `STACK.md`. State their
 applicability, required evidence, reviewer, and known enforcement gaps.
+Explain who or what depends on the system, the consequences of failure, and
+the uncertainty and recovery limits. Distinguish that project risk from the
+risk of the changed surface. A risk label alone never waives a required check.
 
 ## P1. Start with purpose and conditions for success
 
 Before implementation, record the intended outcome, acceptance criteria,
 material constraints, and important failure cases. Use the existing issue or
 task summary, then preserve the criteria in the PR. A small task needs only a
-short record. Distinguish given requirements,
-observed facts, and assumptions.
+short record. Trace derived criteria to the original request or source
+evidence. Distinguish given requirements, observed facts, and assumptions.
 
 Resolve uncertainty that could change the solution. Use bounded experiments
 when they can answer the question. Proceed without a new approval when the
 request and authority are clear. Ask the owner when an ambiguity materially
 changes the goal or crosses an escalation boundary. Do not silently cut agreed
 functionality to make a task easier to complete.
+
+For provisional work, prefer the interpretation that adds the fewest
+unsupported product rules within the stated constraints. Record its
+user-visible effects and unresolved decisions. A useful assumption remains
+an assumption until evidence supports it.
 
 **Evidence:** Criteria linked to promised behaviour, assumptions, and checks.
 
@@ -87,6 +95,12 @@ Define data meaning, state owners, lifecycles, and valid transitions. Separate
 source data from derived data and state how copies remain consistent. Validate
 external input before accepting it under an internal contract.
 
+Normalisation must preserve distinctions, precision, and uncertainty that
+affect downstream decisions. Justify any deliberate change in meaning or
+precision from a requirement. Do not silently replace missing information
+with an asserted fact. A valid internal type does not prove that a conversion
+preserved the source meaning.
+
 Prefer pure functions and immutable data where they clarify behaviour. Contain
 mutation and effects. Make time, randomness, and external interactions
 controllable for repeatable verification.
@@ -101,6 +115,13 @@ Define relevant concurrency, cancellation, repeated-request, and partial-
 failure behaviour. Bound external work and retries. Preserve invariants and
 make failures observable. Do not silently discard errors.
 
+Declare failure containment at each relevant boundary. Independent items may
+continue after an invalid item only when the contract permits partial success;
+make the exclusion and reason observable without exposing sensitive data.
+An invalid envelope or a broken whole-operation contract stops the operation.
+An atomic operation must not publish partial success. Test one invalid item
+among valid items and the whole-operation failure where each can occur.
+
 **Evidence:** State owners, contracts, conversions, and tested failure cases.
 
 ## P6. Demonstrate quality and challenge the evidence
@@ -111,9 +132,12 @@ reviewed exception under the Exceptions section. A pending owner-only test
 that is necessary for safe release blocks merge. Seek an automatic equivalent
 instead of making owner testing routine.
 
-Expected outcomes must come from requirements or another basis independent of
-the implementation. Confirm that tests can detect meaningful failures. A
-regression test should fail without its fix. Preserve checks on promised
+Trace expected outcomes to original requirements, independent source evidence,
+or explicitly labelled provisional assumptions. A test of an assumption shows
+consistency with it, not that the assumption is valid. Add challenge cases for
+material assumptions and transformations beyond the supplied examples.
+Confirm that tests can detect meaningful failures. A regression test should
+fail without its fix. Preserve checks on promised
 behaviour through refactoring; test setup and organisation may change.
 
 Use fast checks at the smallest credible scope and verify relevant component
@@ -122,9 +146,17 @@ property tests for the risks they address. No metric substitutes for
 correctness. Investigate flaky checks; a successful rerun does not explain the
 failure.
 
-Bind evidence to the exact version, environment, commands, and results. Reuse
-valid evidence instead of repeating unchanged checks. Reverify affected checks
-when code, integration base, configuration, environment, or relevant external
+Bind evidence to the exact version, environment, commands, and results. Retain
+the procedures or scripts, safe inputs or reconstruction instructions, expected
+outcomes and their sources, and results needed to repeat material verification.
+Use repository fixtures and procedures with stable PR or CI evidence links.
+Never preserve secrets or sensitive production data to make a check repeatable.
+Report an unrepeatable claim as a limitation, not a passed required check.
+For agent trials, retain the exact task input and available model/run settings;
+state unavailable settings and do not promise identical model responses.
+
+Reuse valid evidence instead of repeating unchanged checks. Reverify affected
+checks when code, integration base, configuration, environment, or relevant external
 conditions change. Review the adequacy of the checks as well as their results.
 
 **Evidence:** Reproducible results and an explicit account of unverified work.
@@ -187,7 +219,8 @@ isolated or explicitly coordinated.
 Material behavioural, architectural, security, or data changes MUST receive
 review by someone other than the implementer. Agent review uses a separate
 context and examines requirements, actual changes, and evidence. Review
-criteria, tests, and exceptions too. Challenge critical assumptions. Agreement
+derived criteria and assumptions against the original task and source evidence.
+Review tests and exceptions too. Challenge critical assumptions. Agreement
 among agents is not evidence of correctness.
 
 Verify the integrated result. The lead owns acceptance and release even when
@@ -196,8 +229,11 @@ If repeated attempts produce no new evidence or progress, change the approach,
 seek an independent diagnosis, or ask the owner for guidance. Do not loop
 indefinitely or relax gates to finish.
 
-Report what was delivered, what was observed, what remains unverified, and what
-the owner can rely on. Distinguish ready for owner review, accepted for merge,
+Start the report with the decision or fact the owner most needs, especially a
+blocker to the product's access, rights, or feasibility. Do not bury it below
+completed work. Surface such a blocker before dependent work continues.
+Then report what was delivered, what was observed, what remains unverified,
+and what the owner can rely on. Distinguish ready for owner review, accepted for merge,
 and verified release. Stop after the assigned outcome. Continue a backlog or
 batch only when the owner authorised it.
 

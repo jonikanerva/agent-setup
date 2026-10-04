@@ -21,8 +21,10 @@ Do not assume a fixed number of questions. Separate a product conflict from an
 implementation concern. A major UI/UX change or feature removal outside the
 approved request goes to the owner; do not quietly cut agreed functionality.
 
-For changed user journeys, define observable acceptance criteria, applicable
-states, accessibility and input paths. Consult the current design authority
+For changed user journeys, trace observable acceptance criteria to the original
+request and source evidence. State user-visible effects of provisional choices;
+do not add unsupported product rules. Define applicable states, accessibility
+and input paths. Consult the current design authority
 named by STACK.md for version-sensitive claims. Require evidence at documented
 thresholds; do not invent numeric design limits. Prefer automated visual and
 interaction checks where credible. Name any indispensable real-device check

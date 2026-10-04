@@ -16,6 +16,9 @@ authority beyond the adopted project contract.
 
 ## 0. Project shape
 
+- **Project risk rationale:** identify affected people, data, and dependent systems. Record failure consequences, material uncertainty, and reversibility.
+- **Change risk:** assess the surfaces affected by each task against that project rationale. A risk label does not waive required checks or review.
+
 - **Shape:** Home Assistant custom integration (a `custom_components/<domain>/` package), installed via HACS, not a standalone app.
 - **Critical execution path:** the Home Assistant **asyncio event loop**. It is single-threaded and shared with the entire instance; blocking it degrades every integration and the UI. This is the direct analog of "the main actor / one display frame" (Swift) and "the per-request hot path" (TS) — the event loop is sacred and MUST NOT block.
 - **Applicable states:** every entity handles awaiting-first-data, success, empty, degraded, offline, error (plus product-specific). In HA these map to coordinator status (`last_update_success`), entity `available`, and `unknown` / `unavailable` states — not to ad-hoc flags scattered across platforms.
@@ -262,13 +265,20 @@ missing post-release evidence blocks a claim of successful release. A future
 production deployment is not a prerequisite for approving its PR.
 Do not report full acceptance from a local subset. Record results for the exact commit and
 environment; missing required evidence blocks acceptance without a reviewed
-§13 exception. Reviewers also assess whether the checks detect meaningful
-violations. Expected results come from requirements, not the implementation.
+§13 exception. Reviewers assess whether checks detect meaningful violations.
+Apply P6 to material claims: retain procedures or scripts,
+safe inputs or reconstruction steps, expected outcomes, and results. Link the
+evidence location from the PR. Trace expectations to original requirements,
+independent source evidence, or labelled provisional assumptions. Passing a
+test of an assumption does not establish its validity. Include challenge
+cases beyond supplied examples. Report unrepeatable claims and their limits;
+they cannot count as passed required checks.
 
 | Doctrine / applicability | Required evidence | Environment / gap to resolve |
 | --- | --- | --- |
 | P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
 | P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Local and CI; declare checks that rely on review |
+| P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
 | P3, P7: security and dependencies | Gitleaks; vulnerability scans covering `uv.lock` and resolved runtime requirements; Ruff security rules plus applicable static-security analysis | Wire pinned tools into `mise run verify`; name scanners/rules and unsupported surfaces on adoption |
 | P5–P7: HA integration | Setup/unload/reload, config and reauth flows, unavailable states, diagnostics redaction, migration/recovery tests; hassfest and HACS validation | Local pytest and required CI jobs against declared HA versions; device-only behaviour needs recorded evidence |
 | P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |

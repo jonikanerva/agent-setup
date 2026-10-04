@@ -49,7 +49,16 @@ structure for the actual requirements. A necessary structural correction can
 be larger than the immediate patch, but it must stay within product scope and
 have verifiable steps. Do not add unrelated cleanup or speculative capability.
 
-Derive tests from criteria and independently established expected outcomes.
+Trace criteria and expected outcomes to the original request or independent
+source evidence. Label provisional assumptions and challenge material ones
+beyond supplied examples. Passing an assumption-based test does not validate
+the assumption.
+
+Preserve decision-relevant meaning, precision, and uncertainty when normalising
+data. Missing information must not silently become an asserted value. Declare
+and test whether a boundary permits partial success for independent items or
+requires atomic failure; do not drop invalid items by default.
+
 Exercise relevant failures, state transitions, boundaries, and user journeys.
 Confirm that a regression test detects its bug. Prefer automated UI and
 integration evidence over owner testing where credible. Document any
@@ -79,6 +88,10 @@ uses `--force-with-lease`; it invalidates old review evidence.
 Run required verification on the clean committed tree before the final push.
 Record the head SHA, integration base, environment, command, result, and
 evidence location. Do not rerun valid unchanged checks without a reason.
+Retain procedures or scripts, safe inputs or reconstruction instructions, and
+expected outcomes with their sources. Keep material results in durable PR/CI
+evidence; a temporary console claim alone is not repeatable proof. Record any
+unrepeatable claim as a limitation rather than a passed required check.
 Changes to code, base, configuration, environment, or relevant external
 conditions require reassessment and affected checks.
 

@@ -16,6 +16,9 @@ authority beyond the adopted project contract.
 
 ## 0. Project shape
 
+- **Project risk rationale:** identify affected people, data, and dependent systems. Record failure consequences, material uncertainty, and reversibility.
+- **Change risk:** assess the surfaces affected by each task against that project rationale. A risk label does not waive required checks or review.
+
 - **Shape:** backend service (`apps/server`, `@effect/platform` HttpApi) + browser SPA (`apps/web`, React + Vite), sharing one contract package.
 - **Critical execution path:** server — request decode → scope narrowing → use case → typed response or typed error; web — route match → query/client cache → typed view model → React render.
 - **Applicable states:** web surfaces handle awaiting-first-data, success, empty, degraded, offline, error (plus product-specific); API responses are typed success / typed error.
@@ -132,7 +135,19 @@ type ErrorDescriptor = {
 };
 ```
 
-**External data boundary.** External data is untrusted until decoded. Decode and narrow with Effect Schema at the boundary; never pass, persist, or log raw upstream data. Product scope from `VISION.md` is enforced structurally at the Schema layer, not in React components — anything out of scope is dropped, rejected, or mapped to a typed error at the boundary.
+**External data boundary.** External data is untrusted until decoded. Decode
+and narrow with Effect Schema before passing data under internal contracts.
+Do not persist or log raw upstream data. Enforce established product scope at
+the boundary. Decoding, narrowing, defaults, and dropping fields must not
+invent product rules or lose decision-relevant precision or uncertainty (P5).
+Any deliberate change in meaning needs a requirement-based reason. Missing
+information must not become an asserted fact.
+
+Declare failure containment per boundary. Exclude a malformed independent
+item with a safe recorded reason only when partial success meets the contract.
+Reject the operation when an envelope, atomic input, or shared invariant is
+invalid. Do not apply a universal skip rule. Test these decisions and
+material transformations with P6 challenge cases beyond supplied examples.
 
 **Thin handlers.** HttpApi handlers receive decoded input, call a use case or service, and return typed success or typed error. No business rules, no hand-rolled error-to-response glue, no ad hoc post-decode validation beyond use-case invariants.
 
@@ -351,13 +366,20 @@ missing post-release evidence blocks a claim of successful release. A future
 production deployment is not a prerequisite for approving its PR.
 Do not report full acceptance from a local subset. Record results for the exact commit and
 environment; missing required evidence blocks acceptance without a reviewed
-§13 exception. Reviewers also assess whether the checks detect meaningful
-violations. Expected results come from requirements, not the implementation.
+§13 exception. Reviewers assess whether checks detect meaningful violations.
+Apply P6 to material claims: retain procedures or scripts,
+safe inputs or reconstruction steps, expected outcomes, and results. Link the
+evidence location from the PR. Trace expectations to original requirements,
+independent source evidence, or labelled provisional assumptions. Passing a
+test of an assumption does not establish its validity. Include challenge
+cases beyond supplied examples. Report unrepeatable claims and their limits;
+they cannot count as passed required checks.
 
 | Doctrine / applicability | Required evidence | Environment / gap to resolve |
 | --- | --- | --- |
 | P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
 | P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Local and CI; declare checks that rely on review |
+| P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
 | P3, P7: security and dependencies | Gitleaks for changed files/history; locked-dependency vulnerability scan; supported static-security rules | Wire pinned tools into `pnpm verify:ci`; name scanner/rules and uncovered surfaces on adoption |
 | P4–P6: schemas, API and SPA | Import-boundary lint, applicable §2.5 unit/property/contract tests, Playwright critical flows and supported accessibility checks | Full `pnpm verify:ci`, including browser dependencies; quick `verify` is insufficient |
 | P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
