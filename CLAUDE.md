@@ -74,8 +74,8 @@ Before committing:
 2. Run python3 bin/test-setup.py. It exercises both hosts in temporary
    AGENT_SETUP_HOME directories and checks malformed artifacts.
 3. Inspect git diff --check and the complete diff.
-4. Keep README.md accurate. Use docs/workflow-scenarios.md when useful for
-   a workflow change; there is no mandatory agent-team review for setup edits.
+4. Keep README.md accurate. Keep task-specific evaluation records in the PR;
+   there is no mandatory agent-team review for setup edits.
 
 These scripts do not generate or rewrite distributed artifacts. They do not
 execute application-profile commands or prove model compliance. Keep the two

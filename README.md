@@ -82,8 +82,6 @@ template/
   .agents/skills/       # Codex workflows
   .github/pull_request_template.md
 stacks/                # Concrete example profiles
-docs/workflow-scenarios.md
-docs/workflow-trial-inputs.md
 bin/                   # Linking and validation; no artifact generation
 ```
 
@@ -239,11 +237,6 @@ references, and validates shell syntax. The regression suite tests malformed
 artifacts and isolated linking for both hosts, including safe pruning.
 Tests use a temporary `AGENT_SETUP_HOME`; they do not alter live links.
 
-Inspect the diff. When useful for a workflow change, evaluate both hosts against
-[the shared scenarios](docs/workflow-scenarios.md). Use the separate
-[trial inputs](docs/workflow-trial-inputs.md) for fresh-context decision trials;
-keep the scoring rubric out of the evaluator's input. Retain the invocation,
-available run settings, and observed results in the PR or review. Record which
-results came from code execution, policy inspection, or isolated agent trials. Static tests
-do not prove model compliance or vendor-runtime compatibility. Record any
-unexecuted host, application, or deployment checks as limitations.
+Inspect the diff and keep task-specific evaluation inputs and results in the
+PR when useful. They are not required source-bundle artifacts. Static checks
+do not prove model compliance or host-runtime compatibility; state those limits.

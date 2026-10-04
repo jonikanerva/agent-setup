@@ -175,7 +175,7 @@ class FormatTests(unittest.TestCase):
     def test_repository_fixtures_reject_invalid_artifacts(self):
         with tempfile.TemporaryDirectory(prefix="agent-setup-format-") as temporary:
             root = Path(temporary)
-            for directory in ("template", "stacks", "bin", "docs"):
+            for directory in ("template", "stacks", "bin"):
                 shutil.copytree(ROOT / directory, root / directory)
             for filename in ("README.md", "AGENTS.md", "CLAUDE.md"):
                 shutil.copyfile(ROOT / filename, root / filename)
@@ -221,7 +221,7 @@ class FormatTests(unittest.TestCase):
                         else:
                             path.unlink()
             CHECK.validate(root)
-            for relative in ("template/DOCTRINE.md", "docs/workflow-trial-inputs.md"):
+            for relative in ("template/DOCTRINE.md",):
                 with self.subTest(missing=relative):
                     path = root / relative
                     original = path.read_text()
