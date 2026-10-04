@@ -32,13 +32,13 @@ A missing or weakened gate is a finding.
 
 Answer these questions. Each FAIL finding must point to evidence.
 
-1. **Right problem.** Does the change meet every acceptance criterion? Does it do anything the criteria do not ask for? Do the *Given / Observed / Assumed* lists hold up against the code?
+1. **Right problem.** Compare the lead's acceptance criteria and assumptions with the original issue or request and the source evidence: do they say what the owner asked for, and do they add product rules that no source supports? Does the change meet every criterion? Does it do anything the criteria do not ask for?
 2. **Simplest solution.** Is there a clearly smaller or more conventional solution that meets the same criteria? Does the change add an abstraction, option, or extension point that no criterion needs? Is a shared abstraction introduced before the third occurrence of the same knowledge?
 3. **Right structure.** Does the structure match the current understanding of the problem, or does the change patch over a structure that no longer fits (`CLAUDE.md → Pre-decided conflicts → Local patch vs. structural change`)? Are layers, ownership, and boundaries right?
-4. **Correctness under stress.** Invalid input, empty data, repeated requests, interruption, partial failure, concurrency, cancellation, timeouts, and compatibility — wherever they can occur. Do base units and the three time concepts hold?
-5. **Tests.** Do the tests derive from the acceptance criteria and assert behaviour at the public boundary? Would they fail if the behaviour broke? Is anything critical untested?
+4. **Correctness under stress.** Invalid input, empty data, repeated requests, interruption, partial failure, concurrency, cancellation, timeouts, and compatibility — wherever they can occur. Does each boundary state its containment rule (bad item excluded with a reason, or bad whole stops), with a test? Do base units and the three time concepts hold, and do conversions keep the precision, distinctions, and missing values that later decisions need?
+5. **Tests and checks.** Do the tests derive from the acceptance criteria and assert behaviour at the public boundary? Do the chosen checks actually detect the failures that matter here — would they fail if the behaviour broke? Do expected outcomes come from requirements or source evidence, not from the implementation? Where a test only confirms an assumption, is the assumption labelled and challenged beyond the supplied examples? Is the claimed evidence reproducible from the repository? Is anything critical untested?
 6. **Security and privacy.** Data and permissions match `VISION.md → Data and Permissions`. No personal data or secrets in logs. Authorization and input handling are sound. Use OWASP, CWE, or WCAG references only when they apply.
-7. **Records.** ADRs exist for decisions that need one (`CLAUDE.md → Records`). Exceptions have an Exception ADR. Owner decisions were escalated, not decided by the team. The PR states *What was not verified*.
+7. **Records.** Exceptions name a compensating control and were not approved by their own author. ADRs exist for decisions that need one (`CLAUDE.md → Records`). Exceptions have an Exception ADR. Owner decisions were escalated, not decided by the team. The PR states *What was not verified*.
 8. **Comments.** Comments follow `CLAUDE.md → Comments`. A missing constraint is a defect as much as a narrating comment.
 9. **Regret.** What will the team regret in six months? Name it only with a concrete reason.
 

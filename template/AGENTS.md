@@ -41,6 +41,7 @@ When two values conflict, the higher one wins. Record a new kind of conflict and
 
 The lead stops the affected work and asks the owner before acting on:
 
+- first, any question that decides whether the product can exist at all: a legal, access, licensing, or feasibility question;
 - anything that costs money: a paid service, a plan upgrade, new infrastructure, a paid license;
 - a new external service, integration, or dependency on a third-party service;
 - a product change listed in `VISION.md → Owner Decisions` (for example, removing a feature or changing the Product Shape);
@@ -51,11 +52,13 @@ The lead stops the affected work and asks the owner before acting on:
 
 Ask in chat. Say what is blocked, the options, their consequences, and a recommendation. Keep working on the parts that the decision does not affect. Never pick a workaround only to avoid asking.
 
+An explicit instruction from the owner approves the decisions that it necessarily entails. When the owner asks for "X with service Y", service Y is approved: record the decision and do not ask again. An owner decision that the instruction does not cover still goes to the owner.
+
 ### Team decisions — decide and record
 
-Everything else is the team's. The lead does not ask the owner what this file, `VISION.md`, `STACK.md`, the ADRs, or the issue already answer. When something is ambiguous, choose the smallest *coherent* change that matches the current understanding, prefer the most reversible option, and write the assumption in the PR. The implementer never approves its own exception and never reviews its own work.
+Everything else is the team's. The lead does not ask the owner what this file, `VISION.md`, `STACK.md`, the ADRs, or the issue already answer. When something is ambiguous, choose the smallest *coherent* change that matches the current understanding, prefer the most reversible option, and choose the interpretation that adds the fewest product rules that the sources do not support. Write the assumption and its user-visible effect in the PR. The implementer never approves its own exception and never reviews its own work.
 
-*Test:* every assumption the team made appears in the PR under *Assumed*; every owner decision appears under *Owner decisions* with the owner's answer.
+*Test:* every assumption the team made appears in the PR under *Assumed*, with its user-visible effect; every owner decision appears under *Owner decisions* with the owner's answer.
 
 ### Checkpoints
 
@@ -87,11 +90,11 @@ The team merges only when the owner authorised it for this task. Merge authority
 
 ### Exceptions
 
-A MUST is suspended only by an ADR of kind *Exception*: the rule, where, why, and when it expires. The lead approves an exception in the spirit of this file and asks the owner when the exception touches an owner decision. The implementer never approves one alone. An inline escape hatch (for example, a type-system override) is an exception too; it carries a comment that names the constraint and, when it outlives the task, an ADR. When the same exception is renewed twice, the rule or the design is wrong: change one of them.
+A MUST is suspended only by an ADR of kind *Exception*: the rule, where, why, what compensates for it while it is open, and when it expires. The author of a change never approves an exception that weakens the checks on that change. The lead approves exceptions for the team's work in the spirit of this file. The owner approves an exception that the lead itself needs, for example a weaker acceptance criterion, and any exception that touches an owner decision. Every report to the owner lists the open exceptions. An inline escape hatch (for example, a type-system override) is an exception too; it carries a comment that names the constraint and, when it outlives the task, an ADR. When the same exception is renewed twice, the rule or the design is wrong: change one of them.
 
 ### Ratchet
 
-When a review finding, defect, or escalation recurs, remove its class, not the instance. In order of preference: a type or structure that makes the defect impossible; a gate in `$VERIFY_CMD`; a rule in `STACK.md`. The lead decides the fix. A small fix goes into the current task; a larger one follows *Structure first*. Record the lesson in an ADR of kind *Lesson* so that the next team does not repeat the loop.
+When a review finding, defect, or escalation recurs, remove its class, not the instance. In order of preference: a type or structure that makes the defect impossible; a gate in `$VERIFY_CMD`; a rule in `STACK.md`. The lead decides the fix. A small fix goes into the current task; a larger one follows *Structure first*. Record the lesson in an ADR of kind *Lesson* so that the next team does not repeat the loop. A gate that never fires is not removed for that reason alone: weigh its protective value against its cost first.
 
 ## 5. Engineering rules
 
@@ -101,7 +104,9 @@ Every concept has one canonical internal form: its base unit. Logic, storage, ca
 
 Time has three concepts, each its own type: an *instant* (a point on the timeline, stored and computed in UTC); a *local calendar time* (a wall-clock date or time that has meaning only with a time zone, such as "every day at 09:00 Europe/Helsinki" — store the local value and the zone, never a precomputed UTC instant); and a *duration*. Never mix them, and never hand-write time-zone offset arithmetic.
 
-*Test:* conversions exist only in boundary modules; internal types do not accept the raw external form; the three time concepts are distinct types.
+A conversion keeps every distinction, precision, and uncertainty that a later decision depends on. A deliberate loss of meaning or precision needs a requirement that justifies it. Missing information stays missing: never replace it with an asserted value.
+
+*Test:* conversions exist only in boundary modules; internal types do not accept the raw external form; the three time concepts are distinct types; an unknown or missing input has its own representation.
 
 ### Validate once, model the domain
 
@@ -115,13 +120,14 @@ Validate all external input at the boundary and convert it to the internal type.
 - Inject time, randomness, I/O, configuration, and environment. Core logic runs with a fixed clock and fixed inputs.
 - Reach external systems through a service in the infrastructure layer, with a timeout, a typed failure, and an explicit retry decision. The interface layer never calls a raw client.
 - Use the ecosystem's one idiomatic error strategy. Never swallow an error. Every caught error is handled, logged with context, or raised again.
+- Contain a failure to the unit that failed. At each boundary, write down which rule applies: one malformed item in a collection is excluded with a recorded reason and the rest proceed, or a malformed whole (an envelope, a schema, a contract) stops the operation.
 - Where concurrency, interruption, repeated requests, or partial failure can happen, define the behaviour: operations are idempotent or guarded, and invariants hold after a partial failure. Use the strictest concurrency mode in `STACK.md`. Prefer structured concurrency; cancel work when its owner goes away.
 
-*Test:* for any state, name the code that creates, changes, and destroys it; tests exist for duplicate delivery, interruption, and failure after a partial write wherever those can occur.
+*Test:* for any state, name the code that creates, changes, and destroys it; tests exist for duplicate delivery, interruption, and failure after a partial write wherever those can occur; each boundary states its containment rule and has a test with one bad item among good ones.
 
 ### Architecture
 
-Keep three layers, named per `STACK.md`: **interface** (screens, handlers, CLI, public API), **domain** (pure rules and state machines, no framework imports), **infrastructure** (network, storage, devices). Dependencies point inward to the domain. Each module exposes a public interface; other modules and tests use only that interface. Cross-cutting concerns (configuration, logging, authentication, error reporting) each live in one place. Gate: the dependency-direction check in `$VERIFY_CMD`.
+Keep three layers, named per `STACK.md`: **interface** (screens, handlers, CLI, public API), **domain** (pure rules and state machines, no framework imports), **infrastructure** (network, storage, devices). Dependencies point inward to the domain by default; a platform whose idiom differs records its direction in an ADR. Enforce the declared directions with the ecosystem's standard mechanism where one exists. Each module exposes a public interface; other modules and tests use only that interface. Each cross-cutting concern (configuration, logging, authentication, error reporting) has one policy, defined once and applied consistently; where the policy is applied follows the ecosystem. Gate: the dependency-direction check in `$VERIFY_CMD`.
 
 Every module, dependency, and abstraction serves a current acceptance criterion. Introduce a shared abstraction at the third occurrence of the same knowledge.
 
@@ -148,13 +154,14 @@ Default to no. Before adding one, answer in the PR: does the standard library or
 ### Testing
 
 - Derive tests from the acceptance criteria. Each criterion has a test; each test traces to a criterion or a reproduced bug.
-- Test behaviour at a module's public boundary, not its implementation. A refactor that keeps behaviour changes no test assertions.
+- Test behaviour at a module's public boundary, not its implementation. A behaviour-preserving refactor may move or reorganise tests when the boundary moves, but it changes no expected outcome.
+- Expected outcomes come from the requirements, independent source evidence, or an assumption that is labelled as one. A passing test of an assumption shows consistency with it, not that it is true. Add challenge cases for material assumptions and transformations beyond the supplied examples.
 - A new test must fail without the change it covers. Run the narrowest selector `STACK.md` names to prove it.
 - Tests are deterministic. A flaky test is a defect: fix it, or quarantine it and file a `follow-up` issue in the same PR. Never add retries.
 - Pure logic with a large input space SHOULD have property-based tests. Critical logic gets `$MUTATION_CMD`.
 - Coverage percentage is never a target. Test code meets the same rules as production code.
 
-*Test:* each acceptance criterion maps to a named test; tests import only public interfaces; a behaviour-preserving refactor in the PR changes no test assertion.
+*Test:* each acceptance criterion maps to a named test; tests import only public interfaces; after a behaviour-preserving refactor every earlier expected outcome is still asserted and unchanged.
 
 ### Code conventions
 
@@ -193,13 +200,13 @@ Write for a reader who has this file and nothing else. Read each comment back co
 
 Work is done when all of these hold:
 
-- every acceptance criterion is met, and the PR names the evidence for each;
+- every acceptance criterion is met, and the PR names the evidence for each; anyone can reproduce that evidence from the repository (a one-off manual check is a limitation, not evidence);
 - `$VERIFY_CMD` passes on the PR head; critical logic has its extra evidence;
 - the review is PASS when the change touches code;
 - documentation and ADRs changed in the same PR as the behaviour they describe;
-- the lead's report to the owner states what was checked, what was observed, **what was not verified**, and what the owner can now rely on and why.
+- the lead's report to the owner opens with the one thing the owner most needs to decide or know — above all anything that decides whether the product can exist — and then states what the owner can now rely on and why, what was checked and observed, **what was not verified**, open exceptions, and open decisions.
 
-A report that leaves out the unverified part is not a completion report.
+A report that leaves out the unverified part, or buries the decisive risk, is not a completion report.
 
 ## 8. Safeguards
 

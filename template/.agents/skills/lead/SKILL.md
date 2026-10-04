@@ -30,7 +30,7 @@ Tehtävä: <#N + title, or one-line restatement>
 Ymmärrykseni: <two or three lines>
 Hyväksymiskriteerit (luonnos): <the criteria, short>
 Tarkistuspisteet: <proposal, e.g. "vien PR:ään asti, sinä mergeät">
-Omistajan päätöksiä näköpiirissä: <items from AGENTS.md → Owner decisions, or "ei">
+Omistajan päätöksiä näköpiirissä: <feasibility questions first, then other items from AGENTS.md → Owner decisions that the owner's request does not already cover, or "ei">
 ```
 
 Ask the owner to confirm or change the checkpoints. When the owner's request already states the scope and the checkpoints (for example "vie maaliin ja mergeä"), skip the question and continue. Ask about scope only when the answer changes the solution and no file answers it. One round of questions at most; resolve the rest with the most reversible option and record it.
@@ -83,14 +83,15 @@ When review is PASS (or no review was needed):
 - With merge authority for this task: `gh pr merge --merge --delete-branch`. Confirm that the issue closed.
 - Without merge authority: stop and hand the PR to the owner.
 
-Report to the owner in Finnish, in one screen:
+Report to the owner in Finnish, in one screen. Open with the decisive item:
 
+- **Tärkein:** the one thing the owner most needs to decide or know — above all anything that decides whether the product can exist. If there is nothing, say so.
 - **Tulos:** PR link(s) and review verdict; merged or waiting.
-- **Tarkistettu:** what was checked and on which SHA.
-- **Ei todennettu:** what no check covered.
 - **Voit luottaa:** what the owner can now rely on, and why.
-- **Päätökset:** ADRs written, owner decisions taken, assumptions made.
-- **Avoinna:** follow-up issues and open questions.
+- **Tarkistettu:** what was checked and observed, on which SHA, and how to reproduce it.
+- **Ei todennettu:** what no reproducible check covered.
+- **Päätökset ja poikkeukset:** ADRs written, owner decisions taken, decisions covered by the owner's instruction, assumptions made, open exceptions.
+- **Avoinna:** follow-up issues and open decisions.
 
 For a batch of issues, repeat from step 2 for the next issue only when the owner authorised the batch. Stop the batch after three consecutive issues that need a human.
 

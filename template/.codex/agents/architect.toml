@@ -19,10 +19,10 @@ When `STACK.md → Best practices source` names a source, check it for every API
 
 1. **Does the current structure fit?** If the change would patch over a structure that no longer matches the current understanding of the problem, say so. Describe the behaviour-preserving refactoring that must land first as its own PR.
 2. **Placement.** The layer (interface, domain, infrastructure) and the files, per the layout in `STACK.md`.
-3. **Boundaries and state.** Owners and lifecycles of state; source and derived data; base units and conversions at the boundary; concurrency, cancellation, and partial-failure behaviour where it applies.
+3. **Boundaries and state.** Owners and lifecycles of state; source and derived data; base units and conversions at the boundary; the failure-containment rule at each boundary (bad item excluded or bad whole stops); concurrency, cancellation, and partial-failure behaviour where it applies.
 4. **Conventional first.** The platform's recommended mechanism over a bespoke one; no new abstraction before the third occurrence of the same knowledge; no option or extension point that no criterion needs.
 5. **ADRs needed.** A new boundary, data store, integration, public contract, change of dependency direction, or architecture-shaping dependency needs an ADR. Name each one and give its decision and rejected alternatives in two lines.
-6. **Owner decisions.** Flag cost, a new external service, an irreversible data change, or a change to the Product Shape.
+6. **Owner decisions.** Flag first any legal, access, licensing, or feasibility question that decides whether the solution can exist. Then flag cost, a new external service, an irreversible data change, or a change to the Product Shape — unless the owner's instruction already covers it.
 
 Between two equally conventional options, choose the more reversible one.
 

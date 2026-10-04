@@ -37,6 +37,8 @@ Delete this comment and every section marked (optional) that does not apply.
 
 - **Rule suspended:** <the operating-contract or STACK.md rule>.
 - **Where:** <files, modules, or paths>.
+- **Compensating control:** <what reduces the risk while the exception is open>.
+- **Approved by:** <the lead, or the owner when the lead needs the exception or it touches an owner decision>. The author of the change never approves it.
 - **Expires when:** <a date or a condition>. When the condition is true, remove the exception and set Status to "Expired".
 
 ## Do not repeat (optional — Kind: Lesson)
