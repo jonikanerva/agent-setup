@@ -1,111 +1,89 @@
 # AGENTS.md
 
-This file provides guidance to Codex when working in this repository.
+Guidance for Codex when editing this source bundle.
 
-## What this repository is
+## Repository and scope
 
-This is not an application. It is the versioned source bundle for a static
-Claude Code and Codex project setup. Every file under `template/` is a final,
-human-reviewable artifact that downstream projects or global symlinks consume
-directly. Do not introduce a generator, build step, or hidden source format for
-the agent setup.
+Read README.md first. This repository contains final, static Claude Code and
+Codex project guidance. It is not an application. Preserve explicit host
+artifacts; do not add a generator, build step, or hidden source format.
 
-Read `README.md` first. It is the canonical explanation of the distribution
-model and supported hosts.
+The shared doctrine distributed to target projects is template/DOCTRINE.md.
+Product intent and concrete
+technology are distributed separately as template/VISION.md and stacks/.
+The templates describe downstream defaults, not this repository's maintenance
+process. Maintain this static bundle with lightweight checks and PRs. Do not
+apply the distributed delivery workflow or ADR process to setup maintenance.
 
-## Distribution model
+## Distribution
 
-Link global roles and skills before you configure a project. Then copy only
-the product contract, one stack profile, and the selected host contract:
+bin/link-global.sh links static role and skill files to user discovery paths.
+Each target project separately adopts DOCTRINE.md, VISION.md, STACK.md, and its
+selected CLAUDE.md or AGENTS.md. Copied contracts never update implicitly.
 
-```sh
-bin/link-global.sh
-PROJECT_DIR="/path/to/project"
-cp template/VISION.md "$PROJECT_DIR/VISION.md"
-cp stacks/STACK-TS.md "$PROJECT_DIR/STACK.md"
-cp template/CLAUDE.md "$PROJECT_DIR/CLAUDE.md"
-cp template/AGENTS.md "$PROJECT_DIR/AGENTS.md"
-```
+Never replace a real user file or directory. Replace only symlinks. Prune only
+dead links whose target ownership is established inside this repository.
+Use AGENT_SETUP_HOME in temporary tests; never test against live user paths.
+Global updates must preserve a legacy project's approval and merge rules.
 
-Global distribution uses `bin/link-global.sh`. It symlinks the static role and
-skill files into the user-level discovery locations for Claude and Codex.
-Edits and `git pull` apply to new sessions without a copy or render step.
+## Cross-host policy
 
-Never overwrite a user's real file while changing the linker. It may replace
-only symlinks, and pruning may remove only dead links whose target is inside
-this repository.
+Maintain the same authority and evidence rules in both host trees. Keep native
+syntax explicit: Claude Markdown agents and slash skills; Codex TOML agents
+and dollar-prefixed skills. In target projects, five specialists remain available, but the lead
+chooses the roster. The lead may implement. Material changes require a
+reviewer who did not implement them in a separate context.
 
-## Cross-host structure
+The three workflows are project-manager, implement, and codereview. Delivery
+runs from criteria through implementation and independent review to the
+authorised outcome. Missing required evidence blocks acceptance. An owner
+reservation of review, testing, or merge always applies.
 
-- `template/CLAUDE.md` and `template/.claude/` are the Claude distribution.
-- `template/AGENTS.md`, `template/.codex/agents/`, and
-  `template/.agents/skills/` are the Codex distribution.
-- `template/VISION.md`, `template/.github/`, and `stacks/` are shared.
+Shared doctrine and host instructions remain technology-neutral. Concrete
+technology and commands belong in STACK.md. Host contracts, agents, and
+skills use the five named commands: $FORMAT_CMD, $LINT_CMD, $BUILD_CMD,
+$TEST_CMD, $VERIFY_CMD. This source bundle uses the verification contract below
+instead of an application VISION.md or STACK.md.
 
-The two hosts use different agent and orchestration formats. Keep both outputs
-static and explicit in Git. Share concepts and policy, but do not hide their
-differences behind generated files or runtime indirection.
+## Records and safeguards
 
-## Load-bearing indirection
-
-The operating contracts, agents, and skills are technology-neutral. Concrete
-technology belongs in `STACK.md` alone. Refer to commands only through
-`$FORMAT_CMD`, `$LINT_CMD`, `$BUILD_CMD`, `$TEST_CMD`, and `$VERIFY_CMD`, which
-each stack profile defines in its Build & verify commands section.
-
-Never hard-code a language, framework, package manager, or build command into
-the operating contracts, agents, or skills.
-
-## Workflow parity
-
-Both hosts expose the same five roles and three workflows:
-
-- Roles: architect, UX guardian, devil's advocate, lead developer, QA enforcer.
-- Workflows: project manager, implementation, and code review.
-- Sequence: plan and approve; UX and architecture review; stress-test;
-  implementation; QA-owned code review to PASS; human review and merge.
-
-Host-specific syntax is intentional: Claude uses slash commands and Markdown
-agent manifests; Codex uses dollar-prefixed skills, TOML custom agents, and
-subagent delegation. Do not copy host-specific tool names into the other host's
-files.
-
-## Invariants to keep consistent
-
-When changing policy, search both host trees and update every affected static
-file. The files are deliberately self-contained because agents may run in
-isolated contexts.
-
-- Repository and GitHub artifacts are English; user chat is Finnish.
-- New user-facing English uses Simplified Technical English. Write short
-  sentences. Use active voice and plain, consistent terms. Do not rewrite
-  compact operating contracts only to apply STE.
-- Never commit or push to `main`; use `feat|fix|chore|docs/<topic>` branches.
-- Conventional Commits with the host-specific co-author trailer; merge commits,
-  never squash.
-- Issues, commits, PR descriptions, and review comments are the audit trail.
-- The user owns product direction, backlog changes, and merge authority.
-- Read-only roles never edit product code.
-- `lead-dev` implements; `qa-enforcer` owns the semantic review gate.
-- Direct pushes to `main` are forbidden, normal and force. Destructive
-  deletion, hook bypasses, and autonomous merges are forbidden.
-- A force-push to a feature branch is allowed. Use `--force-with-lease`.
+- Use English for repository and GitHub artifacts and Finnish for user chat,
+  subject to the owner's explicit language instructions.
+- Use ASD-STE100 writing principles: short, active sentences and consistent terms.
+- Use feat|fix|chore|docs/<topic> branches. Never commit or push to main.
+- Use Conventional Commits with the current host's co-author trailer:
+  Co-Authored-By: Codex <noreply@openai.com>.
+- Keep coherent commits and use merge commits, never squash.
+- Feature-branch force-pushes use --force-with-lease, never bare force.
+- Keep setup decisions and history in GitHub PRs and discussions. Do not add
+  local ADR, roadmap, backlog, ledger, or changelog files. The distributed
+  ADR policy applies to target projects only.
+- Do not modify other projects or live user settings without authorisation.
+- Never weaken protections, bypass hooks, read secrets, recursively delete
+  broad paths, or overwrite another contributor's work.
+- Read-only specialists do not edit product or governance files. Review scratch
+  files and test artifacts must be isolated.
+- Ask before changing product direction, backlog structure, or repository
+  settings. Merge only under explicit task authority. If the owner says they
+  will review and merge, leave the PR for them.
 
 ## Verification
 
-There is no application build. Before committing setup changes:
+Before committing:
+1. Run bin/check-setup.sh (Bash and Python 3.11+).
+2. Run python3 bin/test-setup.py. It exercises both hosts in temporary
+   AGENT_SETUP_HOME directories and checks malformed artifacts.
+3. Inspect git diff --check and the complete diff.
+4. Keep README.md accurate. Keep task-specific evaluation records in the PR;
+   there is no mandatory agent-team review for setup edits.
 
-1. Run `bin/check-setup.sh`.
-2. Exercise `bin/link-global.sh` against a temporary `HOME` for every changed
-   host path; never test by replacing the user's live files.
-3. Inspect `git diff --check` and the complete Git diff.
-4. Keep `README.md` accurate.
+These scripts do not generate or rewrite distributed artifacts. They do not
+execute application-profile commands or prove model compliance. Keep the two
+host distributions consistent and follow the owner's review instructions.
 
 ## Decision rights
 
-- Feature-branch edits, commits, pushes, and PR creation are allowed when the
-  user requested the change.
-- Ask before editing product vision, restructuring the backlog, changing
-  repository settings, or merging.
-- Never push to `main`, normal or force. Never bypass hooks, read secret files,
-  or merge without explicit user authorization.
+An approved change authorises feature-branch edits, validation, commits,
+pushes, and PR creation. The current task controls worktree, review, merge,
+and rollout limits. Do not adopt new downstream permissions for this task
+merely because the patch changes a template.

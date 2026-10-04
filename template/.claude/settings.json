@@ -49,7 +49,8 @@
       "WebFetch(domain:www.w3.org)",
       "Skill(project-manager)",
       "Skill(implement)",
-      "Skill(codereview)"
+      "Skill(codereview)",
+      "WebFetch(domain:code.claude.com)"
     ],
     "deny": [
       "Bash(claude:*)",
@@ -101,21 +102,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cmd=$(jq -r \".tool_input.command\"); if echo \"$cmd\" | grep -q \"gh pr create\"; then echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PostToolUse\\\",\\\"additionalContext\\\":\\\"PR created. The /codereview gate is next: in the team flow qa-enforcer runs it (lead-dev does not). If you opened this PR by hand, run /codereview yourself.\\\"}}\"; fi'"
+            "command": "bash -c 'cmd=$(jq -r \".tool_input.command\"); if echo \"$cmd\" | grep -q \"gh pr create\"; then echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PostToolUse\\\",\\\"additionalContext\\\":\\\"PR created. Confirm the local project policy and owner reservations. Material changes require independent review. Missing required evidence blocks acceptance. The lead invokes /codereview for an isolated QA review.\\\"}}\"; fi'"
           }
         ]
       }
     ]
   },
   "sandbox": {
-    "excludedCommands": ["open"],
+    "excludedCommands": [
+      "open"
+    ],
     "filesystem": {
       "allowWrite": [
         "~/.gnupg"
       ]
     }
-  },
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   }
 }

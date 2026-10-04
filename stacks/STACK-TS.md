@@ -1,10 +1,21 @@
 # STACK.md — Strict TypeScript / Node LTS / Hono / React / Vite / Vitest profile
 
+Policy revision: 2
+
 > Strict TypeScript monorepo with a Hono backend (`apps/api`), a React + Vite frontend (`apps/web`), and a shared `packages/shared` module. pnpm workspaces, Vitest for tests.
+
+Use with `DOCTRINE.md` (P1–P9) and the selected host contract. This is an
+example profile, not evidence that a project has implemented its checks. On
+adoption, confirm its scope, pin versions, define each command, and complete
+§14–15. Record exclusions and gaps. A profile does not grant merge or release
+authority beyond the adopted project contract.
 
 ---
 
 ## 0. Project shape
+
+- **Project risk rationale:** identify affected people, data, and dependent systems. Record failure consequences, material uncertainty, and reversibility.
+- **Change risk:** assess the surfaces affected by each task against that project rationale. A risk label does not waive required checks or review.
 
 - **Shape:** UI app (`apps/web`) + backend service (`apps/api`).
 - **Critical execution path:** the browser main thread / React render path on the web; the per-request hot path on the API.
@@ -16,12 +27,12 @@
 
 - **Primary language:** TypeScript 6.0
 - **Strictness mode:** `"strict": true`, `"noUncheckedIndexedAccess": true`, `"exactOptionalPropertyTypes": true`, `"noImplicitOverride": true`, `"verbatimModuleSyntax": true`. ESLint with `@typescript-eslint/strict-type-checked`.
-- **Target runtime:** Node.js 24 (Krypton — active LTS, latest 24.15.0)
+- **Target runtime:** Node.js 24 LTS; pin the supported patch version in `mise.toml`
 - **Minimum runtime version:** Node 24.0 (no back-deployment to Node 22 / 20)
 - **Package manager:** pnpm (workspaces)
 - **Lockfile:** `pnpm-lock.yaml`
 - **Dev-environment provisioning:** [`mise`](https://mise.jdx.dev/) is the single bootstrap. `mise install` provisions **every pinned tool and runtime version** from `mise.toml` — the exact Node.js 24 interpreter and `pnpm` — so a fresh checkout reaches a reproducible environment with one command. Wire dependency install as a mise task (e.g. `mise run setup` → `pnpm install`) so `mise install` followed by that task fully bootstraps. `mise.toml` is the source of truth for tool/runtime versions; commit it alongside the lockfile.
-- **Pinning surfaces (two layers, each owns one):** `mise.toml` pins tool/runtime versions (Node, pnpm); `pnpm-lock.yaml` pins the resolved dependency graph. Never rely on a globally-installed Node or pnpm — go through mise so local and CI use identical versions.
+- **Pinning surfaces (two layers, each owns one):** `mise.toml` pins tool/runtime versions (Node, pnpm); `pnpm-lock.yaml` pins the resolved dependency graph. Never rely on a globally-installed Node or pnpm — go through mise so local and any CI use identical versions.
 
 ---
 
@@ -53,9 +64,9 @@
 | `$LINT_CMD`   | `pnpm lint`                                         |
 | `$BUILD_CMD`  | `pnpm build`                                        |
 | `$TEST_CMD`   | `pnpm test`                                         |
-| `$VERIFY_CMD` | `pnpm test-all` (type-check → lint → build → tests) |
+| `$VERIFY_CMD` | `pnpm test-all` (format-check → type/lint/security checks → build → required tests) |
 
-Bootstrap the environment with `mise install` (provisions the pinned Node/pnpm versions) before running any command above. The `package.json` scripts are the single source of truth. Never invoke `eslint`, `tsc`, `vitest`, or `vite` directly from commits, CI, or agent scripts.
+Implement these scripts in the adopting project; this profile does not supply `package.json`. Bootstrap with `mise install` (pinned Node/pnpm versions). The `package.json` scripts are the single source of truth. Never invoke `eslint`, `tsc`, `vitest`, or `vite` directly from commits, CI, or agent scripts.
 
 ---
 
@@ -84,7 +95,7 @@ Bootstrap the environment with `mise install` (provisions the pinned Node/pnpm v
 
 ## 6. Approved dependencies
 
-Default answer to "should we add a library?" is **no**. The lists below are intentionally short; new entries require a `STACK.md` PR with justification.
+Prefer supported platform capabilities. New dependencies need a PR rationale for necessity, provenance, maintenance, licence, transitive cost, and replacement cost. The lead can approve routine libraries within project authority. New providers, external data transfers, costs, or material lock-in need owner approval. The list is a starting point, not a requirement to install unused packages.
 
 | Dependency               | Version | Why it earns its place                                | Approver  | Date       |
 | ------------------------ | ------- | ----------------------------------------------------- | --------- | ---------- |
@@ -108,9 +119,9 @@ Default answer to "should we add a library?" is **no**. The lists below are inte
 - `any` (explicit or implicit via `@typescript-eslint/no-explicit-any`) without an inline `// reason: ...` justification.
 - `as` casts that bypass type checking — use `satisfies` or a runtime guard.
 - `// @ts-ignore` / `// @ts-expect-error` without an inline explanation that names the underlying constraint.
-- `moment` / `moment.js` — use `Temporal` (proposal) via polyfill or `date-fns` if approved.
-- Local-time storage or computation, and manual UTC-offset arithmetic — timezone conversion happens only at the request-parse / response-build edges (see §10).
-- `new Date(...)`-based local-time math or storing `Date`/timestamps that implicitly carry a local offset; formatting to a local-time string anywhere except the display boundary.
+- `moment` / `moment.js` in new code — use supported platform APIs or an approved time library.
+- Treating local calendar values as UTC instants without their required calendar/zone, or manual UTC-offset arithmetic (see §10).
+- Host-local `Date` arithmetic for zoned calendar rules; parsing a local-format string as an instant without a declared timezone.
 - Full-import of `lodash` (`import _ from 'lodash'`) — import single functions only, or use the standard library equivalent.
 - Raw `fetch` without zod-validated response parsing for any external network call.
 - `console.log` / `console.warn` / `console.error` in shipped code — use the `pino` logger.
@@ -139,15 +150,11 @@ Default answer to "should we add a library?" is **no**. The lists below are inte
 
 ## 10. Time & timezones
 
-Time is treated exactly like any other external input: **UTC everywhere internally, converted only at the boundary.** This is the same "validate/narrow at the edge" discipline this profile applies to data, applied to instants.
-
-- **Internal representation:** all timestamps in logic, API payloads, persistence, caches, and logs are **UTC instants** — a `Date` (which is an absolute epoch instant, not a wall-clock time) or a UTC `Temporal.Instant` / ISO-8601 string with a `Z` offset. Values that carry an implicit local offset are forbidden (see §7).
-- **Conversion happens only at the two edges:** parsing an inbound request/payload → normalise to a UTC instant immediately (validate with Zod, e.g. `z.string().datetime()` / `z.coerce.date()`); building an outbound response → serialise as UTC ISO-8601 (`.toISOString()`); rendering a user-facing value → convert to the target timezone at the last moment (`Intl.DateTimeFormat` with an explicit `timeZone`). Nothing in between ever holds local time.
-- **Mechanics:** prefer `Temporal` (via the approved polyfill) or `date-fns` for date math; never hand-roll `timedelta`/offset arithmetic. When using `Date`, only ever read/write epoch milliseconds or ISO-8601-with-`Z`; never `Date.parse` a local-format string and never assemble a date from local components for logic.
-- **Wire format:** the API contract exchanges UTC ISO-8601 strings (`Z` suffix); the frontend converts to the user's timezone for display only.
-- **Tests:** freeze/inject the clock (a fixed `Date` / Vitest fake timers) rather than reading wall-clock time; no timezone-dependent assertions.
-
-> The language-neutral UTC-in-logic / convert-at-edges rule lives in `CLAUDE.md → Time`; this section pins the concrete TypeScript mechanics.
+- **Instant:** `Date`, or `Temporal.Instant` where runtime support or an approved polyfill is declared. Validate external values with Zod. Store and exchange instants as UTC ISO-8601 (`Z`) or explicitly typed epoch values.
+- **Calendar value:** use validated date-only or local-time fields. With Temporal, use `PlainDate` / `PlainTime`; use a named IANA zone for schedules that resolve to instants. Do not turn a birthday or recurring local schedule into a fixed UTC timestamp.
+- **Duration:** use a typed value with an explicit unit, or `Temporal.Duration` when selected. Use a monotonic clock for elapsed-time measurement; distinguish elapsed hours from calendar days.
+- **Conversion:** use supported calendar/zone APIs. Set `timeZone` explicitly for `Intl.DateTimeFormat`. Define handling for missing and repeated local times. Never compute timezone offsets by hand.
+- **Tests:** inject the clock or use Vitest fake timers. Cover DST and zone changes when relevant. Test results must not depend on the host timezone.
 
 ---
 
@@ -164,12 +171,114 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 
 ## 12. Best practices source
 
-`architect` and `ux-guardian` consult current MDN and framework documentation before design and review verdicts on API-level questions, and cite the section. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with MDN via WebFetch as fallback. Training-data memory is not an acceptable source for API signatures or accessibility specifics.
+Consult current, version-relevant MDN, Node.js, TypeScript, and the selected framework documentation for uncertain APIs, platform rules,
+and material design decisions. Use the documentation tools available in the
+current host. Cite the relevant section in the decision or review. Do not
+require every role to repeat the same lookup or assume host-specific tools.
 
 ---
 
-## 13. Intentional Divergences
+## 13. Scoped exceptions
 
-| Date     | CLAUDE.md rule | Divergence | Reason |
-| -------- | -------------- | ---------- | ------ |
-| _(none)_ | —              | —          | —      |
+Do not weaken a rule or check to make a change pass. The responsible lead
+resolves exceptions within project authority, with an independent reviewer.
+The change author must not approve their own weaker acceptance or checks.
+Escalate changes beyond that authority and unresolved material risks to the
+owner. Record significant design decisions separately in concise `docs/adr/`
+files. Read them when relevant; keep backlog and change history in GitHub.
+
+| Rule / scope | Reason and consequences | Compensating evidence | Responsible lead / reviewer / approval | Expiry or reassessment |
+| --- | --- | --- | --- | --- |
+| _(none)_ | — | — | — | — |
+
+---
+
+## 14. Applicability and evidence
+
+On adoption, fill in local commands, environments, known gaps, and any
+existing required CI jobs. P1–P9 refer to `DOCTRINE.md`. Run required tests
+and the full `$VERIFY_CMD` locally for the exact mergeable version against
+the current integration base. Failed or missing required local checks block
+merge. Existing required CI must also pass; follow `DOCTRINE.md` P6 and
+the local host contract for the full verification and CI policy.
+Keep this matrix current. Assign each applicable check a phase:
+before merge or after release. Missing pre-merge evidence blocks merge;
+missing post-release evidence blocks a claim of successful release. A future
+production deployment is not a prerequisite for approving its PR.
+Do not report full acceptance from a local subset. Record results for the exact commit and
+environment; missing required evidence blocks acceptance without a reviewed
+§13 exception. Reviewers assess whether checks detect meaningful violations.
+Apply P6 to material claims: retain procedures or scripts,
+safe inputs or reconstruction steps, expected outcomes, and results. Link the
+evidence location from the PR. Trace expectations to original requirements,
+independent source evidence, or labelled provisional assumptions. Passing a
+test of an assumption does not establish its validity. Include challenge
+cases beyond supplied examples. Report unrepeatable claims and their limits;
+they cannot count as passed required checks.
+
+For §14–15, a release, monitoring, migration, or recovery item may be
+`not applicable` with a short reason tied to project purpose. A CLI or library
+label does not waive these duties as a group. An unsupported tool is a gap,
+not a reason to claim the requirement does not apply.
+
+| Doctrine / applicability | Required evidence | Environment / gap to resolve |
+| --- | --- | --- |
+| P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
+| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Required locally; existing required CI also passes; declare checks that rely on review |
+| P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
+| P3, P7: security and dependencies | Gitleaks for changed files/history; locked-dependency vulnerability scan; supported static-security rules | Wire pinned tools into `pnpm test-all`; name scanner/rules and uncovered surfaces on adoption |
+| P5–P7: API and web journeys | Vitest integration/contract tests; Playwright for critical flows, keyboard and supported accessibility checks; migration/recovery tests when storage changes | Local with representative browser/service; existing required CI also passes; record hardware or external-service gaps |
+| P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
+| P8–P9: material changes | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations | Separate reviewer context; no read-all-ADR prerequisite |
+
+### Example check configuration
+
+These tools and numeric limits are examples, not universal mandates. On
+adoption, select and justify the applicable checks, scope, and acceptance
+conditions. Record required checks in the §3 entry points; optional example
+tools need the normal dependency assessment. Do not lower an adopted gate
+merely to make a change pass. Existing §13 exception rules still apply.
+
+| Check | Tool | Threshold / acceptance condition | Principle |
+| --- | --- | --- | --- |
+| Formatting | Prettier check mode | No format differences | P3, P8 |
+| Types | TypeScript compiler with §1 strict flags | No type errors or new warnings | P3 |
+| Lint | ESLint with typescript-eslint | No violations of selected rules | P3 |
+| Complexity | [ESLint complexity](https://eslint.org/docs/latest/rules/complexity) | Example: cyclomatic complexity ≤ 10 per function | P3, P4 |
+| Dead code | typescript-eslint unused checks; [Knip](https://knip.dev/) if selected | No unexplained unused symbols, exports, files, or dependencies | P3, P7 |
+| Dependency directions | [ESLint restricted imports](https://eslint.org/docs/latest/rules/no-restricted-imports) | No forbidden edges between API, web, and shared packages | P4 |
+| Secrets | Gitleaks over declared source/history scope | No confirmed exposed secrets | P3, P7 |
+| Vulnerabilities | [pnpm audit](https://pnpm.io/cli/audit) | Example: no unresolved high/critical advisories; triage all findings | P2, P7 |
+| Tests | Vitest; Playwright for required user journeys | All required cases pass locally; challenge material assumptions and transformations | P5, P6 |
+
+Knip needs correct entry points. Restricted-import rules do not cover all
+dynamic loading. Record these gaps; inspect affected loading paths and test
+the relevant integration. A clean scan does not prove complete coverage.
+
+Pin scanner versions and configuration with the project tools. Scanners must
+redact findings. Do not send source or dependency data to a new
+external provider without the required authorization. An unavailable scanner
+is a recorded gap, not a successful check. Select proportionate property,
+mutation, and coverage analysis when it tests a named risk; scores do not
+replace behavioural evidence.
+
+---
+
+## 15. Release, recovery, and maintenance
+
+Apply §14's purpose-based applicability assessment to each item below.
+Record a short reason for each `not applicable` item; retain the relevant
+distribution, compatibility, diagnosis, and data obligations.
+
+- **Release:** declare the web/API deployment jobs, environments, immutable version identifier, configuration validation, and required permissions. Record whether merging `main` deploys automatically.
+- **Observe:** verify deployed versions, API health, and one critical web journey. Declare a bounded observation window and the diagnostic source.
+- **Recover:** define rollback or roll-forward to a known artifact. For database changes, test migration from supported schemas and backup restoration; preserve compatibility during rollout.
+- **Data:** document each store's purpose, retention/deletion rules, credentials, and access boundary. A cache reset is not a recovery plan for durable data.
+
+The responsible lead verifies the integrated release within the adopted
+project authority. Main remains production-ready. Added cost, a new provider
+or external data transfer, material lock-in or product change, and irreversible
+production-data changes require owner approval unless already authorized by
+an applicable policy. Required owner tests block merge. Stop after the agreed
+task and release checks; report follow-up needs without taking new backlog
+work. Apply the same evidence requirements to maintenance updates.

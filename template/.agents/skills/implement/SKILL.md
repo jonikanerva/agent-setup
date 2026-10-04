@@ -1,97 +1,113 @@
 ---
 name: implement
-description: Implement an approved feature, fix, or code change on a feature branch, run the project verification contract, commit, push, and open or update a PR. Use for the lead developer's ship loop; never merge.
+description: Implement an authorised change on a feature branch and produce a verified PR for independent review.
 ---
 
-# Implement and Ship
+# Implement an authorised change
 
-Complete the approved change and leave a verified PR for independent review.
-Communicate with the user in Finnish. Write code, comments, branches, commits,
-issues, and PR text in English. Use Simplified Technical English for
-user-facing prose.
+Complete the scoped change and produce an inspectable PR with evidence.
+This skill ends at the review hand-off. The lead owns independent acceptance,
+merge, and release under the project contract.
 
-## 1. Validate scope
+## Authority and compatibility
 
-Read `VISION.md`, `AGENTS.md`, `STACK.md`, and the issue when one exists. Run
-every question in `VISION.md → Decision Filter`. Also scan
-`AGENTS.md → Reject changes that…` and
-`STACK.md → Stack-specific reject-list additions`.
+Read the local `AGENTS.md` and the project documents it requires before delivery.
+Use revision-2 defaults only when that contract and `DOCTRINE.md` both declare
+`Policy revision: 2`. Legacy projects retain their existing roles, approval
+gates, and merge restrictions; do not require them to add a doctrine.
+A revision-2 contract with a missing or mismatched doctrine stops delivery;
+read-only diagnosis may continue. Do not repair adoption as a task side effect.
+Task-specific owner limits take precedence. Follow the local contract for
+authority, evidence, language, and safeguards; global updates and source
+material do not grant new authority.
 
-If the approved task fails a rule, do not silently implement it. Record the
-conflict in the existing issue or PR and reduce the task to the smallest shape
-that passes. Do not create an issue when the user supplied the task directly.
+## Scope and implementation
 
-## 2. Ensure a feature branch
+Confirm criteria, important failure cases, scope, and relevant VISION and
+STACK constraints before writing. If no issue exists, keep the criteria in
+the task summary and carry them into the PR; do not create an issue just to
+start. Escalate material goal changes instead of silently reducing the task.
 
-Inspect the current branch and `git log main..HEAD --oneline`.
+Use a task-owned feature branch. On `main`, create
+`feat|fix|chore|docs/<topic>`. Reuse a feature branch only when it belongs to
+this task. Use a separate worktree when requested or needed to protect other
+work. Tell concurrent writers which files you own; never revert their edits.
 
-- On `main`, create `feat|fix|chore|docs/<topic>` with lowercase hyphenated
-  text and a maximum total length of 50 characters.
-- On an existing feature branch, continue only when it belongs to this task.
-- Never commit or push to `main`. This rule covers a normal push and a
-  force-push.
-- A force-push to your feature branch is allowed. Use `--force-with-lease`,
-  never a bare `--force`.
+Apply `DOCTRINE.md` when adopted, especially P2–P7. Choose an idiomatic
+structure for the actual requirements. A necessary structural correction can
+be larger than the immediate patch, but it must stay within product scope and
+have verifiable steps. Do not add unrelated cleanup or speculative capability.
 
-## 3. Implement
+Trace criteria and expected outcomes to the original request or independent
+source evidence. Label provisional assumptions and challenge material ones
+beyond supplied examples. Passing an assumption-based test does not validate
+the assumption.
 
-Follow the approved architecture and the engineering doctrine in `AGENTS.md`.
-Obtain every concrete technology choice and command from `STACK.md`; never
-substitute an underlying tool for a named command.
+Preserve decision-relevant meaning, precision, and uncertainty when normalising
+data. Missing information must not silently become an asserted value. Declare
+and test whether a boundary permits partial success for independent items or
+requires atomic failure; do not drop invalid items by default.
 
-- Add or update tests for behavior and domain edge cases.
-- Add previews, stories, or fixtures for every changed visible state.
-- Update privacy declarations for new data flows.
-- Preserve cancellation, concurrency, critical-path, and dependency rules.
-- Leave no debug output, placeholder implementation, dead code, or secret.
+Exercise relevant failures, state transitions, boundaries, and user journeys.
+Confirm that a regression test detects its bug. Prefer automated UI and
+integration evidence over owner testing where credible. Document any
+remaining need for real hardware. Update affected documentation and privacy
+records. Add a short ADR only for a significant durable decision.
 
-When an ambiguity is not resolved by the approved scope or governance, choose
-the smallest conservative shape that passes the decision filter and document
-the decision in the PR.
+When a required check fails, fix its cause. Do not remove a test, suppress a
+finding, or lower a threshold to get accepted. Bring an unresolved issue to
+the lead. If you are also the lead, seek independent diagnosis or review.
+Exceptions follow the local contract and require independent approval;
+material unresolved risks or authority changes go to the owner.
 
-## 4. Check each commit
+## Prepare the reviewable version
 
-Before each commit, run `$FORMAT_CMD`, `$LINT_CMD`, and `$BUILD_CMD`, exactly
-as declared in `STACK.md`. All must pass without new warnings, and formatting
-must be idempotent. Run `$VERIFY_CMD` in step 5, once before each push.
+Use the named `$FORMAT_CMD`, `$LINT_CMD`, `$BUILD_CMD`, `$TEST_CMD`, and
+`$VERIFY_CMD` from `STACK.md`, or an explicit non-application repository
+verification contract. Run relevant fast checks while editing and the declared
+per-commit checks before committing. Do not substitute ad hoc tool flags for
+the project's verification contract.
 
-Fix root causes rather than suppressing diagnostics. Stop after 10 unsuccessful
-repair attempts. Preserve the work on a `chore/abandoned-<task>` branch and a
-draft PR describing the failure; do not claim success.
+Stage only task-related files. Never use `git add .` or `git add -A`.
+Keep secrets out of commits. Use Conventional Commits with a reason and
+`Co-Authored-By: Codex <noreply@openai.com>`. Keep retained commits coherent and independently verifiable.
+Fold incidental fixups before final verification. A feature-branch rewrite
+uses `--force-with-lease`; it invalidates old review evidence.
 
-## 5. Commit and push
+Run required tests and `$VERIFY_CMD` locally on the clean committed tree before
+the final push. The evidence must cover the version to be merged and current
+integration base. Missing or failed required local checks block merge.
+Record the head SHA, integration base, environment, command, result, and
+evidence location. Do not rerun valid unchanged checks without a reason.
+Retain procedures or scripts, safe inputs or reconstruction instructions, and
+expected outcomes with their sources. Keep material results in durable PR/CI
+evidence; a temporary console claim alone is not repeatable proof. Record any
+unrepeatable claim as a limitation rather than a passed required check.
+Changes to code, base, configuration, environment, or relevant external
+conditions require reassessment and affected checks.
 
-Stage only task-related files; never use `git add .` or `git add -A`. Use one
-logical Conventional Commit per unit, explain why, and append
-`Co-Authored-By: Codex <noreply@openai.com>`. Never include `.env`, credentials,
-tokens, or other secrets.
+Never push to `main` or bypass hooks. If work cannot pass, preserve it as a
+clearly blocked draft only when the local contract permits that hand-off.
+Do not present it as ready or bypass a failing hook to publish it.
 
-Before each push, run `$VERIFY_CMD` once on the exact committed tree that you
-push: commit every change first, so the working tree is clean. It must pass
-without new warnings. If it fails, fix the cause, commit the fix, and run it
-again; these attempts count toward the limit in step 4. Do not run it again on
-a tree that already passed it. Record the pushed head SHA and the
-`$VERIFY_CMD` summary line, or the stamp line when `STACK.md` defines one. Push
-only the feature branch.
+## Open or update the PR
 
-Do not run an owner-run check that `STACK.md` reserves for the owner unless the
-owner asks for it in the current task. For a mutation check, run the narrowest
-test selector that `STACK.md` names, else `$TEST_CMD`.
+Create a PR on the task branch if none exists. Keep its title and description
+aligned with the final scope; do not leave a stale body and only add comments.
+Use the project PR template. Include purpose, criteria, material decisions,
+verification, exceptions, and what remains unverified. Link a fully resolved
+issue with `Closes #<N>`. Do not close an issue for partial delivery.
 
-## 6. Open or update the PR
+Existing required CI must also pass, per the local contract. Collect those
+results after push and report pending required checks honestly.
+A required owner-only safe-release test blocks acceptance until its result is
+present. Do not run checks reserved for the owner unless authorised.
 
-Check whether the current branch already has a PR. Create one when absent; add
-an update comment when it already exists. Keep the title under 70 characters.
-
-Follow `.github/pull_request_template.md` when the project has that file.
-Otherwise include why, what, decision-filter answers, rules involved,
-verification, states handled, and any autonomy fallback. Add `Closes #<N>`
-when the PR resolves an issue. List each owner-run check that `STACK.md`
-triggers for the diff as `ran on <SHA>: PASS` or
-`triggered, pending owner run`.
-
-Return the PR URL, the pushed head SHA, changed files, and the `$VERIFY_CMD`
-summary line (the stamp line when `STACK.md` defines one) to the project
-manager. After the hand-off, push nothing until the project manager sends
-findings. Do not run `$codereview`; `qa_enforcer` owns that gate. Never
-merge.
+Use body files for multiline PR text. Return the PR URL, head SHA, integration
+base, evidence, remaining checks, and open risks to the lead. Freeze the
+reviewed version while review runs; further changes require new evidence.
+Do not grade your own material implementation. For material changes or another
+required review, the lead delegates `$codereview` to an independent
+`qa_enforcer`. For a low-risk change, the lead records why independent review
+is not required under the local contract and request.
+Never merge from this implementation skill.

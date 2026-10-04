@@ -1,12 +1,23 @@
-# STACK.md — Python 3.13 / Home Assistant custom integration (HACS) profile
+# STACK.md — Python / Home Assistant custom integration (HACS) profile
+
+Policy revision: 2
 
 > A strict-typed Home Assistant **custom integration** distributed through HACS, written in async Python. The same correctness-first principles as the TypeScript/Effect and Swift profiles — model impossible states as impossible, validate at the boundary, keep the critical path unblocked, add no dependency without justification — expressed through Home Assistant's own idioms (asyncio event loop, `DataUpdateCoordinator`, config-entry lifecycle, `manifest.json` requirements) rather than against the grain of the ecosystem.
 >
 > **Normative.** `MUST`, `MUST NOT`, `SHOULD`, and `MAY` are binding as written. When this document conflicts with product scope, `VISION.md` decides product intent and this file decides implementation mechanics. When it conflicts with Home Assistant's own developer rules or the [Integration Quality Scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/), **Home Assistant wins** — surface the conflict before deviating.
 
+Use with `DOCTRINE.md` (P1–P9) and the selected host contract. This is an
+example profile, not evidence that a project has implemented its checks. On
+adoption, confirm its scope, pin versions, define each command, and complete
+§14–15. Record exclusions and gaps. A profile does not grant merge or release
+authority beyond the adopted project contract.
+
 ---
 
 ## 0. Project shape
+
+- **Project risk rationale:** identify affected people, data, and dependent systems. Record failure consequences, material uncertainty, and reversibility.
+- **Change risk:** assess the surfaces affected by each task against that project rationale. A risk label does not waive required checks or review.
 
 - **Shape:** Home Assistant custom integration (a `custom_components/<domain>/` package), installed via HACS, not a standalone app.
 - **Critical execution path:** the Home Assistant **asyncio event loop**. It is single-threaded and shared with the entire instance; blocking it degrades every integration and the UI. This is the direct analog of "the main actor / one display frame" (Swift) and "the per-request hot path" (TS) — the event loop is sacred and MUST NOT block.
@@ -34,10 +45,11 @@ repo/
   hacs.json                # HACS repository metadata
   mise.toml                # pinned tool/runtime versions (Python, uv, ruff, mypy)
   pyproject.toml           # ruff, mypy, pytest, uv dev tooling config
-  .github/workflows/       # hassfest + HACS validate + verify
+  .github/workflows/       # optional CI; existing required checks stay required
   STACK.md
   VISION.md
-  CLAUDE.md
+  DOCTRINE.md
+  CLAUDE.md / AGENTS.md
 ```
 
 - **Package boundaries (enforced structurally):**
@@ -49,14 +61,14 @@ repo/
 
 ## 1. Language & Runtime
 
-- **Primary language:** Python 3.13 (`from __future__ import annotations` in every module).
-- **Runtime version is not freely chosen — it tracks the Home Assistant release you target.** Set `manifest.json` / CI to the Python version the targeted HA core requires (Home Assistant 2025.x requires **Python 3.13**; do not target a version HA no longer supports, and do not back-deploy to an older Python than HA's minimum). When you bump the supported HA version, re-verify the Python floor first.
+- **Primary language:** Python at the version required by the targeted Home Assistant release; pin it in `mise.toml` and any CI configuration. Use `from __future__ import annotations` in every module.
+- **Runtime version is not freely chosen — it tracks the Home Assistant release you target.** Declare the supported HA release range in project metadata, then match the local test environment and any CI to its Python requirement. Do not invent a Python-version key in `manifest.json` or rely on a historical HA/Python pairing. When you bump the supported HA version, re-verify the Python floor first.
 - **Strictness mode:** `mypy --strict` with zero errors. Additionally enable `disallow_any_explicit`, `warn_unreachable`, `warn_redundant_casts`, and `no_implicit_optional`. Type checking is **the first reviewer** — prefer designs where a mistake is a type error rather than a runtime surprise. Add the integration to a strict-typing gate; new warnings are not allowed.
 - **Typing discipline:**
   - Model impossible states as impossible: frozen `@dataclass(frozen=True, slots=True)` for domain values, `enum.StrEnum` / `typing.Literal` for closed sets, tagged unions resolved with `match`.
   - `ConfigEntry` MUST be typed via a `type MyConfigEntry = ConfigEntry[MyData]` alias and `runtime_data` used for per-entry state — never module-level globals or `hass.data[DOMAIN]` dictionaries of untyped values for new code.
   - Prefer `TypedDict` for structured dict boundaries; prefer explicit narrowing over `cast`.
-- **Dev-environment provisioning:** [`mise`](https://mise.jdx.dev/) is the single bootstrap. `mise install` provisions **every pinned tool and runtime version** from `mise.toml` — the exact Python 3.13 interpreter, `uv`, `ruff`, and `mypy` — so a fresh checkout reaches a reproducible environment with one command. `mise.toml` is the source of truth for tool/runtime versions.
+- **Dev-environment provisioning:** [`mise`](https://mise.jdx.dev/) is the single bootstrap. `mise install` provisions **every pinned tool and runtime version** from `mise.toml` — the exact compatible Python interpreter, `uv`, `ruff`, and `mypy` — so a fresh checkout reaches a reproducible environment with one command. `mise.toml` is the source of truth for tool/runtime versions.
 - **Python dependency manager:** [`uv`](https://docs.astral.sh/uv/) (itself provisioned by mise) resolves and locks the dev/test dependencies. Wire it as a mise task (e.g. `mise run setup` → `uv sync`) so `mise install` followed by that task fully bootstraps. The **integration's own runtime dependencies** are declared in `manifest.json → requirements` (HA's contract), never in `pyproject.toml`; `pyproject.toml` + `uv.lock` govern the **development / test** environment only.
 - **Pinning surfaces (three layers, each owns one):** `mise.toml` pins tool/runtime versions; `uv.lock` pins dev dependencies; `manifest.json → requirements` pins exact runtime versions with `==`.
 
@@ -81,7 +93,7 @@ repo/
 | Time in tests          | `freezegun` / HA's `async_fire_time_changed`                                      | Deterministic — no wall-clock sleeps                                                       |
 | Lint + format          | `ruff` (lint **and** format)                                                      | HA core's own choice; replaces black/isort/flake8/pylint                                  |
 | Type checker           | `mypy --strict`                                                                   | The compiler-as-reviewer analog                                                           |
-| Manifest / repo checks | `hassfest` + HACS validation (GitHub Actions)                                     | Must pass in CI                                                                            |
+| Manifest / repo checks | `hassfest` + HACS validation | Declare supported local execution; existing required CI checks also pass |
 
 ---
 
@@ -95,9 +107,9 @@ Bootstrap the environment with `mise install` (provisions the pinned tools/runti
 | `$LINT_CMD`   | `uv run ruff check . && uv run mypy custom_components`                         |
 | `$BUILD_CMD`  | `uv run python -m compileall -q custom_components` (syntax gate — there is no compile step) |
 | `$TEST_CMD`   | `uv run pytest`                                                                |
-| `$VERIFY_CMD` | `uv run ruff format --check . && uv run ruff check . && uv run mypy custom_components && uv run pytest` (format-check → lint → type-check → tests) |
+| `$VERIFY_CMD` | `mise run verify` (format-check → lint/type checks → syntax gate → tests → security checks) |
 
-> Python has no build artifact, so `$BUILD_CMD` maps to a **bytecode-compile syntax gate** over the integration package. The ecosystem's structural gates — `hassfest` and HACS validation — cannot run locally in a custom-integration repo (`script.hassfest` lives in the Home Assistant core repository), so they run in CI as the `home-assistant/actions/hassfest` and `hacs/action` GitHub Actions. `$VERIFY_CMD` is what any agent must run and report on before claiming completion; the PR must additionally pass the hassfest and HACS-validate actions in CI.
+> Python has no build artifact, so `$BUILD_CMD` maps to a **bytecode-compile syntax gate** over the integration package. Implement the local `verify` mise task with required tests and §14 checks. Define a supported local runner or container for applicable `hassfest` and HACS validation. If a required validator cannot run locally, record the gap and obtain an owner decision before acceptance; do not silently substitute hosted CI. Existing required CI jobs must also pass. This profile does not supply the task or validators.
 
 ---
 
@@ -119,14 +131,14 @@ Bootstrap the environment with `mise install` (provisions the pinned tools/runti
   3. **`RestoreEntity`** for restoring last known entity state across restarts.
 - **Do not** write your own files, open databases, or persist to arbitrary paths. Do not stash mutable runtime state in module globals — use `entry.runtime_data`.
 - **Persisted entities:** declared by `VISION.md → Persistence and Privacy Posture`. Default is "as little as possible."
-- **Schema migration policy:** `Store` is versioned; provide an `async_migrate_func`. Config entries use `async_migrate_entry` with a bumped `entry.version`. A decode/migration failure degrades gracefully (re-setup / re-auth), it does not crash.
+- **Schema migration policy:** `Store` is versioned; provide an `async_migrate_func`. Config entries use `async_migrate_entry` with a bumped `entry.version`. A decode/migration failure surfaces an actionable error and preserves recoverable data. Do not silently reset durable user state; test upgrade and recovery before release.
 - **Forbidden persistence:** anything declared forbidden in `VISION.md → Persistence and Privacy Posture`. Never persist raw upstream payloads, secrets in plaintext beyond the config-entry store, or PII the product does not need.
 
 ---
 
 ## 6. Approved dependencies
 
-Default answer to "should we add a library?" is **no**. Home Assistant enforces this structurally: every runtime dependency MUST be listed in `manifest.json → requirements`, **version-pinned exactly** (`==`), published on PyPI, and ideally pure-Python (wheels for HA's platforms). `hassfest` validates the manifest; unpinned or unlisted imports fail CI.
+Prefer Home Assistant capabilities. Assess each added library's necessity, provenance, maintenance, licence, transitive cost, and replacement cost in the PR. Routine library choices are within lead authority; new providers, external data transfers, costs, or material lock-in need owner approval. For this profile, every runtime dependency MUST be listed in `manifest.json → requirements`, **version-pinned exactly** (`==`), published on PyPI, and ideally pure-Python (wheels for HA's platforms). `hassfest` validates the manifest; locally verify declared requirements and imported runtime dependencies.
 
 **Runtime (`manifest.json → requirements`):**
 
@@ -168,8 +180,8 @@ New runtime entries require a `STACK.md` PR (or ADR) with rationale, owner, appr
 - **YAML-only configuration** for a new integration — a UI config flow is required.
 - **`ObservableObject`-equivalent anti-patterns:** ad-hoc `is_loading` / `has_error` flags scattered across entities instead of deriving availability/state from the coordinator.
 - **Wildcard imports** (`from x import *`) and dependencies not listed + pinned in `manifest.json`.
-- **Naive `datetime` objects** anywhere in logic, storage, caches, or logs; `datetime.utcnow()` / `datetime.now()` without an explicit timezone (both produce naive or local-drifting values). See §10.
-- **Local-time storage or computation, and manual UTC-offset arithmetic** — timezone conversion happens only at the request-parse / response-build edges via `dt_util`.
+- **Naive `datetime` values used as instants**; use `dt_util.utcnow()` or an explicit timezone. Local calendar values require distinct types and declared conversion rules (see §10).
+- **Implicit conversion between local calendar values and instants, or manual UTC-offset arithmetic** — use `dt_util` and named timezone rules.
 
 ---
 
@@ -203,19 +215,11 @@ New runtime entries require a `STACK.md` PR (or ADR) with rationale, owner, appr
 
 ## 10. Time & timezones
 
-Time is treated exactly like any other external input: **UTC everywhere internally, converted only at the boundary.** This is the same "decode/narrow at the edge" discipline that §0 applies to data, applied to instants.
-
-- **Internal representation:** all datetimes in logic, coordinator data, `Store`/persistence, caches, and logs are **timezone-aware UTC**. Naive datetimes are forbidden (see §7).
-- **Conversion happens only at the two edges:** parsing an inbound request/payload → normalise to UTC immediately; building an outbound response / user-facing value → convert to the target timezone at the last moment. Nothing in between ever holds local time.
-- **Python mechanics:** use `datetime.now(UTC)` and aware datetimes. Never `datetime.utcnow()` or `datetime.now()` (both banned — naive/local). Never hand-roll `timedelta` offset math for timezones.
-- **Home Assistant mechanics:** use `homeassistant.util.dt` (`dt_util`) rather than raw `datetime` for anything time-of-day-aware:
-  - `dt_util.utcnow()` for "now";
-  - `dt_util.parse_datetime()` / `dt_util.as_utc()` to normalise inbound values to UTC **at the boundary**;
-  - `dt_util.as_local()` **only** when producing a user-facing value.
-  - HA stores and computes in UTC and renders in the user's configured timezone — do not fight this.
-- **Timestamp entities:** `SensorDeviceClass.TIMESTAMP` (and similar) MUST return timezone-aware UTC datetimes; HA localises them for display.
-
-> The language-neutral UTC-in-logic / convert-at-edges rule lives in `CLAUDE.md → Time`; this section pins the concrete Python/HA mechanics.
+- **Instant:** timezone-aware UTC `datetime`; normalise validated inbound instants with `dt_util.as_utc()`. Use `dt_util.utcnow()` for current time. Timestamp sensors return aware UTC datetimes.
+- **Calendar value:** use `date` for dates and separate `time` or validated component values for local schedules. Retain the configured IANA zone when a schedule resolves to an instant. A date-only entity must not be converted into an arbitrary midnight timestamp.
+- **Duration:** `timedelta` for elapsed intervals. Use a monotonic clock for elapsed-time measurement. A local calendar day need not contain 24 elapsed hours.
+- **Conversion:** use `homeassistant.util.dt` and supported timezone/calendar helpers. Validate timezone information before converting a parsed instant; define DST gaps and overlaps for schedules. Never hand-roll UTC offsets.
+- **Tests:** use `freezegun` and HA time helpers to control clocks. Exercise timezone and DST changes where relevant; no wall-clock sleeps or host-timezone assumptions.
 
 ---
 
@@ -228,12 +232,115 @@ Time is treated exactly like any other external input: **UTC everywhere internal
 
 ## 12. Best practices source
 
-`architect` and `ux-guardian` consult the current Home Assistant developer documentation before design and review verdicts, and cite the page. **Tool:** the `ctx7` CLI via Bash — `npx ctx7@latest library "<name>" "<question>"`, then `npx ctx7@latest docs <libraryId> "<question>"` (workflow in `~/.claude/rules/context7.md`) — with `developers.home-assistant.io` via WebFetch as fallback. Training-data memory is not an acceptable source for HA API details.
+Consult current, version-relevant [Home Assistant developer documentation](https://developers.home-assistant.io/), Python, and the targeted dependency documentation for uncertain APIs, platform rules,
+and material design decisions. Use the documentation tools available in the
+current host. Cite the relevant section in the decision or review. Do not
+require every role to repeat the same lookup or assume host-specific tools.
 
 ---
 
-## 13. Intentional Divergences
+## 13. Scoped exceptions
 
-| Date     | CLAUDE.md rule | Divergence | Reason |
-| -------- | -------------- | ---------- | ------ |
-| _(none)_ | —              | —          | —      |
+Do not weaken a rule or check to make a change pass. The responsible lead
+resolves exceptions within project authority, with an independent reviewer.
+The change author must not approve their own weaker acceptance or checks.
+Escalate changes beyond that authority and unresolved material risks to the
+owner. Record significant design decisions separately in concise `docs/adr/`
+files. Read them when relevant; keep backlog and change history in GitHub.
+
+| Rule / scope | Reason and consequences | Compensating evidence | Responsible lead / reviewer / approval | Expiry or reassessment |
+| --- | --- | --- | --- | --- |
+| _(none)_ | — | — | — | — |
+
+---
+
+## 14. Applicability and evidence
+
+On adoption, fill in local commands, environments, known gaps, and any
+existing required CI jobs. P1–P9 refer to `DOCTRINE.md`. Run required tests
+and the full `$VERIFY_CMD` locally for the exact mergeable version against
+the current integration base. Failed or missing required local checks block
+merge. Existing required CI must also pass; follow `DOCTRINE.md` P6 and
+the local host contract for the full verification and CI policy.
+Keep this matrix current. Assign each applicable check a phase:
+before merge or after release. Missing pre-merge evidence blocks merge;
+missing post-release evidence blocks a claim of successful release. A future
+production deployment is not a prerequisite for approving its PR.
+Do not report full acceptance from a local subset. Record results for the exact commit and
+environment; missing required evidence blocks acceptance without a reviewed
+§13 exception. Reviewers assess whether checks detect meaningful violations.
+Apply P6 to material claims: retain procedures or scripts,
+safe inputs or reconstruction steps, expected outcomes, and results. Link the
+evidence location from the PR. Trace expectations to original requirements,
+independent source evidence, or labelled provisional assumptions. Passing a
+test of an assumption does not establish its validity. Include challenge
+cases beyond supplied examples. Report unrepeatable claims and their limits;
+they cannot count as passed required checks.
+
+For §14–15, a release, monitoring, migration, or recovery item may be
+`not applicable` with a short reason tied to project purpose. A CLI or library
+label does not waive these duties as a group. An unsupported tool is a gap,
+not a reason to claim the requirement does not apply.
+
+| Doctrine / applicability | Required evidence | Environment / gap to resolve |
+| --- | --- | --- |
+| P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
+| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Required locally; existing required CI also passes; declare checks that rely on review |
+| P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
+| P3, P7: security and dependencies | Gitleaks; vulnerability scans covering `uv.lock` and resolved runtime requirements; Ruff security rules plus applicable static-security analysis | Wire pinned tools into `mise run verify`; name scanners/rules and unsupported surfaces on adoption |
+| P5–P7: HA integration | Setup/unload/reload, config and reauth flows, unavailable states, diagnostics redaction, migration/recovery tests; hassfest and HACS validation | Local pytest and applicable validators against declared HA versions; existing required CI also passes; record device-only evidence |
+| P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
+| P8–P9: material changes | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations | Separate reviewer context; no read-all-ADR prerequisite |
+
+### Example check configuration
+
+These tools and numeric limits are examples, not universal mandates. On
+adoption, select and justify the applicable checks, scope, and acceptance
+conditions. Record required checks in the §3 entry points; optional example
+tools need the normal dependency assessment. Do not lower an adopted gate
+merely to make a change pass. Existing §13 exception rules still apply.
+
+| Check | Tool | Threshold / acceptance condition | Principle |
+| --- | --- | --- | --- |
+| Formatting | Ruff format check | No format differences | P3, P8 |
+| Types | mypy with §1 strict settings | No type errors or new warnings | P3 |
+| Lint | Ruff, including selected security rules | No violations of selected rules | P3, P7 |
+| Complexity | [Ruff C901](https://docs.astral.sh/ruff/settings/#lint_mccabe_max-complexity) | Example: McCabe complexity ≤ 10 per function | P3, P4 |
+| Dead code | Ruff F401/F841; [Vulture](https://github.com/jendrikseipp/vulture) if selected | No unexplained unused-code findings; retain verified HA callbacks | P3, P7 |
+| Dependency directions | [Import Linter](https://import-linter.readthedocs.io/en/stable/contract_types/) if selected | No forbidden model/API/platform import edges | P4 |
+| Secrets | Gitleaks over declared source/history scope | No confirmed exposed secrets | P3, P7 |
+| Vulnerabilities | [pip-audit](https://github.com/pypa/pip-audit) on resolved dev and runtime environments | All findings triaged; none violate the project's declared security acceptance | P2, P7 |
+| Tests | pytest with HA fixtures; local manifest/repository validators | Required lifecycle, config, redaction, data and failure cases pass for declared HA versions | P5, P6 |
+
+Ruff's unused checks do not find every dead declaration. Dynamic HA discovery
+can confuse dead-code and import analysis. Review registered entry points and
+exercise setup/unload tests. Record unsupported local validator or device
+checks as gaps; an unavailable required check still blocks merge.
+
+Pin scanner versions and configuration with the project tools. Scanners must
+redact findings. Do not send source or dependency data to a new
+external provider without the required authorization. An unavailable scanner
+is a recorded gap, not a successful check. Select proportionate property,
+mutation, and coverage analysis when it tests a named risk; scores do not
+replace behavioural evidence.
+
+---
+
+## 15. Release, recovery, and maintenance
+
+Apply §14's purpose-based applicability assessment to each item below.
+Record a short reason for each `not applicable` item; retain the relevant
+distribution, compatibility, diagnosis, and data obligations.
+
+- **Release:** declare the HACS/tag release process, supported HA range, release artifact, and required permissions. Record whether `main` triggers publication.
+- **Observe:** test clean installation and upgrade, config-entry setup, a representative entity/action, and error diagnostics on the declared HA release.
+- **Recover:** retain a compatible integration version and verify HA/config-entry backup restoration. Test migrations and downgrade limits; do not advise downgrading a schema without evidence.
+- **Data:** document config-entry and Store retention/removal, credential handling, and diagnostic redaction. Owner device checks are exceptional; prefer a repeatable simulated service or fixture.
+
+The responsible lead verifies the integrated release within the adopted
+project authority. Main remains production-ready. Added cost, a new provider
+or external data transfer, material lock-in or product change, and irreversible
+production-data changes require owner approval unless already authorized by
+an applicable policy. Required owner tests block merge. Stop after the agreed
+task and release checks; report follow-up needs without taking new backlog
+work. Apply the same evidence requirements to maintenance updates.

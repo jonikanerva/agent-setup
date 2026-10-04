@@ -1,66 +1,89 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code when editing this source bundle.
 
-## What this repository is
+## Repository and scope
 
-This is **not an application** — it is the versioned source bundle for static Claude Code and Codex project setups. It ships pre-wired host configurations, engineering doctrines, and per-stack profiles that get copied into other projects or linked into user-level discovery locations. There is no generated setup: every distributed file is checked in as the final artifact downstream projects consume.
+Read README.md first. This repository contains final, static Claude Code and
+Codex project guidance. It is not an application. Preserve explicit host
+artifacts; do not add a generator, build step, or hidden source format.
 
-Global roles and skills are linked first. Each project then receives only the
-product contract, one stack profile, and its selected host contract:
+The shared doctrine distributed to target projects is template/DOCTRINE.md.
+Product intent and concrete
+technology are distributed separately as template/VISION.md and stacks/.
+The templates describe downstream defaults, not this repository's maintenance
+process. Maintain this static bundle with lightweight checks and PRs. Do not
+apply the distributed delivery workflow or ADR process to setup maintenance.
 
-```sh
-bin/link-global.sh
-PROJECT_DIR="/path/to/project"
-cp template/VISION.md "$PROJECT_DIR/VISION.md"
-cp stacks/STACK-TS.md "$PROJECT_DIR/STACK.md"
-cp template/CLAUDE.md "$PROJECT_DIR/CLAUDE.md"   # Claude
-cp template/AGENTS.md "$PROJECT_DIR/AGENTS.md"   # Codex
-```
+## Distribution
 
-`README.md` is the canonical explanation of the whole system — read it first.
+bin/link-global.sh links static role and skill files to user discovery paths.
+Each target project separately adopts DOCTRINE.md, VISION.md, STACK.md, and its
+selected CLAUDE.md or AGENTS.md. Copied contracts never update implicitly.
 
-## The core design: host contracts, shared project documents, one indirection
+Never replace a real user file or directory. Replace only symlinks. Prune only
+dead links whose target ownership is established inside this repository.
+Use AGENT_SETUP_HOME in temporary tests; never test against live user paths.
+Global updates must preserve a legacy project's approval and merge rules.
 
-The entire setup rests on a separation that you must preserve when editing:
+## Cross-host policy
 
-- **`template/CLAUDE.md` and `template/AGENTS.md`** — host-specific engineering doctrines + team workflows. Both are **technology-neutral**: they name no language, framework, or concrete command. They are static final artifacts, not generated outputs. When they need a concrete rule, they defer with the phrase *"as in `STACK.md`"* or a `$VAR_CMD` placeholder.
-- **`template/VISION.md`** — a fill-in-the-blank product contract (what the product *is* and *is not*). Shipped as a template full of `<…>` placeholders.
-- **`stacks/STACK-*.md`** — concrete technology profiles. Each one is copied into a target project as `STACK.md` and holds every language/framework/command/budget/banned-call.
+Maintain the same authority and evidence rules in both host trees. Keep native
+syntax explicit: Claude Markdown agents and slash skills; Codex TOML agents
+and dollar-prefixed skills. In target projects, five specialists remain available, but the lead
+chooses the roster. The lead may implement. Material changes require a
+reviewer who did not implement them in a separate context.
 
-**The load-bearing indirection:** both host contracts and all skills/agents refer to commands only through variables — `$FORMAT_CMD`, `$LINT_CMD`, `$BUILD_CMD`, `$TEST_CMD`, `$VERIFY_CMD` — which are **defined once** in each `STACK.md` Section 3 ("Build & verify commands"). This is why the doctrine works unchanged for TypeScript, Swift, or any future stack. **Never hard-code a concrete command or framework name into an operating contract, skill, or agent** — that would break the neutrality the whole system depends on. Concrete tooling lives in `STACK.md` alone.
+The three workflows are project-manager, implement, and codereview. Delivery
+runs from criteria through implementation and independent review to the
+authorised outcome. Missing required evidence blocks acceptance. An owner
+reservation of review, testing, or merge always applies.
 
-## The agent team and workflow (what the template encodes)
+Shared doctrine and host instructions remain technology-neutral. Concrete
+technology and commands belong in STACK.md. Host contracts, agents, and
+skills use the five named commands: $FORMAT_CMD, $LINT_CMD, $BUILD_CMD,
+$TEST_CMD, $VERIFY_CMD. This source bundle uses the verification contract below
+instead of an application VISION.md or STACK.md.
 
-Each host bundle wires up the same five-agent team driven by three skills. Claude uses Markdown agent definitions and slash-command skills; Codex uses TOML custom agents, dollar-prefixed skills, and subagent delegation. Understanding the flow is essential before editing either host tree:
+## Records and safeguards
 
-- **`project-manager`** (`template/.claude/skills/project-manager/SKILL.md`) — the **only** surface that talks to the user. Two phases: **Phase A** (interactive — reads the issue, proposes a plan, `AskUserQuestion` allowed) and **Phase B** (autonomous — convenes the team, drives to a PASS-reviewed PR, `AskUserQuestion` **forbidden**, autonomy fallback applies). It never writes app code itself.
-- **`implement`** skill — the branch → change → `$VERIFY_CMD` → commit → push → PR loop. Run once per issue by the `lead-dev` agent.
-- **`codereview`** skill — runs as an **isolated subagent** (`context: fork`), posts a `**Verdict: PASS**` / `**Verdict: FAIL**` comment to the PR. Run by `qa-enforcer` after each implement.
-- Five agents (`template/.claude/agents/`): `architect`, `ux-guardian`, `devils-advocate` (all read-only), `lead-dev` (writes), `qa-enforcer` (read-only verifier). The **full team is convened for every issue** — depth scales, the roster does not.
+- Use English for repository and GitHub artifacts and Finnish for user chat,
+  subject to the owner's explicit language instructions.
+- Use ASD-STE100 writing principles: short, active sentences and consistent terms.
+- Use feat|fix|chore|docs/<topic> branches. Never commit or push to main.
+- Use Conventional Commits with the current host's co-author trailer:
+  Co-Authored-By: <agent display name> <noreply@anthropic.com>.
+- Keep coherent commits and use merge commits, never squash.
+- Feature-branch force-pushes use --force-with-lease, never bare force.
+- Keep setup decisions and history in GitHub PRs and discussions. Do not add
+  local ADR, roadmap, backlog, ledger, or changelog files. The distributed
+  ADR policy applies to target projects only.
+- Do not modify other projects or live user settings without authorisation.
+- Never weaken protections, bypass hooks, read secrets, recursively delete
+  broad paths, or overwrite another contributor's work.
+- Read-only specialists do not edit product or governance files. Review scratch
+  files and test artifacts must be isolated.
+- Ask before changing product direction, backlog structure, or repository
+  settings. Merge only under explicit task authority. If the owner says they
+  will review and merge, leave the PR for them.
 
-The PM convenes the team for every issue; the team reviews its own work to PASS *before* a PR is ever surfaced to the user.
+## Verification
 
-The corresponding Codex files live under `template/.codex/agents/` and `template/.agents/skills/`. Their host-native syntax is intentionally separate and visible in Git. Keep semantics aligned, but do not introduce a generator or runtime include mechanism to hide the final artifacts.
+Before committing:
+1. Run bin/check-setup.sh (Bash and Python 3.11+).
+2. Run python3 bin/test-setup.py. It exercises both hosts in temporary
+   AGENT_SETUP_HOME directories and checks malformed artifacts.
+3. Inspect git diff --check and the complete diff.
+4. Keep README.md accurate. Keep task-specific evaluation records in the PR;
+   there is no mandatory agent-team review for setup edits.
 
-## Invariants to keep consistent across files
+These scripts do not generate or rewrite distributed artifacts. They do not
+execute application-profile commands or prove model compliance. Keep the two
+host distributions consistent and follow the owner's review instructions.
 
-These rules are stated in both operating contracts and **repeated and relied upon** in the skills, agents, PR template, and host safeguards. If you change one, grep both host trees and update every affected static file — they are intentionally redundant so each agent reads them in isolation:
+## Decision rights
 
-- **Language split:** everything written to the repo or GitHub (code, commits, branches, PRs, issues, docs) is in **English**; only the active agent host's chat replies to the user are in **Finnish**. (This is a rule the template imposes on downstream projects.)
-- **Simplified Technical English:** use STE for new user-facing English in the repository and on GitHub. Write short sentences. Use active voice and plain, consistent terms. Do not rewrite compact operating contracts only to apply STE.
-- **Git:** never commit/push to `main` — normal or force; `main` is protected on GitHub and that protection is the real gate; a force-push to a feature branch is allowed with `--force-with-lease`; feature branches `feat|fix|chore|docs/<topic>` (≤50 chars); Conventional Commits with the host-specific `Co-Authored-By` agent trailer; **merge commits, never squash**; `Closes #<N>` links the issue.
-- **No ledger files:** the backlog is GitHub issues; the audit trail is issues + commits + PR descriptions. The template forbids creating `ROADMAP.md` / changelog / backlog files — do not add one here either.
-- **Autonomy fallback:** in autonomous phases, agents do not call `AskUserQuestion`; they pick the smallest-surface conservative interpretation and document it. `VISION.md` / `CLAUDE.md` edits require an explicit user request.
-- **Safeguards:** `template/.claude/settings.json` is the reference Claude deny-list and hook configuration; the global linker does not install it. Codex uses custom-agent sandbox defaults plus the user's native sandbox and approval controls. Both doctrines' Safeguards and Decision rights must describe the same behavioral boundaries without claiming identical host enforcement.
-
-## Adding or editing a stack profile
-
-A new stack (Kotlin, Go, Rust, …) is added by copying `stacks/STACK-TEMPLATE.md` to `stacks/STACK-<name>.md` and filling it — **nothing else in the setup changes**. Match the section structure of the existing profiles (`STACK-TS.md` is a compact filled example): Project shape · Language & Runtime · Frameworks · Build & verify commands · Performance budgets · Persistence shape · Approved dependencies · Stack-specific reject-list additions · Logging & privacy · Background & lifecycle · Time & timezones · Design guidelines & UX thresholds (optional, UI-facing) · Best practices source (optional) · Intentional Divergences. Section 3 **must** define all five `$*_CMD` variables, because every skill and agent dereferences them. `ux-guardian` dereferences "Design guidelines & UX thresholds" and `architect` dereferences "Best practices source" by name — projects that omit them simply skip those checks.
-
-## Editing rules of thumb
-
-- Changing either operating contract, a skill, or an agent changes the doctrine downstream projects inherit. Keep it neutral, preserve the host-native cross-references, and verify the other host does not contradict the change.
-- The skill/agent files are long and deliberately self-contained (each is read in isolation by a separate subagent). Some redundancy is by design — do not "DRY it up" across files in a way that assumes shared context.
-- Keep `README.md` accurate when you add a stack or change the flow — it is the front door.
-- Run `bin/check-setup.sh` before committing. It validates the checked-in static distributions and does not generate or rewrite files.
+An approved change authorises feature-branch edits, validation, commits,
+pushes, and PR creation. The current task controls worktree, review, merge,
+and rollout limits. Do not adopt new downstream permissions for this task
+merely because the patch changes a template.
