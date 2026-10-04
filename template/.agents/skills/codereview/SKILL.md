@@ -9,7 +9,9 @@ Review the complete change and the adequacy of its evidence. You must not have
 implemented the change. Run this skill in a separate
 `qa_enforcer` subagent context. If invoked by the implementer, delegate it;
 do not perform self-review.
-Never edit product or governance files, commit, push, or merge. Scratch files
+Never edit product or governance files, commit implementation changes, push,
+or merge the PR. A local synthetic integration commit used only for verification
+is permitted in the isolated checkout; never publish it. Scratch files
 and build outputs belong in an isolated review checkout or temporary location.
 Use the project's declared safe review environment; do not run unknown commands
 with production access or secrets.
@@ -75,10 +77,18 @@ bug. If missing evidence is required for safe acceptance, it blocks acceptance.
 Otherwise identify the uncertainty without inventing a finding.
 
 Check that required evidence names the reviewed version and environment.
-Required project tests and `$VERIFY_CMD` must have run locally for the version
-to be merged and current integration base. Failed or missing required local
-checks block merge. CI is optional; existing required CI checks must also pass
-and must not be bypassed. Do not require CI adoption or repository-setting changes.
+Before PASS, run the full `$VERIFY_CMD` yourself and all required tests in an
+isolated checkout of the PR head merged with the current integration base.
+If the base is already an ancestor of the head, the head is that integration
+result. Otherwise prepare an automatic synthetic integration snapshot. Do not
+resolve conflicts or fix product code as the reviewer; return FAIL to the lead.
+Use the repository's full verification contract when it has no application
+`$VERIFY_CMD`. Tests included in that command need not be run twice.
+
+Record the PR head, base, tested integration commit or tree identifier,
+environment, commands, and observed results. An implementer report or CI
+result cannot replace this independent local run. A failed or missing reviewer
+run is FAIL. Existing required CI must also pass, per the local contract.
 Check retained procedures or scripts, safe inputs or reconstruction, expected
 outcomes and sources, and material results. Unrepeatable claims are limitations,
 not passed required checks. In agent trials, distinguish repeatable procedures
@@ -86,9 +96,8 @@ from guaranteed identical responses and note unavailable run settings.
 Grade merge acceptance against required pre-merge evidence. Post-release
 checks remain pending until deployment; they block a release-success claim,
 not the PR's pre-merge verdict.
-Reproduce changed or risk-sensitive checks and run any reviewer checks required
-by the project. Reuse trustworthy unchanged results where permitted; do not
-repeat the entire suite by ritual. Required local, CI, and owner-only checks
+Run additional reviewer checks required by the project. Reuse of other evidence
+must not replace your full integration verification. Required local, CI, and owner-only checks
 must all be satisfied, or have an independently approved exception within
 authority. A pending owner test necessary for safe release blocks merge.
 
@@ -113,7 +122,9 @@ Complete the required review checks before publishing the verdict:
 
 A PASS is not owner approval and does not override a reserved review or merge.
 Before posting, refetch the PR head and base. If either changed, report the
-review as stale and reassess; do not post a current PASS for the old version.
+review as stale, reassess the changes, and repeat full integration verification
+for the new head/base pair;
+do not post a current PASS for the old version.
 
 Write a fresh body file in an allowed temporary directory. Begin with exactly
 `**Verdict: PASS**` or `**Verdict: FAIL**`. Include verification commands,
@@ -126,4 +137,4 @@ review explicitly. Never report a successful post before this check passes.
 Return the verdict, reviewed head and base, findings or pending evidence, and
 review URL to the lead. Further changes invalidate the review until reassessed.
 Only the lead can accept the integrated result and decide the authorised next
-step. Never merge.
+step. Never merge the PR.

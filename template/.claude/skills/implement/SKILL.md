@@ -100,10 +100,8 @@ Use the project PR template. Include purpose, criteria, material decisions,
 verification, exceptions, and what remains unverified. Link a fully resolved
 issue with `Closes #<N>`. Do not close an issue for partial delivery.
 
-Collect CI results after push if the repository requires them; do not bypass
-those checks. CI is optional and its absence does not block merge when local
-verification and other acceptance conditions pass. Do not set up CI or change
-repository settings independently. Report pending required checks honestly.
+Existing required CI must also pass, per the local contract. Collect those
+results after push and report pending required checks honestly.
 A required owner-only safe-release test blocks acceptance until its result is
 present. Do not run checks reserved for the owner unless authorised.
 

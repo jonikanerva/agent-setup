@@ -234,6 +234,14 @@ Apply this boundary by impact, not file type. A typo, clarifying documentation,
 or another low-impact change does not require a separate reviewer unless the
 owner or local rules require it. Required automated checks still apply.
 
+When independent review is required, the reviewer must run the full
+`$VERIFY_CMD` and required tests on the PR head integrated with the current
+base in an isolated checkout before PASS. Record both input revisions and
+the tested integration commit or tree. A missing or failed independent run
+is FAIL; the implementer's report cannot replace it. Reuse of other evidence
+under P6 does not waive this run. This does not add a reviewer to low-impact
+changes that do not otherwise require independent review.
+
 Verify the integrated result. The lead owns acceptance and release even when
 other agents approve parts. Continue within the agreed goal and authority.
 If repeated attempts produce no new evidence or progress, change the approach,

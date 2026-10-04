@@ -140,14 +140,27 @@ CI, hardware, release, and recovery checks. Record enforcement gaps and
 exceptions. Keep the five core command names; add named checks when needed.
 Copy the PR template separately if useful.
 
-Local verification is the default. Run the project's required tests and
-`$VERIFY_CMD` locally before merge, against the version to be merged and its
-current integration base. Missing or failed required local checks block merge.
-If the repository has required CI status checks, those must also pass; never
-bypass them. CI is optional. No CI pipeline or CI-based branch protection is
-required for autonomous merge when the other acceptance conditions pass.
-Repository settings remain owner-controlled; agents do not change them
-independently.
+Local verification is the default; existing required CI must also pass.
+See `DOCTRINE.md` P6 and the selected host contract for the full rule. When
+independent review is required, the reviewer runs the full verification on the
+integrated head/base before PASS. This does not add review to low-impact work.
+Repository settings remain owner-controlled.
+
+### Before first real adoption
+
+Run a small task in an isolated test project with actual Claude Code and Codex
+sessions before adopting revision 2 in a real project. Verify role and skill
+loading, a separate reviewer context, the reviewer's own full verification,
+and merge blocking for a failed required check or pending required owner test.
+Confirm that the reviewer leaves product files unchanged and does not merge,
+while allowing isolated scratch files and build outputs.
+
+Record the procedure, host versions, results, and unverified items in the PR.
+Distinguish enforced restrictions from instructions: `workspace-write` permits
+writes; an instruction not to edit or merge does not technically remove that
+capability. An observed absence of writes is not proof that writes are
+impossible. Policy decision scenarios do not replace these host workflow tests.
+This source-bundle PR may merge before those runs; real adoption must wait.
 
 Use an existing issue or a direct task:
 

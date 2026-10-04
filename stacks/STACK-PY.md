@@ -260,8 +260,8 @@ On adoption, fill in local commands, environments, known gaps, and any
 existing required CI jobs. P1–P9 refer to `DOCTRINE.md`. Run required tests
 and the full `$VERIFY_CMD` locally for the exact mergeable version against
 the current integration base. Failed or missing required local checks block
-merge. CI is optional; existing required CI checks must also pass and must
-not be bypassed. Do not require new CI or repository protection settings.
+merge. Existing required CI must also pass; follow `DOCTRINE.md` P6 and
+the local host contract for the full verification and CI policy.
 Keep this matrix current. Assign each applicable check a phase:
 before merge or after release. Missing pre-merge evidence blocks merge;
 missing post-release evidence blocks a claim of successful release. A future

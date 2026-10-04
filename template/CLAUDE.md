@@ -80,7 +80,10 @@ material claims. Unrepeatable claims remain limitations. CI and owner-only resul
 are part of acceptance when required. A pending required owner test blocks
 merge. Prefer automatic tests and remove avoidable manual work.
 
-A review PASS covers the reviewed version only. Before merge, confirm the PR
+A review PASS covers the reviewed version only. When independent review is
+required, it includes the reviewer's own full `$VERIFY_CMD` and required tests
+on the head integrated with the current base in an isolated checkout. Missing
+or failed reviewer execution blocks PASS. Before merge, confirm the current PR
 head, current base, required checks, required independent review, and authority still
 match. Reverify the affected integrated result after changes. Do not treat a
 PASS comment as repository protection or bypass a required hosting check.
@@ -124,8 +127,10 @@ principles: short sentences, active voice, and consistent domain terms. Keep
 technical vocabulary intact. Chat with the owner in Finnish unless their
 explicit language instruction says otherwise.
 
-Use the host's sandbox and approval controls. Branch protections are the
-external merge gate. Never bypass hooks, weaken permissions or repository
+Use the host's sandbox and approval controls. When enabled, branch protections
+are the external merge gate. Otherwise, the gate is this contract's acceptance
+conditions, including the reviewer's own verification when independent review
+is required. Never bypass hooks, weaken permissions or repository
 protections, read secret files, expose credentials, or recursively delete broad
 project paths. The reference `.claude/settings.json` is optional and must be
 merged with existing settings, never installed over them.

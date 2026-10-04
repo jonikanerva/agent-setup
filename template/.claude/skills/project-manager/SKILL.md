@@ -102,9 +102,9 @@ Before accepting, confirm:
   result is present and passing, or covered by an approved exception.
 - Required tests and `$VERIFY_CMD` ran locally for the version to be merged
   and current integration base. Failed or missing mandatory local results block
-  merge. CI is optional; existing repository-required CI must also pass.
-  Missing CI alone does not block merge. Never bypass required CI or
-  independently change repository settings.
+  merge. Existing required CI must also pass, per the local contract.
+- When independent review is required, the reviewer ran the full verification
+  and required tests on the integrated head/base in an isolated checkout.
 - Changed requirements, checks, and exceptions received independent scrutiny.
 - Any required owner test is complete. Pending safe-release tests block merge.
 - The agreed scope is delivered and limitations are visible.
