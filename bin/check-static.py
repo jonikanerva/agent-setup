@@ -166,6 +166,25 @@ def validate(root):
         result = subprocess.run(["bash", "-n", str(script)], capture_output=True, text=True)
         require(result.returncode == 0, f"{script.name}: {result.stderr.strip()}")
 
+    # Match the non-hidden entries that link-global.sh can distribute. A role
+    # glob can also select a directory, so do not limit it to regular files.
+    for host, suffix in ((".claude", ".md"), (".codex", ".toml")):
+        relative = f"template/{host}/agents"
+        expected = {role + suffix for role in ROLES}
+        actual = {path.name for path in (root / relative).glob(f"*{suffix}")
+                  if path.exists() and not path.name.startswith(".")}
+        require(actual == expected,
+                f"{relative}: role set mismatch; missing={sorted(expected - actual)}, "
+                f"unexpected={sorted(actual - expected)}")
+    for host in (".claude", ".agents"):
+        relative = f"template/{host}/skills"
+        expected = set(SKILLS)
+        actual = {path.name for path in (root / relative).glob("*")
+                  if path.is_dir() and not path.name.startswith(".")}
+        require(actual == expected,
+                f"{relative}: skill set mismatch; missing={sorted(expected - actual)}, "
+                f"unexpected={sorted(actual - expected)}")
+
     for role in ROLES:
         relative = f"template/.claude/agents/{role}.md"
         fields = metadata(read(root, relative), relative, role,

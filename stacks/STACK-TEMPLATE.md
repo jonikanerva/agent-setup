@@ -167,10 +167,13 @@ files. Read them when relevant; keep backlog and change history in GitHub.
 
 ## 14. Applicability and evidence
 
-On adoption, fill in project commands, CI job names, environments, and known
-gaps for each row. P1–P9 refer to `DOCTRINE.md`. Keep the matrix current with
-the change. `$VERIFY_CMD` must run the applicable automated checks or report
-which required external results remain pending. Assign each check a phase:
+On adoption, fill in local commands, environments, known gaps, and any
+existing required CI jobs. P1–P9 refer to `DOCTRINE.md`. Run required tests
+and the full `$VERIFY_CMD` locally for the exact mergeable version against
+the current integration base. Failed or missing required local checks block
+merge. CI is optional; existing required CI checks must also pass and must
+not be bypassed. Do not require new CI or repository protection settings.
+Keep this matrix current. Assign each applicable check a phase:
 before merge or after release. Missing pre-merge evidence blocks merge;
 missing post-release evidence blocks a claim of successful release. A future
 production deployment is not a prerequisite for approving its PR.
@@ -185,15 +188,45 @@ test of an assumption does not establish its validity. Include challenge
 cases beyond supplied examples. Report unrepeatable claims and their limits;
 they cannot count as passed required checks.
 
+For §14–15, a release, monitoring, migration, or recovery item may be
+`not applicable` with a short reason tied to project purpose. A CLI or library
+label does not waive these duties as a group. An unsupported tool is a gap,
+not a reason to claim the requirement does not apply.
+
 | Doctrine / applicability | Required evidence | Environment / gap to resolve |
 | --- | --- | --- |
 | P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
-| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Local and CI; declare checks that rely on review |
+| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Required locally; existing required CI also passes; declare checks that rely on review |
 | P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
-| P3, P7: security and dependencies | `<pinned secret, dependency-vulnerability, and static-security scanners, commands, and scope>` | Local/CI; document unsupported checks and compensating evidence |
-| P5–P7: interfaces and critical journeys | `<integration, contract, UI/accessibility, performance, migration and recovery checks that apply>` | `<CI, test service, simulator or hardware; pending owner checks>` |
+| P3, P7: security and dependencies | `<pinned secret, dependency-vulnerability, and static-security scanners, commands, and scope>` | Local; existing required CI also passes; document unsupported checks and compensating evidence |
+| P5–P7: interfaces and critical journeys | `<integration, contract, UI/accessibility, performance, migration and recovery checks that apply>` | `<local test service, simulator or hardware; existing required CI; pending owner checks>` |
 | P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
 | P8–P9: material changes | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations | Separate reviewer context; no read-all-ADR prerequisite |
+
+### Example check configuration
+
+These tools and numeric limits are examples, not universal mandates. On
+adoption, select and justify the applicable checks, scope, and acceptance
+conditions. Record required checks in the §3 entry points; optional example
+tools need the normal dependency assessment. Do not lower an adopted gate
+merely to make a change pass. Existing §13 exception rules still apply.
+
+| Check | Tool | Threshold / acceptance condition | Principle |
+| --- | --- | --- | --- |
+| Formatting | `<formatter check mode>` | `<no differences>` | P3, P8 |
+| Types | `<strict compiler/type checker>` | `<no errors or new warnings; identify untyped boundaries>` | P3 |
+| Lint | `<selected ecosystem rules>` | `<no rule violations>` | P3 |
+| Complexity | `<complexity analyser or explicit review procedure>` | `<justified metric and limit; scope and exclusions>` | P3, P4 |
+| Dead code | `<unused-code analyser>` | `<no unexplained findings; dynamic entry points checked>` | P3, P7 |
+| Dependency directions | `<module visibility/import checker>` | `<no forbidden edges; list unenforced boundaries>` | P4 |
+| Secrets | `<secret scanner and scan scope>` | `<no confirmed exposed secrets>` | P3, P7 |
+| Vulnerabilities | `<resolved-dependency scanner/advisory procedure>` | `<declared risk threshold; all findings triaged>` | P2, P7 |
+| Tests | `<unit/integration/critical-flow tools>` | `<all required cases pass locally; criteria and challenge cases covered>` | P5, P6 |
+
+For every unsupported tool or platform, name the enforcement gap and credible
+replacement evidence, such as independent boundary review and targeted
+failure tests. State what the replacement cannot show. Missing required
+evidence still blocks merge.
 
 Pin scanner versions and configuration with the project tools. Scanners must
 redact findings. Do not send source or dependency data to a new
@@ -205,6 +238,10 @@ replace behavioural evidence.
 ---
 
 ## 15. Release, recovery, and maintenance
+
+Apply §14's purpose-based applicability assessment to each item below.
+Record a short reason for each `not applicable` item; retain the relevant
+distribution, compatibility, diagnosis, and data obligations.
 
 - **Release:** `<trigger, target environments, command/job, required permissions, and version identifier>`.
 - **Observe:** `<health/smoke check, diagnostic source, and bounded observation window>`.

@@ -4,9 +4,9 @@ Policy revision: 2
 
 ## Project authority
 
-This project adopts `DOCTRINE.md` revision 2. Read that doctrine, this contract,
-and the relevant `VISION.md` and `STACK.md` sections when starting delivery
-work. Reuse context already read. Search `docs/adr/` and read relevant decisions
+This project adopts `DOCTRINE.md` revision 2. Before starting delivery work,
+read `DOCTRINE.md`, `VISION.md`, and `STACK.md` in full, plus this contract.
+Reuse context already read. Search `docs/adr/` and read relevant decisions
 only when they affect the task. The issue or user request supplies the scope.
 
 `VISION.md` owns product intent. `DOCTRINE.md` owns quality and delegated
@@ -35,12 +35,16 @@ Use native Codex subagents when delegation helps. Available roles are
 Assign owned files and expected evidence. Keep the reviewer separate from
 implementation. Do not start another Codex CLI process to simulate a subagent.
 
-Material behavioural, architectural, security, or data changes require a
+Material changes to behaviour, architecture, security, data, agent authority,
+or acceptance gates require a
 reviewer other than the implementer in a separate context. Use `$codereview`
 with `qa_enforcer`.
 Give the reviewer criteria and raw evidence, not instructions to confirm the
 implementer's conclusion. Wait for required results and verify the integrated
-work. The lead owns acceptance and release.
+work. The lead owns acceptance and release. A typo, clarifying documentation,
+or other low-impact change needs no separate review unless the owner or local
+rules require it. Impact, not file type, decides. Required automated checks
+still apply to small changes.
 
 Record acceptance criteria and material assumptions before implementation.
 Trace them to the original request and source evidence. Prefer provisional
@@ -60,8 +64,10 @@ from `STACK.md → Build & verify commands`. Additional checks must also have a
 named entry there. For a repository without an application stack, use its
 explicit local verification contract. Never invent a successful command.
 
-Run relevant fast checks during development. Before final review, run required
-verification on the exact committed tree. Record SHA, integration base,
+Run relevant fast checks during development. Required project tests and
+`$VERIFY_CMD` run locally before merge on the version to be merged and the
+current integration base. Missing or failed required local evidence blocks
+merge. Record SHA, integration base,
 environment, command, result, and missing evidence. Retain safe inputs or their
 reconstruction, expected outcomes with sources, and procedures needed to repeat
 material claims. Unrepeatable claims remain limitations. CI and owner-only results
@@ -72,6 +78,10 @@ A review PASS covers the reviewed version only. Before merge, confirm the PR
 head, current base, required checks, required independent review, and authority still
 match. Reverify the affected integrated result after changes. Do not treat a
 PASS comment as repository protection or bypass a required hosting check.
+If the repository has required CI checks, they must also pass. CI is optional:
+its absence does not block autonomous merge when local verification and other
+acceptance conditions pass. Do not require a CI pipeline or CI-based branch
+protection setup, and do not change repository settings independently.
 
 Within adopted authority, the lead may merge and release after all acceptance
 conditions pass. An automatic deployment is part of that release. Follow the

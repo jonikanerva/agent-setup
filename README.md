@@ -18,8 +18,9 @@ changes use lightweight file checks and GitHub PRs; no local ADR is required.
 
 The primary agent is the lead and owns the complete result. It can implement
 directly or delegate. It chooses specialists by risk and uncertainty.
-Material behavioural, architectural, security, and data changes require
-independent review in a separate context. A fixed team is not required.
+Material changes to behaviour, architecture, security, data, agent authority,
+or acceptance gates require independent review in a separate context.
+A fixed team is not required.
 
 ## Delivery and authority
 
@@ -138,6 +139,15 @@ placeholders. Implement the named verification commands and define applicable
 CI, hardware, release, and recovery checks. Record enforcement gaps and
 exceptions. Keep the five core command names; add named checks when needed.
 Copy the PR template separately if useful.
+
+Local verification is the default. Run the project's required tests and
+`$VERIFY_CMD` locally before merge, against the version to be merged and its
+current integration base. Missing or failed required local checks block merge.
+If the repository has required CI status checks, those must also pass; never
+bypass them. CI is optional. No CI pipeline or CI-based branch protection is
+required for autonomous merge when the other acceptance conditions pass.
+Repository settings remain owner-controlled; agents do not change them
+independently.
 
 Use an existing issue or a direct task:
 

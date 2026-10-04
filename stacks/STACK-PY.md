@@ -45,7 +45,7 @@ repo/
   hacs.json                # HACS repository metadata
   mise.toml                # pinned tool/runtime versions (Python, uv, ruff, mypy)
   pyproject.toml           # ruff, mypy, pytest, uv dev tooling config
-  .github/workflows/       # hassfest + HACS validate + verify
+  .github/workflows/       # optional CI; existing required checks stay required
   STACK.md
   VISION.md
   DOCTRINE.md
@@ -61,8 +61,8 @@ repo/
 
 ## 1. Language & Runtime
 
-- **Primary language:** Python at the version required by the targeted Home Assistant release; pin it in `mise.toml` and CI. Use `from __future__ import annotations` in every module.
-- **Runtime version is not freely chosen — it tracks the Home Assistant release you target.** Declare the supported HA release range in project metadata, then match the test environment and CI to its Python requirement. Do not invent a Python-version key in `manifest.json` or rely on a historical HA/Python pairing. When you bump the supported HA version, re-verify the Python floor first.
+- **Primary language:** Python at the version required by the targeted Home Assistant release; pin it in `mise.toml` and any CI configuration. Use `from __future__ import annotations` in every module.
+- **Runtime version is not freely chosen — it tracks the Home Assistant release you target.** Declare the supported HA release range in project metadata, then match the local test environment and any CI to its Python requirement. Do not invent a Python-version key in `manifest.json` or rely on a historical HA/Python pairing. When you bump the supported HA version, re-verify the Python floor first.
 - **Strictness mode:** `mypy --strict` with zero errors. Additionally enable `disallow_any_explicit`, `warn_unreachable`, `warn_redundant_casts`, and `no_implicit_optional`. Type checking is **the first reviewer** — prefer designs where a mistake is a type error rather than a runtime surprise. Add the integration to a strict-typing gate; new warnings are not allowed.
 - **Typing discipline:**
   - Model impossible states as impossible: frozen `@dataclass(frozen=True, slots=True)` for domain values, `enum.StrEnum` / `typing.Literal` for closed sets, tagged unions resolved with `match`.
@@ -93,7 +93,7 @@ repo/
 | Time in tests          | `freezegun` / HA's `async_fire_time_changed`                                      | Deterministic — no wall-clock sleeps                                                       |
 | Lint + format          | `ruff` (lint **and** format)                                                      | HA core's own choice; replaces black/isort/flake8/pylint                                  |
 | Type checker           | `mypy --strict`                                                                   | The compiler-as-reviewer analog                                                           |
-| Manifest / repo checks | `hassfest` + HACS validation (GitHub Actions)                                     | Must pass in CI                                                                            |
+| Manifest / repo checks | `hassfest` + HACS validation | Declare supported local execution; existing required CI checks also pass |
 
 ---
 
@@ -109,7 +109,7 @@ Bootstrap the environment with `mise install` (provisions the pinned tools/runti
 | `$TEST_CMD`   | `uv run pytest`                                                                |
 | `$VERIFY_CMD` | `mise run verify` (format-check → lint/type checks → syntax gate → tests → security checks) |
 
-> Python has no build artifact, so `$BUILD_CMD` maps to a **bytecode-compile syntax gate** over the integration package. Implement the `verify` mise task in the adopting project. It runs the declared checks and §14 security checks. Run `hassfest` and HACS validation through the project's pinned `home-assistant/actions/hassfest` and `hacs/action` CI jobs. Record these required results for the same commit; local verification alone cannot establish acceptance. This profile does not supply the task or jobs.
+> Python has no build artifact, so `$BUILD_CMD` maps to a **bytecode-compile syntax gate** over the integration package. Implement the local `verify` mise task with required tests and §14 checks. Define a supported local runner or container for applicable `hassfest` and HACS validation. If a required validator cannot run locally, record the gap and obtain an owner decision before acceptance; do not silently substitute hosted CI. Existing required CI jobs must also pass. This profile does not supply the task or validators.
 
 ---
 
@@ -138,7 +138,7 @@ Bootstrap the environment with `mise install` (provisions the pinned tools/runti
 
 ## 6. Approved dependencies
 
-Prefer Home Assistant capabilities. Assess each added library's necessity, provenance, maintenance, licence, transitive cost, and replacement cost in the PR. Routine library choices are within lead authority; new providers, external data transfers, costs, or material lock-in need owner approval. For this profile, every runtime dependency MUST be listed in `manifest.json → requirements`, **version-pinned exactly** (`==`), published on PyPI, and ideally pure-Python (wheels for HA's platforms). `hassfest` validates the manifest; unpinned or unlisted imports fail CI.
+Prefer Home Assistant capabilities. Assess each added library's necessity, provenance, maintenance, licence, transitive cost, and replacement cost in the PR. Routine library choices are within lead authority; new providers, external data transfers, costs, or material lock-in need owner approval. For this profile, every runtime dependency MUST be listed in `manifest.json → requirements`, **version-pinned exactly** (`==`), published on PyPI, and ideally pure-Python (wheels for HA's platforms). `hassfest` validates the manifest; locally verify declared requirements and imported runtime dependencies.
 
 **Runtime (`manifest.json → requirements`):**
 
@@ -256,10 +256,13 @@ files. Read them when relevant; keep backlog and change history in GitHub.
 
 ## 14. Applicability and evidence
 
-On adoption, fill in project commands, CI job names, environments, and known
-gaps for each row. P1–P9 refer to `DOCTRINE.md`. Keep the matrix current with
-the change. `$VERIFY_CMD` must run the applicable automated checks or report
-which required external results remain pending. Assign each check a phase:
+On adoption, fill in local commands, environments, known gaps, and any
+existing required CI jobs. P1–P9 refer to `DOCTRINE.md`. Run required tests
+and the full `$VERIFY_CMD` locally for the exact mergeable version against
+the current integration base. Failed or missing required local checks block
+merge. CI is optional; existing required CI checks must also pass and must
+not be bypassed. Do not require new CI or repository protection settings.
+Keep this matrix current. Assign each applicable check a phase:
 before merge or after release. Missing pre-merge evidence blocks merge;
 missing post-release evidence blocks a claim of successful release. A future
 production deployment is not a prerequisite for approving its PR.
@@ -274,15 +277,45 @@ test of an assumption does not establish its validity. Include challenge
 cases beyond supplied examples. Report unrepeatable claims and their limits;
 they cannot count as passed required checks.
 
+For §14–15, a release, monitoring, migration, or recovery item may be
+`not applicable` with a short reason tied to project purpose. A CLI or library
+label does not waive these duties as a group. An unsupported tool is a gap,
+not a reason to claim the requirement does not apply.
+
 | Doctrine / applicability | Required evidence | Environment / gap to resolve |
 | --- | --- | --- |
 | P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
-| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Local and CI; declare checks that rely on review |
+| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Required locally; existing required CI also passes; declare checks that rely on review |
 | P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
 | P3, P7: security and dependencies | Gitleaks; vulnerability scans covering `uv.lock` and resolved runtime requirements; Ruff security rules plus applicable static-security analysis | Wire pinned tools into `mise run verify`; name scanners/rules and unsupported surfaces on adoption |
-| P5–P7: HA integration | Setup/unload/reload, config and reauth flows, unavailable states, diagnostics redaction, migration/recovery tests; hassfest and HACS validation | Local pytest and required CI jobs against declared HA versions; device-only behaviour needs recorded evidence |
+| P5–P7: HA integration | Setup/unload/reload, config and reauth flows, unavailable states, diagnostics redaction, migration/recovery tests; hassfest and HACS validation | Local pytest and applicable validators against declared HA versions; existing required CI also passes; record device-only evidence |
 | P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
 | P8–P9: material changes | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations | Separate reviewer context; no read-all-ADR prerequisite |
+
+### Example check configuration
+
+These tools and numeric limits are examples, not universal mandates. On
+adoption, select and justify the applicable checks, scope, and acceptance
+conditions. Record required checks in the §3 entry points; optional example
+tools need the normal dependency assessment. Do not lower an adopted gate
+merely to make a change pass. Existing §13 exception rules still apply.
+
+| Check | Tool | Threshold / acceptance condition | Principle |
+| --- | --- | --- | --- |
+| Formatting | Ruff format check | No format differences | P3, P8 |
+| Types | mypy with §1 strict settings | No type errors or new warnings | P3 |
+| Lint | Ruff, including selected security rules | No violations of selected rules | P3, P7 |
+| Complexity | [Ruff C901](https://docs.astral.sh/ruff/settings/#lint_mccabe_max-complexity) | Example: McCabe complexity ≤ 10 per function | P3, P4 |
+| Dead code | Ruff F401/F841; [Vulture](https://github.com/jendrikseipp/vulture) if selected | No unexplained unused-code findings; retain verified HA callbacks | P3, P7 |
+| Dependency directions | [Import Linter](https://import-linter.readthedocs.io/en/stable/contract_types/) if selected | No forbidden model/API/platform import edges | P4 |
+| Secrets | Gitleaks over declared source/history scope | No confirmed exposed secrets | P3, P7 |
+| Vulnerabilities | [pip-audit](https://github.com/pypa/pip-audit) on resolved dev and runtime environments | All findings triaged; none violate the project's declared security acceptance | P2, P7 |
+| Tests | pytest with HA fixtures; local manifest/repository validators | Required lifecycle, config, redaction, data and failure cases pass for declared HA versions | P5, P6 |
+
+Ruff's unused checks do not find every dead declaration. Dynamic HA discovery
+can confuse dead-code and import analysis. Review registered entry points and
+exercise setup/unload tests. Record unsupported local validator or device
+checks as gaps; an unavailable required check still blocks merge.
 
 Pin scanner versions and configuration with the project tools. Scanners must
 redact findings. Do not send source or dependency data to a new
@@ -294,6 +327,10 @@ replace behavioural evidence.
 ---
 
 ## 15. Release, recovery, and maintenance
+
+Apply §14's purpose-based applicability assessment to each item below.
+Record a short reason for each `not applicable` item; retain the relevant
+distribution, compatibility, diagnosis, and data obligations.
 
 - **Release:** declare the HACS/tag release process, supported HA range, release artifact, and required permissions. Record whether `main` triggers publication.
 - **Observe:** test clean installation and upgrade, config-entry setup, a representative entity/action, and error diagnostics on the declared HA release.

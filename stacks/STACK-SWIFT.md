@@ -68,7 +68,7 @@ authority beyond the adopted project contract.
 | `$TEST_CMD`   | `make test`                                 |
 | `$VERIFY_CMD` | `make test-all` (format-check → lint/build → required unit/UI tests → security checks) |
 
-Implement these targets in the adopting project's `Makefile`; this profile does not supply one. Set schemes and destinations for all supported targets. `$VERIFY_CMD` runs all applicable §14 checks. Record required CI or hardware results for the same commit if they cannot run locally. Invoke the build tools through these targets.
+Implement these targets in the adopting project's `Makefile`; this profile does not supply one. Set schemes and destinations for all supported targets. `$VERIFY_CMD` runs all applicable §14 checks. Run required tests and verification locally. Existing required CI must also pass. Record hardware gaps; missing required local evidence blocks merge. Invoke the build tools through these targets.
 
 ---
 
@@ -187,10 +187,13 @@ files. Read them when relevant; keep backlog and change history in GitHub.
 
 ## 14. Applicability and evidence
 
-On adoption, fill in project commands, CI job names, environments, and known
-gaps for each row. P1–P9 refer to `DOCTRINE.md`. Keep the matrix current with
-the change. `$VERIFY_CMD` must run the applicable automated checks or report
-which required external results remain pending. Assign each check a phase:
+On adoption, fill in local commands, environments, known gaps, and any
+existing required CI jobs. P1–P9 refer to `DOCTRINE.md`. Run required tests
+and the full `$VERIFY_CMD` locally for the exact mergeable version against
+the current integration base. Failed or missing required local checks block
+merge. CI is optional; existing required CI checks must also pass and must
+not be bypassed. Do not require new CI or repository protection settings.
+Keep this matrix current. Assign each applicable check a phase:
 before merge or after release. Missing pre-merge evidence blocks merge;
 missing post-release evidence blocks a claim of successful release. A future
 production deployment is not a prerequisite for approving its PR.
@@ -205,15 +208,48 @@ test of an assumption does not establish its validity. Include challenge
 cases beyond supplied examples. Report unrepeatable claims and their limits;
 they cannot count as passed required checks.
 
+For §14–15, a release, monitoring, migration, or recovery item may be
+`not applicable` with a short reason tied to project purpose. A CLI or library
+label does not waive these duties as a group. An unsupported tool is a gap,
+not a reason to claim the requirement does not apply.
+
 | Doctrine / applicability | Required evidence | Environment / gap to resolve |
 | --- | --- | --- |
 | P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
-| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Local and CI; declare checks that rely on review |
+| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Required locally; existing required CI also passes; declare checks that rely on review |
 | P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
 | P3, P7: security and dependencies | Gitleaks, dependency vulnerability review/scan for `Package.resolved` when present, applicable static-security analysis, entitlement and privacy-manifest checks | Wire supported pinned tools into `make test-all`; record scanner coverage gaps and independent security review |
 | P5–P7: app journeys | Swift Testing, required XCUI flows/accessibility audits, migration/recovery and cancellation tests for each supported platform | macOS runner and declared simulators; hardware only for behaviour that these cannot verify, with exact device/OS results |
 | P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
 | P8–P9: material changes | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations | Separate reviewer context; no read-all-ADR prerequisite |
+
+### Example check configuration
+
+These tools and numeric limits are examples, not universal mandates. On
+adoption, select and justify the applicable checks, scope, and acceptance
+conditions. Record required checks in the §3 entry points; optional example
+tools need the normal dependency assessment. Do not lower an adopted gate
+merely to make a change pass. Existing §13 exception rules still apply.
+
+| Check | Tool | Threshold / acceptance condition | Principle |
+| --- | --- | --- | --- |
+| Formatting | [swift-format lint --strict](https://github.com/swiftlang/swift-format#linting) | No format diagnostics | P3, P8 |
+| Types and concurrency | Swift compiler through Xcode build targets | No errors or new warnings with §1 strict settings | P3, P5 |
+| Lint | swift-format rules in the project configuration | No violations of selected style rules | P3 |
+| Complexity | [Lizard](https://github.com/terryyin/lizard) if selected | Example: function cyclomatic complexity ≤ 10; review parser gaps | P3, P4 |
+| Dead code | [Periphery](https://github.com/peripheryapp/periphery) if selected | No unexplained unused-code findings across supported configurations | P3, P7 |
+| Dependency directions | Swift module visibility, target graph and import review | No forbidden target/import edges; internal rules need explicit review or a project check | P4 |
+| Secrets | Gitleaks over declared source/history scope | No confirmed exposed secrets | P3, P7 |
+| Vulnerabilities | Package.resolved inventory, upstream advisories and a compatible scanner if available | All packages assessed; no findings that violate declared security acceptance | P2, P7 |
+| Tests | Swift Testing and required XCTest/XCUI plans | All required cases pass locally on declared macOS/simulator/device targets | P5, P6 |
+
+Periphery can miss dynamic or Objective-C references and synthesized usage.
+Validate findings against entry points and supported build configurations.
+Lizard is not the Swift compiler; record unsupported syntax. Compiler and
+formatter success do not prove security or enforce all architecture rules.
+For unsupported checks, retain a scoped independent review of imports,
+permissions and trust boundaries plus targeted tests. Record scanner and
+device gaps without presenting manual evidence as an automated pass.
 
 Pin scanner versions and configuration with the project tools. Scanners must
 redact findings. Do not send source or dependency data to a new
@@ -225,6 +261,10 @@ replace behavioural evidence.
 ---
 
 ## 15. Release, recovery, and maintenance
+
+Apply §14's purpose-based applicability assessment to each item below.
+Record a short reason for each `not applicable` item; retain the relevant
+distribution, compatibility, diagnosis, and data obligations.
 
 - **Release:** declare per-target archive/signing and distribution jobs, channels, version identifiers, entitlements, and any store review dependency. Keep credentials outside the repository.
 - **Observe:** verify the delivered build on the declared target, a critical launch/journey, and available crash diagnostics. Define the observation window; upload success does not prove store availability.

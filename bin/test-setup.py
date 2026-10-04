@@ -197,6 +197,30 @@ class FormatTests(unittest.TestCase):
                             CHECK.validate(root)
                     finally:
                         path.write_text(original)
+            extra_entries = (
+                ("template/.claude/agents/unexpected.md", False, "role set mismatch"),
+                ("template/.codex/agents/unexpected.toml", False, "role set mismatch"),
+                ("template/.claude/skills/unexpected", True, "skill set mismatch"),
+                ("template/.agents/skills/unexpected", True, "skill set mismatch"),
+                ("template/.claude/agents/unexpected.md", True, "role set mismatch"),
+                ("template/.codex/agents/unexpected.toml", True, "role set mismatch"),
+            )
+            for relative, directory, error in extra_entries:
+                with self.subTest(extra=relative, directory=directory):
+                    path = root / relative
+                    try:
+                        if directory:
+                            path.mkdir()
+                        else:
+                            path.write_text("Unexpected role fixture.\n")
+                        with self.assertRaisesRegex(ValueError, error):
+                            CHECK.validate(root)
+                    finally:
+                        if directory:
+                            path.rmdir()
+                        else:
+                            path.unlink()
+            CHECK.validate(root)
             for relative in ("template/DOCTRINE.md", "docs/workflow-trial-inputs.md"):
                 with self.subTest(missing=relative):
                     path = root / relative

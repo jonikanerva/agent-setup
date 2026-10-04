@@ -127,7 +127,13 @@ among valid items and the whole-operation failure where each can occur.
 ## P6. Demonstrate quality and challenge the evidence
 
 Derive checks from acceptance criteria and risks. Automate verification where
-practical. Required checks must pass before acceptance, subject only to a
+practical. Run required project tests and `$VERIFY_CMD` locally before merge
+on the version to be merged and the current integration base. Missing or
+failed mandatory local checks block merge. Existing required CI checks must
+also pass and must not be bypassed. CI is optional: its absence does not block
+autonomous merge when local verification and other acceptance conditions pass.
+Do not require a CI pipeline or related repository-setting changes.
+Required checks must pass before acceptance, subject only to a
 reviewed exception under the Exceptions section. A pending owner-only test
 that is necessary for safe release blocks merge. Seek an automatic equivalent
 instead of making owner testing routine.
@@ -216,12 +222,17 @@ parallel work. It may implement directly. Give each contributor a clear scope,
 owned files, interfaces, and acceptance criteria. Keep concurrent edits
 isolated or explicitly coordinated.
 
-Material behavioural, architectural, security, or data changes MUST receive
-review by someone other than the implementer. Agent review uses a separate
+Material changes to behaviour, architecture, security, data, agent authority,
+or acceptance gates MUST receive review by someone other than the implementer.
+Agent review uses a separate
 context and examines requirements, actual changes, and evidence. Review
 derived criteria and assumptions against the original task and source evidence.
 Review tests and exceptions too. Challenge critical assumptions. Agreement
 among agents is not evidence of correctness.
+
+Apply this boundary by impact, not file type. A typo, clarifying documentation,
+or another low-impact change does not require a separate reviewer unless the
+owner or local rules require it. Required automated checks still apply.
 
 Verify the integrated result. The lead owns acceptance and release even when
 other agents approve parts. Continue within the agreed goal and authority.

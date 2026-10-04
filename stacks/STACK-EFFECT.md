@@ -56,7 +56,7 @@ repo/
 
 ## 1. Language & Runtime
 
-- **Primary language:** TypeScript 6.x profile baseline. A major upgrade needs current compatibility evidence, a CI trial, and an updated profile. Do not introduce preview toolchains without a reviewed §13 exception.
+- **Primary language:** TypeScript 6.x profile baseline. A major upgrade needs current compatibility evidence, a local compatibility trial, and an updated profile. Do not introduce preview toolchains without a reviewed §13 exception.
 - **Strictness mode:** ESLint with `@typescript-eslint/strict-type-checked`, plus this non-negotiable `tsconfig` baseline:
 
 ```json
@@ -77,10 +77,10 @@ repo/
 ```
 
 - **Typing discipline:** model impossible states as impossible; discriminated unions over optional-field state bags; `satisfies` over casts; no `any`, no `as unknown as` (§7).
-- **Target runtime:** Node.js 24 LTS; **minimum** 24.11.0. `mise.toml`, the Docker base image, the CI image, and the deployment runtime MUST agree on the same Node major line.
+- **Target runtime:** Node.js 24 LTS; **minimum** 24.11.0. `mise.toml`, any Docker/CI image, and the deployment runtime MUST agree on the same Node major line.
 - **Package manager:** pnpm workspaces; `pnpm-lock.yaml` pins exact resolved versions. `package.json` MUST NOT use `latest`. Dependency upgrades happen in dedicated PRs; `effect`, `@effect/platform`, and `@effect/platform-node` upgrade together in a single PR.
 - **Dev-environment provisioning:** [`mise`](https://mise.jdx.dev/) is the single bootstrap. `mise install` provisions **every pinned tool and runtime version** from `mise.toml` — the exact Node.js 24 LTS interpreter and `pnpm` — so a fresh checkout reaches a reproducible environment with one command. Wire dependency install as a mise task (e.g. `mise run setup` → `pnpm install`).
-- **Pinning surfaces (two layers, each owns one):** `mise.toml` pins tool/runtime versions (Node, pnpm); `pnpm-lock.yaml` pins the resolved dependency graph. Never rely on a globally-installed Node or pnpm — go through mise so local and CI use identical versions.
+- **Pinning surfaces (two layers, each owns one):** `mise.toml` pins tool/runtime versions (Node, pnpm); `pnpm-lock.yaml` pins the resolved dependency graph. Never rely on a globally-installed Node or pnpm — go through mise so local and any CI use identical versions.
 
 ---
 
@@ -203,20 +203,21 @@ Bootstrap the environment with `mise install` (provisions the pinned Node/pnpm v
 | `$LINT_CMD` | `pnpm lint` |
 | `$BUILD_CMD` | `pnpm build` |
 | `$TEST_CMD` | `pnpm test` |
-| `$VERIFY_CMD` | `pnpm verify:ci` |
+| `$VERIFY_CMD` | `pnpm verify` |
 
 Implement these script semantics in the adopting project:
 
 ```txt
-pnpm verify    = format check → typecheck → lint → build → unit tests
-pnpm test      = unit → required property and contract tests
-pnpm verify:ci = verify → required property and contract tests → required browser tests → security checks
+pnpm verify:quick = format check → typecheck → lint → build → unit tests
+pnpm test         = unit → required property and contract tests
+pnpm verify       = verify:quick → required property and contract tests → required browser tests → security checks
 ```
 
-`verify` is a quick local subset. It cannot establish acceptance. The full
-`$VERIFY_CMD` includes the §14 evidence. If a required job needs CI or another
-environment, record its command and result for the same commit. Missing
-results block acceptance. This profile does not supply those scripts.
+`verify:quick` is only a development subset. Run the full `$VERIFY_CMD`
+locally before merge, including the required §14 tests and checks. Missing
+local results block merge. Existing required CI checks must also pass; a
+hosted pipeline is not otherwise required. Record any hardware or external
+evidence gap. This profile does not supply those scripts.
 
 ---
 
@@ -357,10 +358,13 @@ files. Read them when relevant; keep backlog and change history in GitHub.
 
 ## 14. Applicability and evidence
 
-On adoption, fill in project commands, CI job names, environments, and known
-gaps for each row. P1–P9 refer to `DOCTRINE.md`. Keep the matrix current with
-the change. `$VERIFY_CMD` must run the applicable automated checks or report
-which required external results remain pending. Assign each check a phase:
+On adoption, fill in local commands, environments, known gaps, and any
+existing required CI jobs. P1–P9 refer to `DOCTRINE.md`. Run required tests
+and the full `$VERIFY_CMD` locally for the exact mergeable version against
+the current integration base. Failed or missing required local checks block
+merge. CI is optional; existing required CI checks must also pass and must
+not be bypassed. Do not require new CI or repository protection settings.
+Keep this matrix current. Assign each applicable check a phase:
 before merge or after release. Missing pre-merge evidence blocks merge;
 missing post-release evidence blocks a claim of successful release. A future
 production deployment is not a prerequisite for approving its PR.
@@ -375,15 +379,44 @@ test of an assumption does not establish its validity. Include challenge
 cases beyond supplied examples. Report unrepeatable claims and their limits;
 they cannot count as passed required checks.
 
+For §14–15, a release, monitoring, migration, or recovery item may be
+`not applicable` with a short reason tied to project purpose. A CLI or library
+label does not waive these duties as a group. An unsupported tool is a gap,
+not a reason to claim the requirement does not apply.
+
 | Doctrine / applicability | Required evidence | Environment / gap to resolve |
 | --- | --- | --- |
 | P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
-| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Local and CI; declare checks that rely on review |
+| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Required locally; existing required CI also passes; declare checks that rely on review |
 | P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
-| P3, P7: security and dependencies | Gitleaks for changed files/history; locked-dependency vulnerability scan; supported static-security rules | Wire pinned tools into `pnpm verify:ci`; name scanner/rules and uncovered surfaces on adoption |
-| P4–P6: schemas, API and SPA | Import-boundary lint, applicable §2.5 unit/property/contract tests, Playwright critical flows and supported accessibility checks | Full `pnpm verify:ci`, including browser dependencies; quick `verify` is insufficient |
+| P3, P7: security and dependencies | Gitleaks for changed files/history; locked-dependency vulnerability scan; supported static-security rules | Wire pinned tools into `pnpm verify`; name scanner/rules and uncovered surfaces on adoption |
+| P4–P6: schemas, API and SPA | Import-boundary lint, applicable §2.5 unit/property/contract tests, Playwright critical flows and supported accessibility checks | Full local `pnpm verify`, including browser dependencies; `verify:quick` is insufficient |
 | P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
 | P8–P9: material changes | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations | Separate reviewer context; no read-all-ADR prerequisite |
+
+### Example check configuration
+
+These tools and numeric limits are examples, not universal mandates. On
+adoption, select and justify the applicable checks, scope, and acceptance
+conditions. Record required checks in the §3 entry points; optional example
+tools need the normal dependency assessment. Do not lower an adopted gate
+merely to make a change pass. Existing §13 exception rules still apply.
+
+| Check | Tool | Threshold / acceptance condition | Principle |
+| --- | --- | --- | --- |
+| Formatting | Prettier check mode | No format differences | P3, P8 |
+| Types | TypeScript compiler with §1 strict flags | No type errors or new warnings | P3 |
+| Lint | ESLint with typescript-eslint | No unsafe types or violations of selected Effect boundary rules | P3, P5 |
+| Complexity | [ESLint complexity](https://eslint.org/docs/latest/rules/complexity) | Example: cyclomatic complexity ≤ 10 per function | P3, P4 |
+| Dead code | typescript-eslint unused checks; [Knip](https://knip.dev/) if selected | No unexplained unused symbols, exports, files, or dependencies | P3, P7 |
+| Dependency directions | [ESLint restricted imports](https://eslint.org/docs/latest/rules/no-restricted-imports) | No forbidden §0 package imports | P4 |
+| Secrets | Gitleaks over declared source/history scope | No confirmed exposed secrets | P3, P7 |
+| Vulnerabilities | [pnpm audit](https://pnpm.io/cli/audit) | Example: no unresolved high/critical advisories; triage all findings | P2, P7 |
+| Tests | Vitest, fast-check, Effect TestClock, Playwright | All required §2.5 cases pass locally; include schema meaning, containment, contract and critical-flow cases | P5, P6 |
+
+Knip needs the runtime and generated-client entry points. Restricted-import
+rules do not cover every dynamic import or service wiring error. Record the
+gap; review Layer composition and test the real contract and service boundary.
 
 Pin scanner versions and configuration with the project tools. Scanners must
 redact findings. Do not send source or dependency data to a new
@@ -395,6 +428,10 @@ replace behavioural evidence.
 ---
 
 ## 15. Release, recovery, and maintenance
+
+Apply §14's purpose-based applicability assessment to each item below.
+Record a short reason for each `not applicable` item; retain the relevant
+distribution, compatibility, diagnosis, and data obligations.
 
 - **Release:** declare server/SPA jobs, target environments, immutable version identifiers, and whether `main` deploys automatically. Validate startup configuration.
 - **Observe:** verify server/client contract compatibility, deployed versions, health, and a critical SPA journey. Define the observation window and diagnostic source.

@@ -32,7 +32,7 @@ authority beyond the adopted project contract.
 - **Package manager:** pnpm (workspaces)
 - **Lockfile:** `pnpm-lock.yaml`
 - **Dev-environment provisioning:** [`mise`](https://mise.jdx.dev/) is the single bootstrap. `mise install` provisions **every pinned tool and runtime version** from `mise.toml` — the exact Node.js 24 interpreter and `pnpm` — so a fresh checkout reaches a reproducible environment with one command. Wire dependency install as a mise task (e.g. `mise run setup` → `pnpm install`) so `mise install` followed by that task fully bootstraps. `mise.toml` is the source of truth for tool/runtime versions; commit it alongside the lockfile.
-- **Pinning surfaces (two layers, each owns one):** `mise.toml` pins tool/runtime versions (Node, pnpm); `pnpm-lock.yaml` pins the resolved dependency graph. Never rely on a globally-installed Node or pnpm — go through mise so local and CI use identical versions.
+- **Pinning surfaces (two layers, each owns one):** `mise.toml` pins tool/runtime versions (Node, pnpm); `pnpm-lock.yaml` pins the resolved dependency graph. Never rely on a globally-installed Node or pnpm — go through mise so local and any CI use identical versions.
 
 ---
 
@@ -195,10 +195,13 @@ files. Read them when relevant; keep backlog and change history in GitHub.
 
 ## 14. Applicability and evidence
 
-On adoption, fill in project commands, CI job names, environments, and known
-gaps for each row. P1–P9 refer to `DOCTRINE.md`. Keep the matrix current with
-the change. `$VERIFY_CMD` must run the applicable automated checks or report
-which required external results remain pending. Assign each check a phase:
+On adoption, fill in local commands, environments, known gaps, and any
+existing required CI jobs. P1–P9 refer to `DOCTRINE.md`. Run required tests
+and the full `$VERIFY_CMD` locally for the exact mergeable version against
+the current integration base. Failed or missing required local checks block
+merge. CI is optional; existing required CI checks must also pass and must
+not be bypassed. Do not require new CI or repository protection settings.
+Keep this matrix current. Assign each applicable check a phase:
 before merge or after release. Missing pre-merge evidence blocks merge;
 missing post-release evidence blocks a claim of successful release. A future
 production deployment is not a prerequisite for approving its PR.
@@ -213,15 +216,44 @@ test of an assumption does not establish its validity. Include challenge
 cases beyond supplied examples. Report unrepeatable claims and their limits;
 they cannot count as passed required checks.
 
+For §14–15, a release, monitoring, migration, or recovery item may be
+`not applicable` with a short reason tied to project purpose. A CLI or library
+label does not waive these duties as a group. An unsupported tool is a gap,
+not a reason to claim the requirement does not apply.
+
 | Doctrine / applicability | Required evidence | Environment / gap to resolve |
 | --- | --- | --- |
 | P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
-| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Local and CI; declare checks that rely on review |
+| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Required locally; existing required CI also passes; declare checks that rely on review |
 | P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
 | P3, P7: security and dependencies | Gitleaks for changed files/history; locked-dependency vulnerability scan; supported static-security rules | Wire pinned tools into `pnpm test-all`; name scanner/rules and uncovered surfaces on adoption |
-| P5–P7: API and web journeys | Vitest integration/contract tests; Playwright for critical flows, keyboard and supported accessibility checks; migration/recovery tests when storage changes | Local/CI with representative browser/service; record hardware or external-service gaps |
+| P5–P7: API and web journeys | Vitest integration/contract tests; Playwright for critical flows, keyboard and supported accessibility checks; migration/recovery tests when storage changes | Local with representative browser/service; existing required CI also passes; record hardware or external-service gaps |
 | P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
 | P8–P9: material changes | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations | Separate reviewer context; no read-all-ADR prerequisite |
+
+### Example check configuration
+
+These tools and numeric limits are examples, not universal mandates. On
+adoption, select and justify the applicable checks, scope, and acceptance
+conditions. Record required checks in the §3 entry points; optional example
+tools need the normal dependency assessment. Do not lower an adopted gate
+merely to make a change pass. Existing §13 exception rules still apply.
+
+| Check | Tool | Threshold / acceptance condition | Principle |
+| --- | --- | --- | --- |
+| Formatting | Prettier check mode | No format differences | P3, P8 |
+| Types | TypeScript compiler with §1 strict flags | No type errors or new warnings | P3 |
+| Lint | ESLint with typescript-eslint | No violations of selected rules | P3 |
+| Complexity | [ESLint complexity](https://eslint.org/docs/latest/rules/complexity) | Example: cyclomatic complexity ≤ 10 per function | P3, P4 |
+| Dead code | typescript-eslint unused checks; [Knip](https://knip.dev/) if selected | No unexplained unused symbols, exports, files, or dependencies | P3, P7 |
+| Dependency directions | [ESLint restricted imports](https://eslint.org/docs/latest/rules/no-restricted-imports) | No forbidden edges between API, web, and shared packages | P4 |
+| Secrets | Gitleaks over declared source/history scope | No confirmed exposed secrets | P3, P7 |
+| Vulnerabilities | [pnpm audit](https://pnpm.io/cli/audit) | Example: no unresolved high/critical advisories; triage all findings | P2, P7 |
+| Tests | Vitest; Playwright for required user journeys | All required cases pass locally; challenge material assumptions and transformations | P5, P6 |
+
+Knip needs correct entry points. Restricted-import rules do not cover all
+dynamic loading. Record these gaps; inspect affected loading paths and test
+the relevant integration. A clean scan does not prove complete coverage.
 
 Pin scanner versions and configuration with the project tools. Scanners must
 redact findings. Do not send source or dependency data to a new
@@ -233,6 +265,10 @@ replace behavioural evidence.
 ---
 
 ## 15. Release, recovery, and maintenance
+
+Apply §14's purpose-based applicability assessment to each item below.
+Record a short reason for each `not applicable` item; retain the relevant
+distribution, compatibility, diagnosis, and data obligations.
 
 - **Release:** declare the web/API deployment jobs, environments, immutable version identifier, configuration validation, and required permissions. Record whether merging `main` deploys automatically.
 - **Observe:** verify deployed versions, API health, and one critical web journey. Declare a bounded observation window and the diagnostic source.

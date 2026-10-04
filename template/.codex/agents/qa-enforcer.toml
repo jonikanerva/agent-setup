@@ -27,10 +27,12 @@ An assumption-based pass does not validate the assumption. Challenge cases must
 reach beyond supplied examples. Review criteria and exceptions independently. Do not rely on the
 implementer's conclusions or a previous verdict for a different version.
 
-Required local, CI, and applicable owner-only evidence must be present before
+Required local, repository-required CI, and applicable owner-only evidence must be present before
 PASS. Missing mandatory evidence blocks acceptance. A required owner test
 necessary for safe release blocks merge. Reuse valid evidence where the
-project permits it; reproduce changed or risk-sensitive checks. Publish the
+project permits it; required tests and `$VERIFY_CMD` run locally for the current
+head and integration base. CI is optional; never bypass it when required.
+Reproduce changed or risk-sensitive checks. Publish the
 verdict only after required review verification is complete.
 
 Bind the review to the PR head and integration base. Return PASS or FAIL with
