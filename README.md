@@ -2,244 +2,216 @@
 
 ## What this repository provides
 
-This repository provides a static agent setup for Claude Code and Codex.
+This repository distributes static project guidance for Claude Code and Codex.
+Every file is the final artifact. There is no generator or hidden source format.
 
-The setup contains:
+- [DOCTRINE.md](template/DOCTRINE.md) defines shared quality principles P1–P9.
+- [VISION.md](template/VISION.md) defines product intent and constraints.
+- A [stack profile](stacks/STACK-TEMPLATE.md) becomes the project's `STACK.md`.
+- [CLAUDE.md](template/CLAUDE.md) and [AGENTS.md](template/AGENTS.md) define
+  host coordination, authority adoption, and Git practice.
+- Five optional specialist roles and three workflows support delivery.
 
-- Five roles: architect, UX guardian, devil's advocate, lead developer, and QA
-  enforcer.
-- Three workflows: project manager, implementation, and code review.
-- A technology-neutral operating contract for each tool.
-- A product contract template in `VISION.md`.
-- Technology profiles that become a project's `STACK.md`.
+The primary agent is the lead and owns the complete result. It can implement
+directly or delegate. It chooses specialists by risk and uncertainty.
+Material behavioural, architectural, security, and data changes require
+independent review in a separate context. A fixed team is not required.
 
-The project manager uses all five roles for each delivery task. The roles
-review product fit, architecture, scope, implementation, and quality. The
-project manager shows the pull request only after the code review reports PASS.
-The user reviews and merges the pull request.
+## Delivery and authority
+
+A project adopts policy revision 2 by reviewing and copying the shared doctrine
+and a matching host contract. A delivery request then authorises technical
+decisions, implementation, PR creation, merge, and release within scope.
+The owner can reserve planning, testing, review, merge, or deployment for any
+task. An analysis-only request never authorises edits.
+
+Escalate additional cost, a new provider or external data transfer, material
+lock-in, significant product changes not already requested, irreversible
+production-data changes outside an approved policy, and unresolved material
+conflicts outside authority. Ordinary library choices and demonstrated,
+recoverable migrations remain technical decisions.
+
+The lead records criteria before implementation. It obtains the required
+verification and independent review, checks the integrated result, and then
+takes the authorised next step. Missing required evidence blocks acceptance.
+An owner-only test needed for safe release blocks merge. Prefer automation.
+
+Keep `main` production-ready. Never push directly to it. Use merge commits.
+A merge-triggered deployment is a release: verify the deployed version and
+required post-release checks. Report unavailable release evidence as pending.
+Stop after the assigned task unless a larger work queue was authorised.
 
 ## Technical basis
 
-The Claude implementation uses these Claude Code features:
+Claude uses [custom subagents](https://code.claude.com/docs/en/sub-agents) and
+[skills](https://code.claude.com/docs/en/skills). The lead invokes
+`/codereview`; its forked context runs `qa-enforcer` directly. This avoids
+a second QA wrapper. The lead waits for the result before acceptance.
 
-- [Agent Teams](https://code.claude.com/docs/en/agent-teams) provide the team
-  lead, independent teammates, shared tasks, and direct messages.
-- [Custom subagents](https://code.claude.com/docs/en/sub-agents) define the five
-  reusable roles and their tool access.
-- [Skills](https://code.claude.com/docs/en/skills) define the three reusable
-  workflows.
+[Agent Teams](https://code.claude.com/docs/en/agent-teams) are an optional,
+experimental choice for work that benefits from teammate coordination.
+The default reference settings do not enable them. To use Teams, merge
+`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` into the `env` object of your existing
+Claude settings. Do not replace other settings.
 
-Claude Code marks Agent Teams as experimental. You must enable Agent Teams
-before you use the Claude workflow.
+Codex uses [custom agents and subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents),
+[skills](https://learn.chatgpt.com/docs/build-skills), and
+[AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
+The lead starts an independent `qa_enforcer` to run `$codereview`.
 
-The Codex implementation uses these Codex features:
+Both hosts implement the same decision boundaries and evidence requirements.
+Their tool syntax and orchestration remain explicit and separate.
 
-- [Subagents and custom agents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
-  provide delegated workers and TOML role definitions.
-- [Skills](https://learn.chatgpt.com/docs/build-skills) define the three
-  reusable workflows.
-- [AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
-  provides the project operating contract.
-
-The two tools use different coordination systems. Claude teammates can share
-tasks and send direct messages. The Codex primary agent starts subagents and
-collects their results. Both implementations use the same roles, order, and
-quality gates.
-
-## Repository layout
+## Layout
 
 ```text
 template/
-  .claude/
-    agents/           # Claude role definitions
-    skills/           # Claude workflows
-    settings.json     # Reference project settings for Claude
-  .codex/agents/      # Codex role definitions
-  .agents/skills/     # Codex workflows
-  CLAUDE.md           # Claude project contract
-  AGENTS.md           # Codex project contract
-  VISION.md           # Product contract template
-stacks/
-  STACK-TEMPLATE.md
-  STACK-TS.md
-  STACK-EFFECT.md
-  STACK-SWIFT.md
-  STACK-PY.md
-bin/
-  link-global.sh
-  check-setup.sh
+  DOCTRINE.md
+  VISION.md
+  CLAUDE.md
+  AGENTS.md
+  .claude/agents/       # Claude specialists
+  .claude/skills/       # Claude workflows
+  .claude/settings.json # Optional reference controls
+  .codex/agents/        # Codex specialists
+  .agents/skills/       # Codex workflows
+  .github/pull_request_template.md
+stacks/                # Concrete example profiles
+docs/adr/              # Significant setup decisions
+docs/workflow-scenarios.md
+bin/                   # Linking and validation; no artifact generation
 ```
-
-Do not copy the complete `template/` directory into a project. The global link
-installs the roles and workflows. Each project needs only `VISION.md`, one
-`STACK.md`, and the operating contract for the selected tool.
 
 ## Requirements
 
-Install these tools:
+Use Git and the selected agent host. Delivery workflows use a GitHub repository
+and the GitHub CLI. The reference Claude hooks require `jq`.
 
-- Claude Code, Codex, or both.
-- GitHub CLI (`gh`).
-- `jq`.
+To validate this source bundle, use Bash and Python 3.11 or newer.
+Validation uses the Python standard library; no additional package is required.
+Example stack commands must be implemented in the target project. The profiles
+do not ship a working application or its build scripts.
 
-Use a GitHub repository for the target project. GitHub issues form the backlog.
-Issues, commits, pull requests, and review comments form the audit trail.
+## Install global roles and workflows
 
-## Use it
-
-### 1. Create the global links
-
-Run the global link command first. This step is required.
-Run all setup commands from the root of this repository.
+Run from this repository:
 
 ```sh
 bin/link-global.sh
 ```
 
-The default command installs both tools. You can select one tool:
+Select one host with `--host claude` or `--host codex`.
+The command links:
+- Claude roles to `~/.claude/agents/` and skills to `~/.claude/skills/`.
+- Codex roles to `~/.codex/agents/` and skills to `~/.agents/skills/`.
 
-```sh
-bin/link-global.sh --host claude
-bin/link-global.sh --host codex
-```
+The linker replaces only symlinks. It preserves real files and directories.
+It does not install user settings or project contracts. The optional
+`template/.claude/settings.json` contains reference permissions and hooks;
+merge needed controls into existing settings yourself. Native permissions
+and repository protections still apply. A policy document cannot bypass them.
 
-The command creates these links:
+## Configure a project
 
-- Claude roles: `~/.claude/agents/`
-- Claude skills: `~/.claude/skills/`
-- Codex roles: `~/.codex/agents/`
-- Codex skills: `~/.agents/skills/`
-
-The command does not replace a real file or directory. The command can replace
-only a symlink. The command does not change Claude or Codex user settings.
-
-For Claude, merge this setting into your existing
-`~/.claude/settings.json` file:
-
-```json
-{
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  }
-}
-```
-
-Do not replace other settings in the file. Claude Agent Teams do not start
-without this setting.
-
-The file `template/.claude/settings.json` contains reference permission rules
-and hooks. The link command does not install those settings. Merge the required
-rules into your existing settings when you want the same enforcement.
-
-### 2. Add the project files
-
-Set a path for the target project:
+Do not copy the complete `template/` directory. Start with:
 
 ```sh
 PROJECT_DIR="/path/to/project"
-```
-
-Copy the product contract:
-
-```sh
+cp template/DOCTRINE.md "$PROJECT_DIR/DOCTRINE.md"
 cp template/VISION.md "$PROJECT_DIR/VISION.md"
-```
-
-Copy one stack profile. Rename the file to `STACK.md`:
-
-```sh
 cp stacks/STACK-TS.md "$PROJECT_DIR/STACK.md"
 ```
 
-Use `STACK-TEMPLATE.md` when no example matches the project.
-
-Copy the contract for the selected tool.
-
-For Claude Code:
+Copy the contract for the selected host, or both when the project uses both:
 
 ```sh
 cp template/CLAUDE.md "$PROJECT_DIR/CLAUDE.md"
-```
-
-For Codex:
-
-```sh
 cp template/AGENTS.md "$PROJECT_DIR/AGENTS.md"
 ```
 
-Copy both contracts when the project uses both hosts.
+Review the authority defaults before adoption. Fill product and stack
+placeholders. Implement the named verification commands and define applicable
+CI, hardware, release, and recovery checks. Record enforcement gaps and
+exceptions. Keep the five core command names; add named checks when needed.
+Copy the PR template separately if useful.
 
-Edit `VISION.md` and `STACK.md`. Replace every placeholder. Define all named
-build and verification commands in `STACK.md`.
-
-### 3. Start the workflow
-
-For Claude Code, run:
+Use an existing issue or a direct task:
 
 ```text
 /project-manager solve issue #1
-```
-
-For Codex, run:
-
-```text
 $project-manager solve issue #1
 ```
 
-You can also give the project manager a direct problem description.
+Use the first form for Claude and the second for Codex. A clear request starts
+autonomous delivery within authority; a new approval ceremony is not required.
 
-## Updates
+## Updating and legacy projects
 
-The repository is the source of truth for global roles and skills. Run
-`git pull` in this repository to update them. Start a new Claude or Codex
-session after an update.
-
-Run the link command again after you add or remove a role or skill:
+Global roles and skills remain linked to this repository. Pulling changes
+updates them for new sessions. Run the linker again after adding or removing
+entries:
 
 ```sh
 bin/link-global.sh --host all --prune
 ```
 
-The copied project contracts do not update automatically. Review contract
-changes and copy the new version into each project when required.
+Pruning removes only dead links whose target ownership can be established
+inside this repository. It retains links with unresolvable parent paths and
+links that escape through parent traversal or a symlinked directory.
+
+Copied project contracts do not update automatically. Revision-2 autonomy
+requires both the local host contract and `DOCTRINE.md` to state
+`Policy revision: 2`. A newer global skill does not grant merge or release
+authority to an old project. Local approval gates and required roles remain.
+An incomplete revision-2 adoption stops delivery until the owner approves a
+compatible update. Read-only diagnosis is still allowed.
+
+Updating this source bundle does not migrate downstream projects. Review and
+adopt their contracts separately. Do not silently copy files or change live
+user settings as part of a delivery task.
 
 ## Stack profiles
 
-| Profile | Main use |
+| Profile | Intended use |
 | --- | --- |
-| `STACK-TS.md` | Strict TypeScript, Node, Hono, React, Vite, and Vitest |
-| `STACK-EFFECT.md` | Strict TypeScript with Effect |
-| `STACK-SWIFT.md` | Strict Swift, SwiftUI, and Xcode |
-| `STACK-PY.md` | Strict Python and Home Assistant custom integrations |
-| `STACK-TEMPLATE.md` | A new stack that has no existing profile |
+| `STACK-TS.md` | TypeScript web application and backend |
+| `STACK-EFFECT.md` | Effect-based stateless web application |
+| `STACK-SWIFT.md` | Native iOS and macOS applications |
+| `STACK-PY.md` | Home Assistant custom integrations |
+| `STACK-TEMPLATE.md` | A project without a matching example |
 
-Each profile defines the project shape, runtime, frameworks, commands, budgets,
-persistence, dependencies, logging, lifecycle, time rules, and reject rules.
+Profiles are starting points, not universal product restrictions. Review
+versions and fit at adoption. Concrete technology belongs only in `STACK.md`.
+Each profile maps applicable doctrine requirements to evidence and defines
+release and recovery responsibilities.
 
-## Writing standard
+## Decisions and writing
 
-Use [Simplified Technical English](https://en.wikipedia.org/wiki/Simplified_Technical_English)
-for new English text that users read. This rule applies to documentation,
-commit messages, issues, pull requests, and review comments.
+Keep backlog and history in GitHub issues, coherent commits, PRs, and reviews.
+Do not create roadmap, backlog, ledger, or changelog files. Use `docs/adr/`
+only for significant durable decisions. Keep ADRs short and read them as needed.
+See [the autonomous delivery decision](docs/adr/0001-autonomous-delivery.md).
 
-Write short sentences. Use active voice. Use plain and consistent terms. The
-rule does not apply to Finnish chat. Do not rewrite compact operating contracts
-only to apply this rule.
+Use ASD-STE100 writing principles for English artifacts: short sentences,
+active voice, and consistent terms. Domain vocabulary remains unchanged.
+This is a writing practice, not a claim of certified STE compliance.
 
-## Static source of truth
+## Verification
 
-This repository does not use a generator. Git contains every final agent and
-skill file. A pull request shows the exact setup that each tool loads.
-
-Some rules appear in more than one file. The repetition is intentional. Each
-agent can run in an isolated context. Claude and Codex also use different file
-formats.
-
-Run the static checks after a change:
+Before committing source-bundle changes:
 
 ```sh
 bin/check-setup.sh
+python3 bin/test-setup.py
 ```
 
-The check validates both role lists and all workflow files. The check does not
-generate or change files.
+The static check parses emitted TOML and JSON, checks metadata and structural
+references, and validates shell syntax. The regression suite tests malformed
+artifacts and isolated linking for both hosts, including safe pruning.
+Tests use a temporary `AGENT_SETUP_HOME`; they do not alter live links.
+
+Inspect the complete diff and evaluate both host distributions against
+[the shared scenarios](docs/workflow-scenarios.md). Record which results came
+from code execution, policy inspection, or isolated agent trials. Static tests
+do not prove model compliance or vendor-runtime compatibility. Record any
+unexecuted host, application, or deployment checks as limitations.

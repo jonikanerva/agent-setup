@@ -76,12 +76,20 @@ link_one() {
 prune_dir() {
   local dir="$1"
   [ -d "$dir" ] || return 0
-  local entry target
+  local entry target target_parent
   for entry in "$dir"/*; do
     [ -L "$entry" ] || continue
     target="$(readlink "$entry")"
     case "$target" in
       "$REPO_ROOT"/*)
+        # A string prefix does not prove ownership: ../ or a symlinked parent
+        # can leave this repository. If the parent cannot be resolved, keep
+        # the link. Pruning must prefer a stale link over unrelated deletion.
+        target_parent="$(cd -P "$(dirname "$target")" 2>/dev/null && pwd -P)" || continue
+        case "$target_parent/" in
+          "$REPO_ROOT/"*) ;;
+          *) continue ;;
+        esac
         if [ ! -e "$target" ]; then
           rm "$entry"
           echo "pruned dead link: $entry"

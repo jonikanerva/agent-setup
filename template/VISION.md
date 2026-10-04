@@ -1,131 +1,73 @@
 # Product Vision
 
-> **Template — replace this entire file before running `/project-manager`.**
-> This document is the single source of truth for what the product *is* and what it is *not*. Every agent reads it on every issue. Be specific. Be opinionated. Cut everything that does not belong.
->
-> Sections marked **REQUIRED** must be filled. Sections marked **OPTIONAL** can be removed if not applicable.
-> Replace every `<…>` placeholder. Delete any guidance text in italics once the section is final.
+> Replace the placeholders before product delivery. This file owns product
+> direction, not technology. Keep it specific and short. Remove inapplicable
+> optional sections. Read relevant sections for the task.
 
----
+## Vision
 
-## Vision *(REQUIRED)*
+<What the product changes about the user's life or work.>
 
-*One paragraph. What does this product change about the user's life or work? Frame the experience, not the feature list.*
+## Goal
 
-`<One-paragraph product vision.>`
+<The principal user or system outcome.>
 
----
+## Audience and environment
 
-## Goal *(REQUIRED)*
+<Who uses it, where it runs, and the conditions that affect success.>
+<Material constraints: compatibility, accessibility, privacy, or operating context.>
 
-*One or two sentences. The single most important thing this product helps a user do. If you cannot say it in two sentences, the product is not narrow enough yet.*
+## Core Principles
 
-`<Single-sentence goal.>`
+<State the few principles that constrain product choices. Give each a practical meaning.>
 
----
+- <Principle and consequence.>
 
-## Core Principles *(REQUIRED)*
+## Product Shape
 
-*4–6 short principles. Each one is a constraint that future feature requests must respect. Pair the principle with a one-line "what this means in practice".*
+<Describe the essential user or system flow.>
+<List relevant user-visible or caller-visible states and failure behaviour.>
 
-- **`<Principle 1>`**
-  `<What this means in practice.>`
+## Non-Goals & Drift Guardrails
 
-- **`<Principle 2>`**
-  `<What this means in practice.>`
+<What the product must not become and the concrete signs of drift.>
+<These guide decisions; a major scope change goes to the owner.>
 
-- **`<Principle 3>`**
-  `<What this means in practice.>`
+## Decision Filter
 
-- **`<Principle 4>`**
-  `<What this means in practice.>`
+<Write the questions needed to assess product fit. There is no fixed count.
+Apply relevant questions and record conflicts. Do not silently change the
+owner's request to make every answer positive.>
 
----
+- <Question and the requirement behind it.>
 
-## Product Shape *(REQUIRED)*
+## Success Definition
 
-*The minimal user flow. Numbered steps. No optional flows here — those go elsewhere.*
+<Observable outcomes that show the intended need is met.>
+<Include important user experience and failure outcomes.>
+<Task-specific acceptance criteria belong in the issue or PR; derive them
+from this definition and the request before implementation.>
 
-1. `<Step 1.>`
-2. `<Step 2.>`
-3. `<Step 3.>`
-4. `<…>`
+## Persistence and Privacy Posture
 
----
+<State allowed data, purpose, location, external recipients, and retention.
+Cover on-device and server storage. State what must never be collected or sent.
+DOCTRINE.md and STACK.md apply this posture to the implementation.>
 
-## Non-Goals & Drift Guardrails *(REQUIRED)*
+| Data or capability | Purpose | Storage or recipient | Retention or expiry |
+| --- | --- | --- | --- |
+| <Data or permission> | <Requirement> | <Location or provider> | <Rule> |
 
-*What the product must not become, and the early-warning signs of drift toward it. Be brutal. `ux-guardian` rejects anything that crosses these even if technically feasible.*
+- Forbidden data flows: <List>.
+- Telemetry and diagnostics: <None, or exactly what, why, and where>.
+- Approved deletion policies: <For example, the established retention rule>.
 
-The product must not become:
+## Audience & Voice (optional)
 
-- `<Non-goal 1.>`
-- `<Non-goal 2.>`
-- `<Non-goal 3.>`
+<Tone and domain terms for user-facing text.>
 
-Drift signals to flag when proposing UX, copy, or features — do not:
+## Open Questions (optional)
 
-- `<drift pattern 1>`.
-- `<drift pattern 2>`.
-- `<drift pattern 3>`.
-
-If a feature makes the product feel more like `<adjacent product category 1>`, `<category 2>`, or `<category 3>`, it is the wrong direction.
-
----
-
-## Decision Filter *(REQUIRED)*
-
-*Exactly four yes/no questions. Every proposed change is evaluated against all four. If any answer is "no", reject the change. The `ux-guardian` agent and the `/implement` skill quote these answers verbatim in PR descriptions.*
-
-A proposed change should only be accepted if it clearly supports the core experience.
-
-Ask:
-
-1. `<Question 1>`
-2. `<Question 2>`
-3. `<Question 3>`
-4. `<Question 4>`
-
-If not, it should not be added.
-
----
-
-## Success Definition *(REQUIRED)*
-
-*What does it feel like when the product works? First-person sentences. These guide tone of voice, copy, and arrival / completion UX.*
-
-The product succeeds when the user feels:
-
-- `<First-person success feeling 1.>`
-- `<First-person success feeling 2.>`
-- `<First-person success feeling 3.>`
-- `<…>`
-
----
-
-## Persistence and Privacy Posture *(REQUIRED)*
-
-*State exactly what the product is allowed to persist and transmit. Agents enforce this via `CLAUDE.md → Side effects` and `→ Privacy & security`.*
-
-- **Persisted on-device:** `<list — be exhaustive>`.
-- **Transmitted off-device:** `<list, or "nothing" if fully local>`.
-- **Never persisted:** `<list of things explicitly forbidden, e.g. user location history, message contents, biometric data>`.
-- **Telemetry / analytics:** `<"none" by default; if any, list exactly what and why>`.
-
----
-
-## Audience & Voice *(OPTIONAL)*
-
-*Who is this for? How should the product talk to them? Drives microcopy, error states, and onboarding.*
-
-- **Primary audience:** `<who they are, what they care about>`.
-- **Tone:** `<calm | playful | technical | warm | terse>` — `<one-line elaboration>`.
-
----
-
-## Open Questions *(OPTIONAL)*
-
-*Things the human owner is still deciding. Agents do not block on these — they pick the most-conservative interpretation, document the choice in the PR description per the `CLAUDE.md → Autonomy fallback` rule, and state it in the relevant issue only if the choice introduces a binding constraint for future work.*
-
-- `<Open question 1.>`
-- `<Open question 2.>`
+<Separate material product decisions from delegated technical choices.
+The lead resolves ordinary choices within authority. A material goal change
+or escalation boundary goes to the owner before dependent work proceeds.>

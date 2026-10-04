@@ -1,9 +1,11 @@
 # STACK.md — `<stack name>` profile
 
+Policy revision: 2
+
 > **Template — copy to your project as `STACK.md` and replace every `<…>` placeholder.**
 > `<One-sentence summary: language + frameworks + build tooling.>`
 >
-> `CLAUDE.md` (the engineering doctrine) is technology-neutral and defers every concrete decision to this file. Every skill and agent dereferences the five `$*_CMD` variables in Section 3 — they MUST be defined. Keep this file concrete: name types, calls, commands, and budgets. Universal rules (layering, concurrency discipline, UTC-internally, privacy) live in `CLAUDE.md`; do not restate them here.
+> `DOCTRINE.md` defines P1–P9. The selected host contract defines agent operation and authority. This file gives their concrete application: types, boundaries, commands, budgets, release controls, and evidence. Define all five `$*_CMD` variables in §3. Complete §14–15 before adoption. This profile does not grant authority beyond the project contract.
 
 ---
 
@@ -12,7 +14,7 @@
 - **Shape:** `<UI app | backend service | CLI | library | …>`
 - **Critical execution path:** `<the surface that must never block — UI thread / event loop / request hot path>`
 - **Applicable states:** `<the states every visible surface handles — commonly awaiting-first-data, success, empty, degraded, permission-blocked, offline, error, plus product-specific>`
-- **Recommended repository layout:** `<optional — a directory sketch that names where the interface / domain / infrastructure layers live>`
+- **Recommended repository layout:** `<optional — a directory sketch with module responsibilities and permitted dependency directions; each layer needs a current purpose>`
 
 ---
 
@@ -53,7 +55,7 @@ All five variables MUST be defined — every skill and agent dereferences them. 
 | `$LINT_CMD`   | `<…>`                                                      |
 | `$BUILD_CMD`  | `<…>`                                                      |
 | `$TEST_CMD`   | `<…>`                                                      |
-| `$VERIFY_CMD` | `<one command: format-check → lint → build → tests>`       |
+| `$VERIFY_CMD` | `<one command: format-check → lint/type/security checks → build → required tests>`       |
 
 ---
 
@@ -77,7 +79,7 @@ All five variables MUST be defined — every skill and agent dereferences them. 
 
 ## 6. Approved dependencies
 
-Default answer to "should we add a library?" is **no**. New entries require a `STACK.md` PR with justification.
+Prefer supported platform capabilities. Record each added dependency's need, provenance, maintenance, licence, transitive cost, and replacement cost in the PR. Record significant decisions in `docs/adr/`. The lead can approve routine libraries within project authority; new providers, external data transfers, costs, or material lock-in need owner approval.
 
 | Dependency | Version | Why it earns its place | Approver | Date |
 | ---------- | ------- | ---------------------- | -------- | ---- |
@@ -87,12 +89,12 @@ Default answer to "should we add a library?" is **no**. New entries require a `S
 
 ## 7. Stack-specific reject-list additions
 
-Hard rules for this stack; `/codereview` enforces every entry on every PR:
+Hard rules for this stack; the code-review workflow checks applicable entries:
 
 - `<the type / concurrency escape hatches that are banned without an inline justification naming the underlying-API constraint>`
 - `<the banned debug-output calls>`
 - `<framework patterns forbidden in new code>`
-- `<local-time storage or computation and hand-rolled offset arithmetic — see §10>`
+- `<implicit timezone conversion, mixing instants/calendar values/durations, and manual UTC-offset arithmetic — see §10>`
 - `<…>`
 
 ---
@@ -114,12 +116,13 @@ Hard rules for this stack; `/codereview` enforces every entry on every PR:
 
 ## 10. Time & timezones
 
-UTC everywhere internally, converted only at the boundary (`CLAUDE.md → Time`). This section pins the concrete mechanics:
+Apply P5 according to meaning. Calendar values are not necessarily instants.
 
-- **Internal representation:** `<the UTC instant type used in logic, persistence, caches, and logs>`
-- **Boundary conversion:** `<the parse-inbound and render-outbound calls, with explicit timezone>`
-- **Banned:** `<the naive / local-time types and calls, and hand-rolled offset arithmetic>`
-- **Tests:** `<the clock-injection / fake-timer mechanism; no timezone-dependent assertions>`
+- **Instant:** `<absolute instant type; UTC wire and storage format>`.
+- **Calendar value:** `<date-only / local-time types; explicit calendar and IANA zone when conversion to an instant is required>`.
+- **Duration:** `<duration type and unit; monotonic clock for elapsed time>`.
+- **Conversion:** `<boundary validation and named conversion functions; policy for missing or repeated times at DST transitions>`.
+- **Tests:** `<injectable clock; date-only, DST, zone-change, and elapsed-time cases where relevant>`.
 
 ---
 
@@ -128,21 +131,80 @@ UTC everywhere internally, converted only at the boundary (`CLAUDE.md → Time`)
 *Declare the platform's design authority and the documented numeric thresholds `ux-guardian` must exercise at the threshold. Remove this section for projects with no user-facing surface.*
 
 - **Design authority:** `<the platform's design guidelines, e.g. Apple HIG, Material Design, WCAG>`
-- **Documented thresholds to exercise at the threshold:** `<component → threshold, e.g. "alert button count → truncates past ~10">`
+- **Documented thresholds to exercise at the threshold:** `<component → threshold, e.g. "dialog option count → verified platform limit, source and test case">`
 - **Input paths:** `<what must stay fully operable — keyboard / pointer / touch / screen reader>`
 
 ---
 
-## 12. Best practices source *(optional)*
+## 12. Best practices source
 
-*Name the documentation source agents consult before design and review passes — and the concrete tool invocation. Subagents only have the tools their definition grants (typically Bash + WebFetch): MCP tools from the user's config are NOT available to them, so prefer a CLI invocable from Bash (e.g. `npx ctx7@latest`) or a WebFetch-able URL. Remove if the project has no such source.*
+Name official, version-relevant documentation for this stack. Consult it when
+an API, platform rule, or material technology decision is uncertain. Use the
+documentation tools available in the current host; do not assume another
+agent has the same tools. Cite relevant sections in the decision or review.
 
-`<e.g. "architect and ux-guardian fetch current platform docs via <tool / URL> before every design and review pass, and cite the doc section in their reports.">`
+- **Sources:** `<official documentation URLs>`.
 
 ---
 
-## 13. Intentional Divergences
+## 13. Scoped exceptions
 
-| Date     | CLAUDE.md rule | Divergence | Reason |
-| -------- | -------------- | ---------- | ------ |
-| _(none)_ | —              | —          | —      |
+Do not weaken a rule or check to make a change pass. The responsible lead
+resolves exceptions within project authority, with an independent reviewer.
+The change author must not approve their own weaker acceptance or checks.
+Escalate changes beyond that authority and unresolved material risks to the
+owner. Record significant design decisions separately in concise `docs/adr/`
+files. Read them when relevant; keep backlog and change history in GitHub.
+
+| Rule / scope | Reason and consequences | Compensating evidence | Responsible lead / reviewer / approval | Expiry or reassessment |
+| --- | --- | --- | --- | --- |
+| _(none)_ | — | — | — | — |
+
+---
+
+## 14. Applicability and evidence
+
+On adoption, fill in project commands, CI job names, environments, and known
+gaps for each row. P1–P9 refer to `DOCTRINE.md`. Keep the matrix current with
+the change. `$VERIFY_CMD` must run the applicable automated checks or report
+which required external results remain pending. Assign each check a phase:
+before merge or after release. Missing pre-merge evidence blocks merge;
+missing post-release evidence blocks a claim of successful release. A future
+production deployment is not a prerequisite for approving its PR.
+Do not report full acceptance from a local subset. Record results for the exact commit and
+environment; missing required evidence blocks acceptance without a reviewed
+§13 exception. Reviewers also assess whether the checks detect meaningful
+violations. Expected results come from requirements, not the implementation.
+
+| Doctrine / applicability | Required evidence | Environment / gap to resolve |
+| --- | --- | --- |
+| P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
+| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Local and CI; declare checks that rely on review |
+| P3, P7: security and dependencies | `<pinned secret, dependency-vulnerability, and static-security scanners, commands, and scope>` | Local/CI; document unsupported checks and compensating evidence |
+| P5–P7: interfaces and critical journeys | `<integration, contract, UI/accessibility, performance, migration and recovery checks that apply>` | `<CI, test service, simulator or hardware; pending owner checks>` |
+| P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
+| P8–P9: material changes | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations | Separate reviewer context; no read-all-ADR prerequisite |
+
+Pin scanner versions and configuration with the project tools. Scanners must
+redact findings. Do not send source or dependency data to a new
+external provider without the required authorization. An unavailable scanner
+is a recorded gap, not a successful check. Select proportionate property,
+mutation, and coverage analysis when it tests a named risk; scores do not
+replace behavioural evidence.
+
+---
+
+## 15. Release, recovery, and maintenance
+
+- **Release:** `<trigger, target environments, command/job, required permissions, and version identifier>`.
+- **Observe:** `<health/smoke check, diagnostic source, and bounded observation window>`.
+- **Recover:** `<rollback/roll-forward command, data backup/restore checks, compatibility window, and responsible lead>`.
+- **Data:** `<persisted data, purpose, retention/deletion policy, migration and recovery tests; explain exclusions>`.
+
+The responsible lead verifies the integrated release within the adopted
+project authority. Main remains production-ready. Added cost, a new provider
+or external data transfer, material lock-in or product change, and irreversible
+production-data changes require owner approval unless already authorized by
+an applicable policy. Required owner tests block merge. Stop after the agreed
+task and release checks; report follow-up needs without taking new backlog
+work. Apply the same evidence requirements to maintenance updates.
