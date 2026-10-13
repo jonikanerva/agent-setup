@@ -185,6 +185,8 @@ class FormatTests(unittest.TestCase):
                 ("template/.claude/settings.json", lambda text: text + "{", "Extra data"),
                 ("template/.agents/skills/implement/SKILL.md", lambda text: text.replace("name: implement", "name: wrong", 1), "name mismatch"),
                 ("stacks/STACK-TEMPLATE.md", lambda text: text.replace("`$TEST_CMD`", "`$MISSING_CMD`"), "TEST_CMD"),
+                ("stacks/STACK-TS.md", lambda text: text.replace("## 15. ", "## ", 1), "sections 0-15"),
+                ("README.md", lambda text: text.replace("| `STACK-TS.md` |", "| `STACK-NONE.md` |", 1), "profile table mismatch"),
             )
             for relative, change, error in mutations:
                 with self.subTest(relative=relative):
@@ -203,6 +205,8 @@ class FormatTests(unittest.TestCase):
                 ("template/.agents/skills/unexpected", True, "skill set mismatch"),
                 ("template/.claude/agents/unexpected.md", True, "role set mismatch"),
                 ("template/.codex/agents/unexpected.toml", True, "role set mismatch"),
+                ("stacks/stack-unexpected.md", False, "profile names must match"),
+                ("stacks/STACK-UNEXPECTED", True, "profile names must match"),
             )
             for relative, directory, error in extra_entries:
                 with self.subTest(extra=relative, directory=directory):

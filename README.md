@@ -192,6 +192,7 @@ settings as part of a delivery task.
 | Profile | Intended use |
 | --- | --- |
 | `STACK-TS.md` | TypeScript web application and backend |
+| `STACK-RUST.md` | Rust backend and TypeScript SPA; optional PostgreSQL persistence |
 | `STACK-EFFECT.md` | Effect-based stateless web application |
 | `STACK-SWIFT.md` | Native iOS and macOS applications |
 | `STACK-PY.md` | Home Assistant custom integrations |
@@ -225,8 +226,12 @@ python3 bin/test-setup.py
 ```
 
 The static check parses emitted TOML and JSON, checks metadata and structural
-references, and validates shell syntax. The regression suite tests malformed
-artifacts and isolated linking for both hosts, including safe pruning.
+references, and validates shell syntax. It also checks each stack profile.
+A profile file name must match `STACK-<NAME>.md`. A profile must contain
+sections 0–15 and one row for each of the five commands. The profile table
+in this README must list exactly the files in `stacks/`. The regression
+suite tests malformed artifacts and isolated linking for both hosts,
+including safe pruning.
 Tests use a temporary `AGENT_SETUP_HOME`; they do not alter live links.
 
 Inspect the diff and keep task-specific evaluation inputs and results in the

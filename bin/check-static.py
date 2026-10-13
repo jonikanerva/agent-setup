@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Check the emitted static formats, not agent behavior or vendor schemas.
 
+Stack profiles must use the STACK-<NAME>.md file name, contain sections 0-15
+in order, and define the five command rows. The README profile table must
+list exactly the profiles in stacks/.
+
 Frontmatter uses a small YAML subset: flat string/boolean fields, quoted
 strings, and indented folded/literal strings. Reject unsupported syntax.
 """
@@ -209,12 +213,26 @@ def validate(root):
                 require(host == ".claude" and (agent == "general-purpose" or
                         (root / f"template/.claude/agents/{agent}.md").is_file()),
                         f"{relative}: missing agent definition {agent}")
-    for profile in sorted((root / "stacks").glob("STACK-*.md")):
+    # A misnamed file in stacks/ would skip every profile check below.
+    for path in sorted((root / "stacks").iterdir()):
+        if path.name.startswith("."):
+            continue
+        require(path.is_file() and re.fullmatch(r"STACK-[A-Z0-9]+\.md", path.name) is not None,
+                f"stacks/{path.name}: profile names must match STACK-<NAME>.md")
+    profiles = sorted((root / "stacks").glob("STACK-*.md"))
+    for profile in profiles:
         text = profile.read_text(encoding="utf-8")
         for command in COMMANDS:
             rows = re.findall(r"^\|\s*`\$" + command + r"`\s*\|\s*`([^`]+)`", text, re.M)
             require(len(rows) == 1 and bool(rows[0].strip()),
                     f"{profile.name}: expected one nonempty {command} command-table row")
+        sections = [int(number) for number in re.findall(r"^## (\d+)\. ", text, re.M)]
+        require(sections == list(range(16)), f"{profile.name}: expected sections 0-15 in order")
+    listed = set(re.findall(r"^\|\s*`(STACK-[A-Z0-9]+\.md)`\s*\|", read(root, "README.md"), re.M))
+    actual = {profile.name for profile in profiles}
+    require(listed == actual,
+            f"README.md: profile table mismatch; missing={sorted(actual - listed)}, "
+            f"unexpected={sorted(listed - actual)}")
 
 
 if __name__ == "__main__":
