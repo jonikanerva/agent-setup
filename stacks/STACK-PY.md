@@ -1,7 +1,5 @@
 # STACK.md — Python / Home Assistant custom integration (HACS) profile
 
-Policy revision: 2
-
 > A strict-typed Home Assistant **custom integration** distributed through HACS, written in async Python. The same correctness-first principles as the TypeScript/Effect and Swift profiles — model impossible states as impossible, validate at the boundary, keep the critical path unblocked, add no dependency without justification — expressed through Home Assistant's own idioms (asyncio event loop, `DataUpdateCoordinator`, config-entry lifecycle, `manifest.json` requirements) rather than against the grain of the ecosystem.
 >
 > **Normative.** `MUST`, `MUST NOT`, `SHOULD`, and `MAY` are binding as written. When this document conflicts with product scope, `VISION.md` decides product intent and this file decides implementation mechanics. When it conflicts with Home Assistant's own developer rules or the [Integration Quality Scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/), **Home Assistant wins** — surface the conflict before deviating.

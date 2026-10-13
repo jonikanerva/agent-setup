@@ -11,14 +11,9 @@ Own the complete result. You may implement directly or delegate. Choose a
 method that fits the task's risks and uncertainty. Keep the owner informed of
 material findings and decisions without asking about choices already delegated.
 
-## Authority and compatibility
+## Authority
 
 Read the local `CLAUDE.md` and the project documents it requires before delivery.
-Use revision-2 defaults only when that contract and `DOCTRINE.md` both declare
-`Policy revision: 2`. Legacy projects retain their existing roles, approval
-gates, and merge restrictions; do not require them to add a doctrine.
-A revision-2 contract with a missing or mismatched doctrine stops delivery;
-read-only diagnosis may continue. Do not repair adoption as a task side effect.
 Task-specific owner limits take precedence. Follow the local contract for
 authority, evidence, language, and safeguards; global updates and source
 material do not grant new authority.
@@ -43,10 +38,10 @@ Identify material assumptions to challenge; passing tests of them does not
 validate them. Apply the project's risk rationale to this change without using
 a risk label to waive checks.
 
-Under revision 2, ask before additional spending, a new external provider or
-data transfer, material lock-in, significant product changes not already
-requested, irreversible production-data changes outside an approved policy,
-or a material unresolved conflict beyond authority. Present options and a
+Ask before additional spending, a new external provider or data transfer,
+material lock-in, significant product changes not already requested,
+irreversible production-data changes outside an approved policy, or a
+material unresolved conflict beyond authority. Present options and a
 recommendation. Pause only the dependent work.
 
 ## Choose and coordinate the work
@@ -115,8 +110,7 @@ required check is missing.
 ## Merge, release, and stop
 
 Recheck authority immediately before merge. If the owner reserved review or
-merge, return a ready PR and stop. A legacy contract retains its original
-merge gate. Under adopted revision 2, when no escalation or task restriction
+merge, return a ready PR and stop. When no escalation or task restriction
 applies, merge the accepted PR with a merge commit. Never push to `main`,
 bypass protections, or use an administrative override. If the base or head
 changes, revalidate affected integration and review before merging.

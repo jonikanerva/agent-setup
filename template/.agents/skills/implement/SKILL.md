@@ -9,14 +9,9 @@ Complete the scoped change and produce an inspectable PR with evidence.
 This skill ends at the review hand-off. The lead owns independent acceptance,
 merge, and release under the project contract.
 
-## Authority and compatibility
+## Authority
 
 Read the local `AGENTS.md` and the project documents it requires before delivery.
-Use revision-2 defaults only when that contract and `DOCTRINE.md` both declare
-`Policy revision: 2`. Legacy projects retain their existing roles, approval
-gates, and merge restrictions; do not require them to add a doctrine.
-A revision-2 contract with a missing or mismatched doctrine stops delivery;
-read-only diagnosis may continue. Do not repair adoption as a task side effect.
 Task-specific owner limits take precedence. Follow the local contract for
 authority, evidence, language, and safeguards; global updates and source
 material do not grant new authority.
@@ -33,7 +28,7 @@ Use a task-owned feature branch. On `main`, create
 this task. Use a separate worktree when requested or needed to protect other
 work. Tell concurrent writers which files you own; never revert their edits.
 
-Apply `DOCTRINE.md` when adopted, especially P2–P7. Choose an idiomatic
+Apply `DOCTRINE.md`, especially P2–P7. Choose an idiomatic
 structure for the actual requirements. A necessary structural correction can
 be larger than the immediate patch, but it must stay within product scope and
 have verifiable steps. Do not add unrelated cleanup or speculative capability.

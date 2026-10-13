@@ -1,7 +1,5 @@
 # STACK.md — TypeScript + Effect stateless SPA profile
 
-Policy revision: 2
-
 > Effect-backed TypeScript profile for a stateless web application: an `@effect/platform` HttpApi backend, generated OpenAPI, a React + Vite SPA, and a pnpm monorepo sharing Effect Schema across server and client through an explicit API contract package. Effect is used because correctness should be machine-checkable: typed errors, Schema boundaries, and Layer-provided dependencies maximise what the compiler and tests can prove.
 >
 > **Normative.** `MUST`, `MUST NOT`, `SHOULD`, and `MAY` are binding as written. `VISION.md` decides product intent; this file decides implementation mechanics. Surface conflicts before deviating.

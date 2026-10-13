@@ -151,13 +151,8 @@ def validate(root):
                      "template/VISION.md", "template/.github/pull_request_template.md",
                      "stacks/STACK-TEMPLATE.md"):
         require(bool(read(root, relative).strip()), f"empty file: {relative}")
-    doctrine = read(root, "template/DOCTRINE.md")
-    require(len(re.findall(r"^Policy revision: 2$", doctrine, re.M)) == 1,
-            "template/DOCTRINE.md: expected one Policy revision: 2 marker")
     for host in ("CLAUDE", "AGENTS"):
         text = read(root, f"template/{host}.md")
-        require(len(re.findall(r"^Policy revision: 2$", text, re.M)) == 1,
-                f"template/{host}.md: expected one Policy revision: 2 marker")
         require("DOCTRINE.md" in text, f"template/{host}.md: missing shared doctrine reference")
 
     settings(read(root, "template/.claude/settings.json"))

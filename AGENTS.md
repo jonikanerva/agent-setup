@@ -24,7 +24,6 @@ selected CLAUDE.md or AGENTS.md. Copied contracts never update implicitly.
 Never replace a real user file or directory. Replace only symlinks. Prune only
 dead links whose target ownership is established inside this repository.
 Use AGENT_SETUP_HOME in temporary tests; never test against live user paths.
-Global updates must preserve a legacy project's approval and merge rules.
 
 ## Cross-host policy
 

@@ -1,7 +1,5 @@
 # STACK.md — `<stack name>` profile
 
-Policy revision: 2
-
 > **Template — copy to your project as `STACK.md` and replace every `<…>` placeholder.**
 > `<One-sentence summary: language + frameworks + build tooling.>`
 >
