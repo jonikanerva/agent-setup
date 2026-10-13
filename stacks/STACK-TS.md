@@ -1,7 +1,5 @@
 # STACK.md — Strict TypeScript / Node LTS / Hono / React / Vite / Vitest profile
 
-Policy revision: 2
-
 > Strict TypeScript monorepo with a Hono backend (`apps/api`), a React + Vite frontend (`apps/web`), and a shared `packages/shared` module. pnpm workspaces, Vitest for tests.
 
 Use with `DOCTRINE.md` (P1–P9) and the selected host contract. This is an

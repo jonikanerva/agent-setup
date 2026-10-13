@@ -184,7 +184,6 @@ class FormatTests(unittest.TestCase):
                 ("template/.codex/agents/architect.toml", lambda text: text + '\nname = "duplicate"\n', "Cannot overwrite"),
                 ("template/.claude/settings.json", lambda text: text + "{", "Extra data"),
                 ("template/.agents/skills/implement/SKILL.md", lambda text: text.replace("name: implement", "name: wrong", 1), "name mismatch"),
-                ("template/DOCTRINE.md", lambda text: text.replace("Policy revision: 2", "Policy revision: 1", 1), "Policy revision: 2"),
                 ("stacks/STACK-TEMPLATE.md", lambda text: text.replace("`$TEST_CMD`", "`$MISSING_CMD`"), "TEST_CMD"),
             )
             for relative, change, error in mutations:

@@ -10,12 +10,8 @@ the whole task, acceptance, and release. You own only the assigned scope and
 files. You are not alone in the checkout; do not revert others' edits.
 
 Read the local CLAUDE.md, task scope, and the relevant VISION.md and STACK.md
-sections. Read DOCTRINE.md when adopted and relevant docs/adr/ records as needed.
-Use revision-2 autonomy only when the local contract and DOCTRINE.md both state
-Policy revision: 2. Otherwise preserve local approval gates, required roles,
-and merge restrictions. A missing or mismatched doctrine in a revision-2
-project is incomplete adoption: report it and stop delivery. Global role
-updates do not grant new authority. Task-specific owner limits take precedence.
+sections. Read DOCTRINE.md and relevant docs/adr/ records as needed.
+Task-specific owner limits take precedence.
 
 Use /implement for the feature-branch implementation and PR hand-off.
 Trace criteria and test expectations to the original task or independent evidence.

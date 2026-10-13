@@ -1,7 +1,5 @@
 # STACK.md — Swift 6 / SwiftUI / Xcode profile
 
-Policy revision: 2
-
 > Native Swift 6 + SwiftUI applications for iOS and macOS. Use Apple frameworks by default. Select the applicable targets when adopting this profile.
 
 Use with `DOCTRINE.md` (P1–P9) and the selected host contract. This is an

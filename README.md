@@ -24,8 +24,8 @@ A fixed team is not required.
 
 ## Delivery and authority
 
-A project adopts policy revision 2 by reviewing and copying the shared doctrine
-and a matching host contract. A delivery request then authorises technical
+A project adopts this setup by reviewing and copying the shared doctrine and a
+matching host contract. A delivery request then authorises technical
 decisions, implementation, PR creation, merge, and release within scope.
 The owner can reserve planning, testing, review, merge, or deployment for any
 task. An analysis-only request never authorises edits.
@@ -147,7 +147,7 @@ Repository settings remain owner-controlled.
 ### Before first real adoption
 
 Run a small task in an isolated test project with actual Claude Code and Codex
-sessions before adopting revision 2 in a real project. Verify role and skill
+sessions before adoption in a real project. Verify role and skill
 loading, a separate reviewer context, the reviewer's own full verification,
 and merge blocking for a failed required check or pending required owner test.
 Confirm that the reviewer leaves product files unchanged and does not merge,
@@ -158,7 +158,6 @@ Distinguish enforced restrictions from instructions: `workspace-write` permits
 writes; an instruction not to edit or merge does not technically remove that
 capability. An observed absence of writes is not proof that writes are
 impossible. Policy decision scenarios do not replace these host workflow tests.
-This source-bundle PR may merge before those runs; real adoption must wait.
 
 Use an existing issue or a direct task:
 
@@ -170,7 +169,7 @@ $project-manager solve issue #1
 Use the first form for Claude and the second for Codex. A clear request starts
 autonomous delivery within authority; a new approval ceremony is not required.
 
-## Updating and legacy projects
+## Updating
 
 Global roles and skills remain linked to this repository. Pulling changes
 updates them for new sessions. Run the linker again after adding or removing
@@ -184,16 +183,9 @@ Pruning removes only dead links whose target ownership can be established
 inside this repository. It retains links with unresolvable parent paths and
 links that escape through parent traversal or a symlinked directory.
 
-Copied project contracts do not update automatically. Revision-2 autonomy
-requires both the local host contract and `DOCTRINE.md` to state
-`Policy revision: 2`. A newer global skill does not grant merge or release
-authority to an old project. Local approval gates and required roles remain.
-An incomplete revision-2 adoption stops delivery until the owner approves a
-compatible update. Read-only diagnosis is still allowed.
-
-Updating this source bundle does not migrate downstream projects. Review and
-adopt their contracts separately. Do not silently copy files or change live
-user settings as part of a delivery task.
+Copied project contracts do not update automatically. To update a project,
+review the changes and copy the updated contracts. Do not silently copy files or change live user
+settings as part of a delivery task.
 
 ## Stack profiles
 
