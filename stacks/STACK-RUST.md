@@ -125,6 +125,7 @@ and domain bounds address lossy conversions. Add targeted checks where needed.
 - **Build-time runtime:** Node.js 24 LTS, exact supported patch pinned in mise. Node is not a production server requirement for this SPA. Reassess later LTS lines after release and a tooling trial.
 - **Package manager:** pnpm workspaces, exact pnpm version pinned, committed `pnpm-lock.yaml`, and frozen-lockfile installs. Do not use `latest` in manifests.
 - **Lint:** ESLint with typescript-eslint `strict-type-checked`, TypeScript project-aware configuration, and React hook rules.
+- **Alternative for TypeScript 7:** typescript-eslint does not run on the native TypeScript 7 compiler. A project that adopts TypeScript 7 MAY use Oxlint with its type-aware tsgolint backend instead of ESLint. Enable the equivalent strict type-aware rules and the React hook rules, deny warnings, and record the rules that have no Oxlint equivalent. Keep the `tsconfig` flags below.
 
 ```json
 {
@@ -189,6 +190,13 @@ set; pinning its package version alone does not prove reproducible tool builds.
 7. Define handling of optional/null fields, unknown fields and enum values, tagged unions, numeric bounds, and temporal precision. Do not silently coerce or invent facts.
 8. Preserve a declared client/server compatibility window. An old browser tab remains an old client after a combined deployment. Define safe upgrade behaviour that preserves unsaved input.
 
+Generator lessons from an adoption with Hey API 0.99:
+
+- Make the output independent of where it is written. The generator reads the first `tsconfig*.json` above its install directory to choose the import extension; set the extension and turn the lookup off (`output.module.extension`, `output.tsConfigPath: null`), or `contract:check` in scratch space can differ from the committed tree.
+- The generator uses the TypeScript compiler API, which the TypeScript 7 package does not export. With TypeScript 7 in the workspace, pin a TypeScript 6 release as a devDependency of the API-client package only, and keep the type check on TypeScript 7. Record it as a scoped exception.
+- The client runtime that the generator copies into the output can fail `exactOptionalPropertyTypes`. Never edit generated files. Type-check the generated directory with its own `tsconfig` that turns off only this flag, keep the flag for the facade and the application, and record a scoped exception.
+- A generator dependency can pin a vulnerable package version outside the reach of an ordinary update. Use a pnpm override for that exact parent version, prove with `contract:check` that the output does not change, and record the override with its removal condition.
+
 The build dependency order is Rust contract-export compilation, OpenAPI
 export, client generation, frontend build, and image assembly. Export and
 ordinary server compilation MUST NOT depend on frontend assets. If embedding
@@ -214,7 +222,18 @@ idempotency separately. An invalid independent item may be excluded only if
 the contract permits partial success; expose its safe reason. Invalid
 whole-operation input and atomic failures MUST NOT publish partial success.
 
-### 2.3 Frontend state
+### 2.3 Outbound sources
+
+Decode each external source at its adapter and narrow it into domain types
+before other code sees it.
+
+- Serde's derived `Deserialize` for a struct also accepts a JSON array in field order, and a repeated key fails the whole value. When a source contract requires an object, or when the previous system kept the last repeated key, check the JSON type or decode through `serde_json::Value`. Test both cases.
+- Give each attempt a deadline that includes the response body, and limit the body size. A per-attempt timeout that stops at the headers leaves the body read unbounded.
+- The text of a transport error can contain a URL with a query or a token. Map transport failures to fixed messages before they reach a log, an error value, or a response.
+- Turn off redirects for a client that sends a credential, so a redirect cannot carry it to another host.
+- Set the `User-Agent` explicitly. Record it as a difference when the service replaces another implementation.
+
+### 2.4 Frontend state
 
 | State | Owner |
 | --- | --- |
@@ -231,7 +250,7 @@ client cancellation does not prove server-side rollback. Avoid copying query
 data into another global store. Use typed view states rather than unrelated
 optional flags. A failed fetch MUST NOT become an empty successful result.
 
-### 2.4 Authentication, when accounts are required
+### 2.5 Authentication, when accounts are required
 
 Use an approved OIDC provider and opaque backend-owned cookie sessions.
 Evaluate openidconnect and a maintained session implementation with a
@@ -258,6 +277,8 @@ trial passes, report that capability as unvalidated.
 Mise tasks are the single source of truth. Implement them in the adopting
 project; this profile ships no application scripts. Commits, agent workflows,
 and any CI invoke these entry points rather than separate tool pipelines.
+When an existing contract names a package-manager script (for example a
+hand-off `pnpm dev`), that script MAY call the mise task. It adds nothing else.
 
 | Variable | Command |
 | --- | --- |
@@ -357,6 +378,7 @@ added cost, and material lock-in follow the doctrine's escalation rules.
 | react / react-dom / vite | 19 / 19 / 8 | SPA and build | (default) | (template) |
 | @tanstack/react-router / @tanstack/react-query | 1 / 5 | Routing and server-state cache | (default) | (template) |
 | typescript / typescript-eslint / eslint | 6.0 / 8 / 10 | Strict types and typed linting; confirm peer ranges | (default) | (template) |
+| typescript / oxlint / oxlint-tsgolint, alternative | 7 / pin exact / pin exact | TypeScript 7 native compiler with type-aware Oxlint when typescript-eslint does not support it (§1) | (default) | (template) |
 | prettier / vitest | 3 / 5 | Format and frontend unit tests | (default) | (template) |
 | @playwright/test / @axe-core/playwright | 1 / 4 | Browser journeys and accessibility checks | (default) | (template) |
 | proptest, dev | 1 | Targeted invariant tests | (default) | (template) |
@@ -366,7 +388,7 @@ Jiff SQLx values use adapter wrapper types; configure query type overrides
 or annotations deliberately and test their round trips. Utoipa's `jiff_0_2`,
 `uuid`, and decimal-related features must agree with actual serialization.
 Pin selected Cargo feature sets; avoid enabling everything by convenience.
-Authentication packages and their compatible store remain conditional §2.4
+Authentication packages and their compatible store remain conditional §2.5
 adoption decisions. Snapshot, mutation, and coverage tools are optional when
 they address a named risk. Their versions belong in the adopting tool pins.
 
@@ -400,8 +422,13 @@ state frameworks require a current reason rather than an automatic prohibition.
 
 Use tracing with tracing-subscriber JSON output in production and a readable
 development formatter. Carry safe request correlation through async spans.
-Allowlist fields. Avoid automatic Debug output of complete arguments, DTOs,
+Allowlist fields. Apply the allowlist to span fields as well as event fields,
+because request correlation puts data on spans. Avoid automatic Debug output of complete arguments, DTOs,
 configuration, headers, and payloads. Redact secret types and test redaction.
+Create the request identifier inside the panic containment of the request: a
+random identifier generator can panic when the operating system gives no
+random bytes. Work that several requests share has no single request
+identifier; record that gap instead of borrowing the first caller's span.
 
 Define diagnostic access, retention, cardinality, and resource limits. Select
 a browser diagnostic mechanism explicitly; the Rust logger does not cover
@@ -424,7 +451,18 @@ not undo committed or external effects. Already-running spawn_blocking work
 cannot normally be aborted; limit parallelism and define its completion or
 cooperative stop policy. A timeout on waiting does not prove work stopped.
 
+A cache or a request-coalescing map that runs one shared lookup per key as a
+spawned task owns that task. Bound it with deadlines. Remove its entry with a
+drop guard inside the task, so a panic after every caller has left cannot keep
+the key in memory or cache the failure. Drive expiry from a clock that tests
+can pause (`tokio::time::Instant`); a cache crate with its own clock source
+makes expiry tests slow or nondeterministic. Choose and test the time to live
+of a failure separately from the time to live of a success.
+
 Implement and test a shutdown deadline in addition to Axum graceful shutdown.
+Dropping a Tokio runtime waits without a limit for its blocking tasks, so end
+the process with `shutdown_background` or `shutdown_timeout` after the deadline.
+Treat a failed signal-handler set-up the same way for every signal, and log it.
 Stop accepting work, drain or cancel owned operations, and define the outcome
 at the deadline. Periodic jobs and real-time connections are allowed for an
 explicit product need with bounded resource use and authorization.
@@ -457,6 +495,7 @@ may use other libraries; their presence does not require rewriting them.
 - **Thresholds:** exercise text contrast at 4.5:1 for normal text and 3:1 for large text; pointer targets at the WCAG 2.5.8 24 by 24 CSS pixel threshold or a documented applicable exception; visible keyboard focus on interactive elements.
 - **Inputs:** full keyboard operability, sensible DOM/focus order, accessible names, and announced validation/error states.
 - **Browser evidence:** Playwright journeys against the release service, axe checks on critical pages/states, and keyboard-only operation. Declare supported browsers and viewports.
+- **Deterministic journeys:** when the service depends on external sources, run the journeys in `verify` against a test server binary that mounts the real router, the real middleware, and the built SPA over fake ports. A journey against live external services is a separate live check, not part of `verify`.
 
 A component or CSS library does not prove conformance. Automated checks miss
 accessibility issues; identify remaining checks and evidence. An owner-only
@@ -577,11 +616,43 @@ An item may be not applicable with a reason tied to product purpose. An
 unsupported tool is not an applicability exemption. Identify what static
 checks, the trial, and agent reviews still do not prove.
 
+### Live checks of external sources
+
+A live check against an external source asserts on a stable control sample.
+When the source can legitimately lack data for recent items, report the hit
+rate of such a sample as a measurement, not as a pass condition. Never run a
+live check with a user's credential unless the owner runs it.
+
+### Replacing an existing service
+
+When the Rust service replaces a service in another language, prove behaviour
+parity before the switch. Keep both servers runnable, send the same request
+set to both, and compare statuses, relevant headers, and exact bodies. Measure
+the noise floor first: send the request set twice to the old server, and
+retry a differing pair before you count it, because external sources can be
+nondeterministic. List every intended difference. Parity keeps the old
+behaviour, including behaviour that breaks a profile rule (for example an
+upstream envelope failure that the old service turned into an empty list).
+Record each such case as a divergence with a follow-up instead of changing
+product behaviour inside the port.
+
+Check the semantics that a port from TypeScript and JavaScript changes
+silently:
+
+- `Number(text)`: white space is trimmed, an empty text is 0, and hexadecimal and exponent forms are numbers.
+- Integer checks of schema libraries can mean `Number.isSafeInteger` (at most 2^53 − 1).
+- `Date.parse` is lenient, and `toISOString()` always prints milliseconds; a value passed through unchanged does not.
+- `String.length` counts UTF-16 code units; `trim()` white space differs from Rust's `char::is_whitespace` in U+FEFF and U+0085.
+- `localeCompare(…, locale)` uses ICU collation; `Array.prototype.sort` is stable.
+- `URLSearchParams` keeps repeated keys, and `JSON.parse` keeps the last of repeated object keys.
+- A router can ignore path case, collapse repeated slashes, or ignore a trailing slash; media types in `Accept` are case-insensitive.
+
 ---
 
 ## 15. Release, recovery, and maintenance
 
 - **Release:** one immutable image contains the Rust binary and built SPA files. ServeDir is the default asset mechanism; embedding is optional for a demonstrated single-executable need. Tag with the commit SHA and retain the image digest. Declare target architecture, environments, commands, permissions, and whether main deploys automatically.
+- **Source builders:** a platform builder that detects the language from the repository root (for example Railpack) selects the Rust provider when the root has `Cargo.toml`, and then does not build the SPA. Declare the build in the builder's config file: the Rust and Node toolchains, the locked SPA build, the locked release build, and an image that contains only the binary and the SPA files. Pin the builder version where the platform allows it. A builder can give every service variable to every build command, including the build scripts of dependencies; record this with its compensating controls. A builder can also read crate manifests with its own parser: Railpack 0.40.1 cannot decode inherited package fields such as `edition.workspace = true` in the binary crate and then plans a failing build. Check the builder's plan after each manifest change, and repeat the needed package fields in the binary crate when the builder requires it.
 - **Asset routing:** keep API failures out of the SPA fallback. Test deep links, missing assets, MIME types, cache headers, and relevant security headers. Separate static hosting MAY preserve one origin through routing; CORS is not an automatic requirement.
 - **Configuration:** validate settings at startup, with safe diagnostics on failure. Secrets come from the declared secret mechanism, not the image or frontend bundle.
 - **Migrations:** run the declared SQLx migration step before routing traffic to code that needs it. Maintain compatibility with still-running versions. Perform destructive contract steps only under approved policy after compatibility is no longer required.
