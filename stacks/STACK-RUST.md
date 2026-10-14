@@ -67,7 +67,7 @@ manifests need boundary review. Standard-library I/O and ambient time remain
 possible without new dependencies. Use selected Clippy disallowed-method
 rules where practical and record review-only gaps. Global cargo-deny bans
 are not per-crate architecture checks. Enforce frontend import directions
-with ESLint restricted-import rules and inspect dynamic-loading gaps.
+with Oxlint `no-restricted-imports` rules and inspect dynamic-loading gaps.
 
 ---
 
@@ -121,11 +121,10 @@ and domain bounds address lossy conversions. Add targeted checks where needed.
 
 ### Frontend
 
-- **Language baseline:** TypeScript 6.0 with the selected typescript-eslint 8 line. Confirm their supported peer ranges together. A later TypeScript line needs a compatibility trial and profile update.
+- **Language baseline:** TypeScript 7 with the native compiler. Pin the exact release. TypeScript 7.0 has no programmatic compiler API. A tool that needs the compiler API gets a scoped exception (§2.1). Reassess the exceptions when a TypeScript 7 release provides the new API.
 - **Build-time runtime:** Node.js 24 LTS, exact supported patch pinned in mise. Node is not a production server requirement for this SPA. Reassess later LTS lines after release and a tooling trial.
 - **Package manager:** pnpm workspaces, exact pnpm version pinned, committed `pnpm-lock.yaml`, and frozen-lockfile installs. Do not use `latest` in manifests.
-- **Lint:** ESLint with typescript-eslint `strict-type-checked`, TypeScript project-aware configuration, and React hook rules.
-- **Alternative for TypeScript 7:** typescript-eslint does not run on the native TypeScript 7 compiler. A project that adopts TypeScript 7 MAY use Oxlint with its type-aware tsgolint backend instead of ESLint. Enable the equivalent strict type-aware rules and the React hook rules, deny warnings, and record the rules that have no Oxlint equivalent. Keep the `tsconfig` flags below.
+- **Lint:** Oxlint with its type-aware tsgolint backend (`oxlint-tsgolint`). typescript-eslint does not run on TypeScript 7. Enable the type-aware rules that correspond to typescript-eslint `strict-type-checked`, the React hook rules, and the import restrictions. Deny warnings. Record each strict rule that Oxlint does not implement and the review that covers it.
 
 ```json
 {
@@ -177,7 +176,7 @@ set; pinning its package version alone does not prove reproducible tool builds.
 | Routing and server state | TanStack Router and Query | URL state and query cache ownership |
 | Styling | CSS; Tailwind optional | Product-specific styling choice |
 | Tests | nextest, Cargo doctests, proptest, Vitest, Playwright/axe | Behaviour, contracts, and critical journeys |
-| Formatting and lint | rustfmt, Clippy, Prettier, ESLint, tsc | Named checks through mise |
+| Formatting and lint | rustfmt, Clippy, Prettier, Oxlint, tsc | Named checks through mise |
 
 ### 2.1 API contract and generation
 
@@ -190,10 +189,10 @@ set; pinning its package version alone does not prove reproducible tool builds.
 7. Define handling of optional/null fields, unknown fields and enum values, tagged unions, numeric bounds, and temporal precision. Do not silently coerce or invent facts.
 8. Preserve a declared client/server compatibility window. An old browser tab remains an old client after a combined deployment. Define safe upgrade behaviour that preserves unsaved input.
 
-Generator lessons from an adoption with Hey API 0.99:
+Generator configuration, checked with Hey API 0.99:
 
 - Make the output independent of where it is written. The generator reads the first `tsconfig*.json` above its install directory to choose the import extension; set the extension and turn the lookup off (`output.module.extension`, `output.tsConfigPath: null`), or `contract:check` in scratch space can differ from the committed tree.
-- The generator uses the TypeScript compiler API, which the TypeScript 7 package does not export. With TypeScript 7 in the workspace, pin a TypeScript 6 release as a devDependency of the API-client package only, and keep the type check on TypeScript 7. Record it as a scoped exception.
+- The generator uses the TypeScript compiler API, which TypeScript 7.0 does not provide. Pin a TypeScript 6 release as a devDependency of the API-client package only, so that only the generator resolves it. Run every type check with TypeScript 7. Record this dependency as a §13 exception. Remove the exception when the generator supports TypeScript 7.
 - The client runtime that the generator copies into the output can fail `exactOptionalPropertyTypes`. Never edit generated files. Type-check the generated directory with its own `tsconfig` that turns off only this flag, keep the flag for the facade and the application, and record a scoped exception.
 - A generator dependency can pin a vulnerable package version outside the reach of an ordinary update. Use a pnpm override for that exact parent version, prove with `contract:check` that the output does not change, and record the override with its removal condition.
 
@@ -227,11 +226,11 @@ whole-operation input and atomic failures MUST NOT publish partial success.
 Decode each external source at its adapter and narrow it into domain types
 before other code sees it.
 
-- Serde's derived `Deserialize` for a struct also accepts a JSON array in field order, and a repeated key fails the whole value. When a source contract requires an object, or when the previous system kept the last repeated key, check the JSON type or decode through `serde_json::Value`. Test both cases.
+- Serde's derived `Deserialize` for a struct also accepts a JSON array in field order, and a repeated key fails the whole value. When the source contract requires an object or accepts the last repeated key, check the JSON type or decode through `serde_json::Value`, which keeps the last repeated key. Test both cases.
 - Give each attempt a deadline that includes the response body, and limit the body size. A per-attempt timeout that stops at the headers leaves the body read unbounded.
-- The text of a transport error can contain a URL with a query or a token. Map transport failures to fixed messages before they reach a log, an error value, or a response.
-- Turn off redirects for a client that sends a credential, so a redirect cannot carry it to another host.
-- Set the `User-Agent` explicitly. Record it as a difference when the service replaces another implementation.
+- The text of a transport error can contain a URL with a query or a token. Map transport failures to fixed messages before they reach a log, an error value, or a response. In reqwest, `Error::without_url` removes the URL.
+- Turn off redirects for a client that sends a credential in a custom header or in the query. reqwest removes only standard credential headers, such as `Authorization` and `Cookie`, on a redirect to another host.
+- Set the `User-Agent` explicitly. reqwest sends none by default.
 
 ### 2.4 Frontend state
 
@@ -277,8 +276,6 @@ trial passes, report that capability as unvalidated.
 Mise tasks are the single source of truth. Implement them in the adopting
 project; this profile ships no application scripts. Commits, agent workflows,
 and any CI invoke these entry points rather than separate tool pipelines.
-When an existing contract names a package-manager script (for example a
-hand-off `pnpm dev`), that script MAY call the mise task. It adds nothing else.
 
 | Variable | Command |
 | --- | --- |
@@ -289,7 +286,7 @@ hand-off `pnpm dev`), that script MAY call the mise task. It adds nothing else.
 | `$VERIFY_CMD` | `mise run verify` |
 
 - **format:** rustfmt and Prettier in write mode.
-- **lint:** `cargo clippy --workspace --all-targets --locked -- -D warnings`, typed ESLint, and `tsc --noEmit` for web, client, and test code. Declare supported feature combinations; do not blindly enable incompatible features.
+- **lint:** `cargo clippy --workspace --all-targets --locked -- -D warnings`, type-aware Oxlint, and TypeScript 7 `tsc --noEmit` for web, client, and test code. Declare supported feature combinations; do not blindly enable incompatible features.
 - **build:** export/generate in the declared order, build the SPA, and build the release server with locked dependencies and offline SQLx metadata. Verify the intended Linux image before claiming release readiness.
 - **test:** nextest workspace tests, `cargo test --doc --workspace --locked`, Vitest, required real-database integration tests, and Playwright against the built service. Required browser tests are part of the complete test command, not an optional omitted suffix.
 - **verify:** format check without edits; isolated service setup and migrations where needed; lint/type checks; complete-tree contract drift check; SQLx metadata check; security/dependency checks; build; all required tests. Stop on required failures, retain useful diagnostics, and clean up only owned temporary resources.
@@ -377,8 +374,8 @@ added cost, and material lock-in follow the doctrine's escalation rules.
 | zod | 4 | Executed browser boundary validation | (default) | (template) |
 | react / react-dom / vite | 19 / 19 / 8 | SPA and build | (default) | (template) |
 | @tanstack/react-router / @tanstack/react-query | 1 / 5 | Routing and server-state cache | (default) | (template) |
-| typescript / typescript-eslint / eslint | 6.0 / 8 / 10 | Strict types and typed linting; confirm peer ranges | (default) | (template) |
-| typescript / oxlint / oxlint-tsgolint, alternative | 7 / pin exact / pin exact | TypeScript 7 native compiler with type-aware Oxlint when typescript-eslint does not support it (§1) | (default) | (template) |
+| typescript / oxlint / oxlint-tsgolint | 7 / pin exact / pin exact | Native compiler and type-aware linting (§1) | (default) | (template) |
+| typescript, API-client generator only | 6, pin exact | Compiler API for the generator until it supports TypeScript 7 (§2.1) | (default) | (template) |
 | prettier / vitest | 3 / 5 | Format and frontend unit tests | (default) | (template) |
 | @playwright/test / @axe-core/playwright | 1 / 4 | Browser journeys and accessibility checks | (default) | (template) |
 | proptest, dev | 1 | Targeted invariant tests | (default) | (template) |
@@ -457,7 +454,8 @@ drop guard inside the task, so a panic after every caller has left cannot keep
 the key in memory or cache the failure. Drive expiry from a clock that tests
 can pause (`tokio::time::Instant`); a cache crate with its own clock source
 makes expiry tests slow or nondeterministic. Choose and test the time to live
-of a failure separately from the time to live of a success.
+of a failure separately from the time to live of a success. The drop guard
+runs on a panic only with `panic = "unwind"`.
 
 Implement and test a shutdown deadline in addition to Axum graceful shutdown.
 Dropping a Tokio runtime waits without a limit for its blocking tasks, so end
@@ -495,7 +493,7 @@ may use other libraries; their presence does not require rewriting them.
 - **Thresholds:** exercise text contrast at 4.5:1 for normal text and 3:1 for large text; pointer targets at the WCAG 2.5.8 24 by 24 CSS pixel threshold or a documented applicable exception; visible keyboard focus on interactive elements.
 - **Inputs:** full keyboard operability, sensible DOM/focus order, accessible names, and announced validation/error states.
 - **Browser evidence:** Playwright journeys against the release service, axe checks on critical pages/states, and keyboard-only operation. Declare supported browsers and viewports.
-- **Deterministic journeys:** when the service depends on external sources, run the journeys in `verify` against a test server binary that mounts the real router, the real middleware, and the built SPA over fake ports. A journey against live external services is a separate live check, not part of `verify`.
+- **Deterministic journeys:** when the service depends on external sources, run the journeys in `verify` against a test server binary that mounts the real router, the real middleware, and the built SPA with fake adapters for the external sources. A journey against live external services is a separate live check, not part of `verify`.
 
 A component or CSS library does not prove conformance. Automated checks miss
 accessibility issues; identify remaining checks and evidence. An owner-only
@@ -582,9 +580,9 @@ explanation. Apply P6 evidence reuse without waiving P9's independent run.
 | Check | Tool | Acceptance condition |
 | --- | --- | --- |
 | Format | rustfmt and Prettier check modes | No formatting differences |
-| Types/lint | Clippy, tsc, typed ESLint | No errors or unreviewed warnings under §1 |
+| Types/lint | Clippy, tsc, type-aware Oxlint | No errors or unreviewed warnings under §1 |
 | Dead dependencies | cargo-shear SHOULD; rustc unused checks; Knip optional | No unexplained findings; configure generated/dynamic entry points |
-| Boundaries | Cargo declarations, Clippy disallowed methods where practical, ESLint restricted imports | No forbidden edges; review declared gaps |
+| Boundaries | Cargo declarations, Clippy disallowed methods where practical, Oxlint restricted imports | No forbidden edges; review declared gaps |
 | Contracts | Scratch export/generation and actual HTTP/client tests | No unexplained drift or invalid data accepted |
 | SQL metadata | SQLx prepare check with declared targets/features | Matches the migrated isolated schema |
 | Secrets | Gitleaks with redacted output and declared source/history scope | No confirmed exposed secrets |
@@ -622,30 +620,6 @@ A live check against an external source asserts on a stable control sample.
 When the source can legitimately lack data for recent items, report the hit
 rate of such a sample as a measurement, not as a pass condition. Never run a
 live check with a user's credential unless the owner runs it.
-
-### Replacing an existing service
-
-When the Rust service replaces a service in another language, prove behaviour
-parity before the switch. Keep both servers runnable, send the same request
-set to both, and compare statuses, relevant headers, and exact bodies. Measure
-the noise floor first: send the request set twice to the old server, and
-retry a differing pair before you count it, because external sources can be
-nondeterministic. List every intended difference. Parity keeps the old
-behaviour, including behaviour that breaks a profile rule (for example an
-upstream envelope failure that the old service turned into an empty list).
-Record each such case as a divergence with a follow-up instead of changing
-product behaviour inside the port.
-
-Check the semantics that a port from TypeScript and JavaScript changes
-silently:
-
-- `Number(text)`: white space is trimmed, an empty text is 0, and hexadecimal and exponent forms are numbers.
-- Integer checks of schema libraries can mean `Number.isSafeInteger` (at most 2^53 − 1).
-- `Date.parse` is lenient, and `toISOString()` always prints milliseconds; a value passed through unchanged does not.
-- `String.length` counts UTF-16 code units; `trim()` white space differs from Rust's `char::is_whitespace` in U+FEFF and U+0085.
-- `localeCompare(…, locale)` uses ICU collation; `Array.prototype.sort` is stable.
-- `URLSearchParams` keeps repeated keys, and `JSON.parse` keeps the last of repeated object keys.
-- A router can ignore path case, collapse repeated slashes, or ignore a trailing slash; media types in `Accept` are case-insensitive.
 
 ---
 
