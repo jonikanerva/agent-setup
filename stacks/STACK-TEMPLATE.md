@@ -58,6 +58,10 @@ All five variables MUST be defined — every skill and agent dereferences them. 
 | `$TEST_CMD`   | `<…>`                                                      |
 | `$VERIFY_CMD` | `<one command: format-check → lint/type/security checks → build → required tests>`       |
 
+Name additional checks below. `DOCTRINE.md` P7 requires the dependency freshness check.
+
+- **Dependency freshness check:** `<read-only command or procedure that lists newer stable releases for every pinned runtime, toolchain, infrastructure component, and dependency surface>`
+
 ---
 
 ## 4. Performance budgets
@@ -245,6 +249,8 @@ distribution, compatibility, diagnosis, and data obligations.
 - **Observe:** `<health/smoke check, diagnostic source, and bounded observation window>`.
 - **Recover:** `<rollback/roll-forward command, data backup/restore checks, compatibility window, and responsible lead>`.
 - **Data:** `<persisted data, purpose, retention/deletion policy, migration and recovery tests; explain exclusions>`.
+- **Infrastructure:** `<each infrastructure component (database, cache, message broker, object storage, container base image, build or deployment platform, managed service), its version in each environment, and how to read that version>`.
+- **Dependencies:** `<update policy under DOCTRINE.md P7: minimum release age, packages that upgrade together, and the trial for a new runtime or toolchain line>`.
 
 The responsible lead verifies the integrated release within the adopted
 project authority. Main remains production-ready. Added cost, a new provider

@@ -22,6 +22,7 @@ assumptions from requirements and observed facts; state unresolved user-visible 
 
 - Version and integration base: <head SHA and base SHA>
 - Environment: <toolchain, configuration, platform, and relevant fixtures>
+- Dependency freshness: <check result, deps PR links, and retained pins with reasons>
 - Required checks: <command or CI job, result, and evidence for this version>
 - Reproduction: <procedure/script, safe inputs or reconstruction, expected
   outcomes and sources, retained result links; agent trial inputs/settings if used>

@@ -109,6 +109,8 @@ Bootstrap the environment with `mise install` (provisions the pinned tools/runti
 
 > Python has no build artifact, so `$BUILD_CMD` maps to a **bytecode-compile syntax gate** over the integration package. Implement the local `verify` mise task with required tests and §14 checks. Define a supported local runner or container for applicable `hassfest` and HACS validation. If a required validator cannot run locally, record the gap and obtain an owner decision before acceptance; do not silently substitute hosted CI. Existing required CI jobs must also pass. This profile does not supply the task or validators.
 
+**Dependency freshness check:** `uv tree --outdated` for locked dev dependencies and `mise outdated --bump` for Python, uv, Ruff, and mypy. Compare each `manifest.json → requirements` pin with its latest PyPI release and with the package versions that the targeted Home Assistant release pins. Also compare each infrastructure version in §15 with its latest stable release.
+
 ---
 
 ## 4. Performance budgets
@@ -334,6 +336,7 @@ distribution, compatibility, diagnosis, and data obligations.
 - **Observe:** test clean installation and upgrade, config-entry setup, a representative entity/action, and error diagnostics on the declared HA release.
 - **Recover:** retain a compatible integration version and verify HA/config-entry backup restoration. Test migrations and downgrade limits; do not advise downgrading a schema without evidence.
 - **Data:** document config-entry and Store retention/removal, credential handling, and diagnostic redaction. Owner device checks are exceptional; prefer a repeatable simulated service or fixture.
+- **Dependencies:** apply `DOCTRINE.md` P7. Target the latest stable Home Assistant release and its Python version. A runtime requirement pin must stay compatible with the versions that Home Assistant release pins. Record each infrastructure component, for example a database, cache, message broker, object storage, or container base image, with its version in each environment. Keep test and production on the same major version.
 
 The responsible lead verifies the integrated release within the adopted
 project authority. Main remains production-ready. Added cost, a new provider

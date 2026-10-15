@@ -34,6 +34,9 @@ Apply `DOCTRINE.md`, especially P2–P7. Choose an idiomatic
 structure for the actual requirements. A necessary structural correction can
 be larger than the immediate patch, but it must stay within product scope and
 have verifiable steps. Do not add unrelated cleanup or speculative capability.
+Keep proactive dependency updates out of the task PR; they belong in the
+dedicated deps PR under `DOCTRINE.md` P7. Change a dependency version in a task
+PR only when its criteria require that change.
 
 Trace criteria and expected outcomes to the original request or independent
 source evidence. Label provisional assumptions and challenge material ones

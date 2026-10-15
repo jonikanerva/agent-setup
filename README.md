@@ -36,6 +36,12 @@ production-data changes outside an approved policy, and unresolved material
 conflicts outside authority. Ordinary library choices and demonstrated,
 recoverable migrations remain technical decisions.
 
+Projects stay on the latest stable toolchains, runtimes, infrastructure, and
+dependencies. Each delivery task starts with the dependency freshness check in
+`STACK.md`. The lead delivers due updates in a dedicated `chore/deps-<topic>`
+PR. That PR merges before the task branch starts. A new major version gets its
+own PR. See `DOCTRINE.md` P7.
+
 The lead records criteria before implementation. It obtains the required
 verification and independent review, checks the integrated result, and then
 takes the authorised next step. Missing required evidence blocks acceptance.
@@ -133,9 +139,10 @@ cp template/AGENTS.md "$PROJECT_DIR/AGENTS.md"
 ```
 
 Review the authority defaults before adoption. Fill product and stack
-placeholders. Implement the named verification commands and define applicable
-CI, hardware, release, and recovery checks. Record enforcement gaps and
-exceptions. Keep the five core command names; add named checks when needed.
+placeholders. Implement the named verification commands and the dependency
+freshness check. Define applicable CI, hardware, release, and recovery checks.
+Record enforcement gaps and exceptions. Keep the five core command names; add
+named checks when needed.
 Copy the PR template separately if useful.
 
 Local verification is the default; existing required CI must also pass.
