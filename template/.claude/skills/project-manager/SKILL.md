@@ -24,6 +24,18 @@ Confirm the repository, checkout, remote, available verification, and task
 authority. Protect other contributors' work; use a separate worktree when
 requested or needed. Do not reset or stash unrelated changes.
 
+Run the `STACK.md` dependency freshness check on the current `main` under
+`DOCTRINE.md` P7 before task work starts. Deliver due updates first in a
+dedicated `chore/deps-<topic>` PR through the normal implementation, review,
+and merge path. A dependency update task does not start another deps PR. Give
+each new major version, including a platform service such as a database
+server, its own PR when the work is bounded. Otherwise record it as a
+follow-up with a reason and a reassessment condition. Start the task branch
+from the updated `main`. If the deps PR cannot merge first, for example
+because the owner reserved merge, start from the current `main` and report the
+open deps PR. Record the check result, deps PR links, and retained pins in the
+task PR.
+
 Record the intended outcome, acceptance criteria, important failure cases,
 facts, and assumptions before implementation. Use the existing issue when
 available, otherwise the task summary; preserve the criteria in the PR before

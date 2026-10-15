@@ -55,6 +55,9 @@ Scale depth to impact. Consider:
   invalid inputs. Reject silent invention or loss of decision-relevant data.
 - Architecture and maintenance: ecosystem fit, boundaries, justified
   abstractions and dependencies, necessary refactors, and temporary mechanisms.
+  Check the recorded dependency freshness result. A task PR contains no
+  version changes beyond its criteria. A deps PR assesses breaking changes,
+  advisories, and the reason for each retained pin.
 - Security and privacy: validation, authorisation, permissions, secrets,
   sensitive diagnostics, data minimisation, retention, and supply-chain risks.
 - User experience: changed states and journeys, accessibility, input methods,
