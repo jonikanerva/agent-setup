@@ -36,11 +36,11 @@ production-data changes outside an approved policy, and unresolved material
 conflicts outside authority. Ordinary library choices and demonstrated,
 recoverable migrations remain technical decisions.
 
-Projects stay on the latest stable toolchains, runtimes, platform services
-such as database servers, and dependencies. Each delivery task starts with the
-dependency freshness check in `STACK.md`. The lead delivers due updates in a
-dedicated `chore/deps-<topic>` PR. That PR merges before the task branch
-starts. A new major version gets its own PR. See `DOCTRINE.md` P7.
+Projects stay on the latest stable toolchains, runtimes, infrastructure, and
+dependencies. Each delivery task starts with the dependency freshness check in
+`STACK.md`. The lead delivers due updates in a dedicated `chore/deps-<topic>`
+PR. That PR merges before the task branch starts. A new major version gets its
+own PR. See `DOCTRINE.md` P7.
 
 The lead records criteria before implementation. It obtains the required
 verification and independent review, checks the integrated result, and then

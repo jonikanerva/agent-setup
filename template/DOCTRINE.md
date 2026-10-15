@@ -176,23 +176,30 @@ Pin toolchains and resolved dependencies. Document environment setup and
 configuration validation. Make environmental differences visible. Define and
 measure resource limits where they affect fitness for purpose.
 
-Keep toolchains, runtimes, platform services such as database servers, and
-dependencies on their latest stable releases. A pin records a verified state;
-it does not freeze that state. Before each delivery task, or once before an
-authorised batch, run the dependency freshness check in `STACK.md` on the
-current `main`. Deliver due updates first in a dedicated `chore/deps-<topic>`
-PR. That PR follows the full acceptance and release path. Merge it before the
-task branch starts. A dependency update task is itself that deps PR; it does
-not start another one. Apply security fixes first. Updates within declared
-version constraints are lead decisions. A new major version gets its own PR
-with compatibility evidence and the required migration. That PR blocks the
-task only when the task depends on it. Start it when the work is bounded.
-Otherwise report it as a follow-up with a reason and a reassessment condition.
-Upgrade a production platform service through the release and recovery
-procedures in `STACK.md`. Keep test and production on the same major version.
-When an update fails verification and the fix is not bounded, keep the current
-pin, record the reason and a reassessment condition in the deps PR, and
-continue the task. Do not adopt prereleases without a reviewed exception.
+Keep toolchains, runtimes, infrastructure, and dependencies on their latest
+stable releases. Infrastructure is every service and platform component that
+the product uses in any environment, for example databases, caches, message
+brokers, search engines, object storage, container base images, and build or
+deployment platforms, including managed services. Record each infrastructure
+component and its version in each environment in `STACK.md`. A pin records a
+verified state; it does not freeze that state. Before each delivery task, or
+once before an authorised batch, run the dependency freshness check in
+`STACK.md` on the current `main`. Deliver due updates first in a dedicated
+`chore/deps-<topic>` PR. That PR follows the full acceptance and release path.
+Merge it before the task branch starts. A dependency update task is itself
+that deps PR; it does not start another one. Apply security fixes first.
+Updates within declared version constraints are lead decisions. A new major
+version gets its own PR with compatibility evidence and the required
+migration. That PR blocks the task only when the task depends on it. Start it
+when the work is bounded. Otherwise report it as a follow-up with a reason and
+a reassessment condition. Keep each infrastructure component on the same major
+version in test and production. Upgrade production infrastructure through the
+release and recovery procedures in `STACK.md`, and prove the upgrade path and
+data restoration before the switch. Ask the owner when an infrastructure
+upgrade needs downtime, added cost, a provider change, or an irreversible data
+step. When an update fails verification and the fix is not bounded, keep the
+current pin, record the reason and a reassessment condition in the deps PR,
+and continue the task. Do not adopt prereleases without a reviewed exception.
 Respect the declared minimum release age except for security fixes. An
 unavailable freshness check is a recorded gap, not a pass.
 

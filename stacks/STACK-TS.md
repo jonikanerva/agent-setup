@@ -66,7 +66,7 @@ authority beyond the adopted project contract.
 
 Implement these scripts in the adopting project; this profile does not supply `package.json`. Bootstrap with `mise install` (pinned Node/pnpm versions). The `package.json` scripts are the single source of truth. Never invoke `eslint`, `tsc`, `vitest`, or `vite` directly from commits, CI, or agent scripts.
 
-**Dependency freshness check:** `pnpm outdated --recursive` and `mise outdated --bump`. The first command lists newer package releases. The second command lists newer Node, pnpm, and other mise tool releases outside the current pins.
+**Dependency freshness check:** `pnpm outdated --recursive` and `mise outdated --bump`. The first command lists newer package releases. The second command lists newer Node, pnpm, and other mise tool releases outside the current pins. Also compare each infrastructure version in §15 with its latest stable release.
 
 ---
 
@@ -274,7 +274,7 @@ distribution, compatibility, diagnosis, and data obligations.
 - **Observe:** verify deployed versions, API health, and one critical web journey. Declare a bounded observation window and the diagnostic source.
 - **Recover:** define rollback or roll-forward to a known artifact. For database changes, test migration from supported schemas and backup restoration; preserve compatibility during rollout.
 - **Data:** document each store's purpose, retention/deletion rules, credentials, and access boundary. A cache reset is not a recovery plan for durable data.
-- **Dependencies:** apply `DOCTRINE.md` P7. Set pnpm `minimumReleaseAge` (for example 1440 minutes). Exclude a version from it only for a security fix. Move to a new Node LTS line when that line is in active LTS and a tooling trial passes. When the project uses PostgreSQL, keep test and production on the same major version and include that major version in the freshness check.
+- **Dependencies:** apply `DOCTRINE.md` P7. Set pnpm `minimumReleaseAge` (for example 1440 minutes). Exclude a version from it only for a security fix. Move to a new Node LTS line when that line is in active LTS and a tooling trial passes. Record each infrastructure component, for example a database, cache, message broker, object storage, or container base image, with its version in each environment. Keep test and production on the same major version.
 
 The responsible lead verifies the integrated release within the adopted
 project authority. Main remains production-ready. Added cost, a new provider

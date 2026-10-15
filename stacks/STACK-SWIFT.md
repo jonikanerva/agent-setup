@@ -68,7 +68,7 @@ authority beyond the adopted project contract.
 
 Implement these targets in the adopting project's `Makefile`; this profile does not supply one. Set schemes and destinations for all supported targets. `$VERIFY_CMD` runs all applicable §14 checks. Run required tests and verification locally. Existing required CI must also pass. Record hardware gaps; missing required local evidence blocks merge. Invoke the build tools through these targets.
 
-**Dependency freshness check:** `swift package update --dry-run` for a Swift package. For packages that the Xcode project manages, compare each `Package.resolved` pin with the latest upstream release. Compare the pinned Xcode release and SDKs with the latest stable Xcode release.
+**Dependency freshness check:** `swift package update --dry-run` for a Swift package. For packages that the Xcode project manages, compare each `Package.resolved` pin with the latest upstream release. Compare the pinned Xcode release and SDKs with the latest stable Xcode release. Also compare each infrastructure version in §15 with its latest stable release.
 
 ---
 
@@ -270,7 +270,7 @@ distribution, compatibility, diagnosis, and data obligations.
 - **Observe:** verify the delivered build on the declared target, a critical launch/journey, and available crash diagnostics. Define the observation window; upload success does not prove store availability.
 - **Recover:** declare available rollback or expedited forward-fix paths for each channel. Test store migrations and recovery from a backup; App Store distribution may not permit immediate rollback.
 - **Data:** record each stored field's purpose, retention/removal, privacy declarations, and migration limits. Preserve recoverable records on decode failure.
-- **Dependencies:** apply `DOCTRINE.md` P7. Adopt a new stable Xcode release after its build, test, and signing trial passes. A change to a minimum runtime version follows §1.
+- **Dependencies:** apply `DOCTRINE.md` P7. Adopt a new stable Xcode release after its build, test, and signing trial passes. A change to a minimum runtime version follows §1. Record each infrastructure component, for example a database, cache, message broker, object storage, or container base image, with its version in each environment. Keep test and production on the same major version.
 
 The responsible lead verifies the integrated release within the adopted
 project authority. Main remains production-ready. Added cost, a new provider
