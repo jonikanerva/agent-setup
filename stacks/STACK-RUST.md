@@ -303,6 +303,8 @@ do not replace full verification. A missing required browser, database, or
 scanner is a gap, not a pass. Validate test connection configuration and
 isolation before creating, migrating, or dropping any database.
 
+**Dependency freshness check:** `cargo update --dry-run --verbose`, `pnpm outdated --recursive`, and `mise outdated --bump`. `cargo update` stays within SemVer-compatible versions, so also compare each direct crate requirement with its latest crates.io release. Compare `rust-toolchain.toml` with the latest stable Rust release. Compare the recorded production and test PostgreSQL major versions (§15) with the latest stable PostgreSQL major version.
+
 ---
 
 ## 4. Performance budgets
@@ -340,7 +342,7 @@ measurements. A microbenchmark is not production capacity evidence.
 - **Repeated requests:** define idempotency and outcome reconciliation, including a committed write followed by a lost response. Use keys and uniqueness where needed.
 - **Migrations:** numbered, reviewed migrations. Run SQLx migration tooling or a subcommand using SQLx's own migration support as a separate release step, not an implicit startup effect. Use expand-and-contract compatibility with running prior releases.
 - **Recovery:** test empty-database setup, upgrade from supported prior schemas, and restore/roll-forward paths. Application rollback does not restore deleted data. Follow the authorized policy for destructive changes.
-- **Server version:** run the isolated test server on the same PostgreSQL major version as production. Read the production version on adoption and after each platform upgrade (`SHOW server_version`, read-only, or the platform's database image tag) and pin the test server to that major version. Record both versions. A migration test, query metadata check, or catalog snapshot from another major version is not evidence for production.
+- **Server version:** run the isolated test server on the same PostgreSQL major version as production. Read the production version on adoption and after each platform upgrade (`SHOW server_version`, read-only, or the platform's database image tag) and pin the test server to that major version. Record both versions. A migration test, query metadata check, or catalog snapshot from another major version is not evidence for production. When a newer stable PostgreSQL major version exists, upgrade it in its own PR under `DOCTRINE.md` P7. Move the test server and production together. Prove the production upgrade path and backup restoration before the switch. Ask the owner when the upgrade needs downtime, added cost, or an irreversible data step.
 - **Connection TLS:** enable one SQLx TLS feature that uses the same rustls crypto provider as the rest of the binary. With reqwest `rustls`, that is `tls-rustls-aws-lc-rs` (§7). The default `sslmode=prefer` uses TLS when the server offers it, checks no certificate chain, and fails the connection on a failed handshake instead of falling back to plain text. `sslmode=require` fails without a TLS feature. SQLx also reads `PGSSLMODE` when the URL has no `sslmode`. rustls rejects a server certificate that is not version 3, although `psql` accepts it. Before the first release, check the production `sslmode`, `PGSSLMODE`, and certificate version read-only.
 
 SQLite backup needs its supported backup API, VACUUM INTO, or a proven
@@ -637,7 +639,7 @@ live check with a user's credential unless the owner runs it.
 - **Compatibility:** declare the old-client support window and a safe upgrade path. An automatic reload alone does not preserve unsaved input or prove compatibility. Confirm Jiff timezone data source and update behaviour.
 - **Recover:** keep a known working image and use a declared rollback or roll-forward command. Confirm schema compatibility before rolling back code. Test data restoration; a backup file or a down migration alone is not recovery evidence.
 - **Data:** document each store's purpose, retention, deletion policy, credentials, and access boundary. Cache removal is not recovery for durable data.
-- **Maintenance:** review toolchain and dependency upgrades with the same evidence rules. Utoipa and Hey API need integration checks, not mandatory simultaneous upgrades. Recheck session adapters and pre-1.0 library compatibility when affected.
+- **Maintenance:** apply `DOCTRINE.md` P7. Set pnpm `minimumReleaseAge` (for example 1440 minutes). Exclude a version from it only for a security fix. Review toolchain and dependency upgrades with the same evidence rules. Utoipa and Hey API need integration checks, not mandatory simultaneous upgrades. Recheck session adapters and pre-1.0 library compatibility when affected.
 
 Record a purpose-based reason for each inapplicable obligation. The responsible
 lead verifies the integrated result within task authority. Main remains

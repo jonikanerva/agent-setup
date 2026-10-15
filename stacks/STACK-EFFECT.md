@@ -217,6 +217,8 @@ local results block merge. Existing required CI checks must also pass; a
 hosted pipeline is not otherwise required. Record any hardware or external
 evidence gap. This profile does not supply those scripts.
 
+**Dependency freshness check:** `pnpm outdated --recursive` and `mise outdated --bump`. The first command lists newer package releases. The second command lists newer Node, pnpm, and other mise tool releases outside the current pins.
+
 ---
 
 ## 4. Performance budgets
@@ -435,6 +437,7 @@ distribution, compatibility, diagnosis, and data obligations.
 - **Observe:** verify server/client contract compatibility, deployed versions, health, and a critical SPA journey. Define the observation window and diagnostic source.
 - **Recover:** retain a known working server/SPA pair. Test cache invalidation/version handling and rollback. Durable-data migrations are excluded by this stateless profile; reassess recovery if persistence is added.
 - **Data:** declare TTL, cache removal, permissions, and retention for any approved client cache or telemetry. Confirm no forbidden data reaches logs or persistence.
+- **Dependencies:** apply `DOCTRINE.md` P7. Set pnpm `minimumReleaseAge` (for example 1440 minutes). Exclude a version from it only for a security fix. Upgrade `effect`, `@effect/platform`, and `@effect/platform-node` together (§1). When the check reports a newer TypeScript major or Node LTS line, run the §1 compatibility trial and update this profile on adoption.
 
 The responsible lead verifies the integrated release within the adopted
 project authority. Main remains production-ready. Added cost, a new provider
