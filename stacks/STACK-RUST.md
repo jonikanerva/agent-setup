@@ -340,6 +340,8 @@ measurements. A microbenchmark is not production capacity evidence.
 - **Repeated requests:** define idempotency and outcome reconciliation, including a committed write followed by a lost response. Use keys and uniqueness where needed.
 - **Migrations:** numbered, reviewed migrations. Run SQLx migration tooling or a subcommand using SQLx's own migration support as a separate release step, not an implicit startup effect. Use expand-and-contract compatibility with running prior releases.
 - **Recovery:** test empty-database setup, upgrade from supported prior schemas, and restore/roll-forward paths. Application rollback does not restore deleted data. Follow the authorized policy for destructive changes.
+- **Server version:** run the isolated test server on the same PostgreSQL major version as production. Read the production version on adoption and after each platform upgrade (`SHOW server_version`, read-only, or the platform's database image tag) and pin the test server to that major version. Record both versions. A migration test, query metadata check, or catalog snapshot from another major version is not evidence for production.
+- **Connection TLS:** enable one SQLx TLS feature that uses the same rustls crypto provider as the rest of the binary. With reqwest `rustls`, that is `tls-rustls-aws-lc-rs` (§7). The default `sslmode=prefer` uses TLS when the server offers it, checks no certificate chain, and fails the connection on a failed handshake instead of falling back to plain text. `sslmode=require` fails without a TLS feature. SQLx also reads `PGSSLMODE` when the URL has no `sslmode`. rustls rejects a server certificate that is not version 3, although `psql` accepts it. Before the first release, check the production `sslmode`, `PGSSLMODE`, and certificate version read-only.
 
 SQLite backup needs its supported backup API, VACUUM INTO, or a proven
 quiescent snapshot with a tested restore. Do not assume a live file copy is
@@ -367,9 +369,9 @@ added cost, and material lock-in follow the doctrine's escalation rules.
 | jiff | 0.2 | Semantic time types | (default) | (template) |
 | utoipa / utoipa-axum | 6 / 0.3 | OpenAPI routes and schemas | (default) | (template) |
 | tracing / tracing-subscriber | 0.1 / 0.3 | Structured backend diagnostics | (default) | (template) |
-| sqlx / jiff-sqlx, conditional | 0.9 / 0.2 | Durable data and Jiff database wrappers | (default) | (template) |
+| sqlx / jiff-sqlx, conditional | 0.9 / 0.2 | Durable data and Jiff database wrappers; TLS feature `tls-rustls-aws-lc-rs` (§5) | (default) | (template) |
 | uuid / rust_decimal, conditional | 1 / 1 | Typed identities and exact decimal quantities | (default) | (template) |
-| reqwest, conditional | 0.13 | External HTTP calls | (default) | (template) |
+| reqwest, conditional | 0.13 | External HTTP calls; feature `rustls` (aws-lc-rs provider) | (default) | (template) |
 | @hey-api/openapi-ts | 0.99, pin exact release | Local client and validator generation | (default) | (template) |
 | zod | 4 | Executed browser boundary validation | (default) | (template) |
 | react / react-dom / vite | 19 / 19 / 8 | SPA and build | (default) | (template) |
@@ -406,6 +408,7 @@ they address a named risk. Their versions belong in the adopting tool pins.
 - Unbounded queues, retries, response bodies, or concurrency; outbound/database operations without defined deadlines.
 - Blocking I/O or heavy CPU work on async request execution paths; synchronous lock guards across await; unowned spawned tasks or silently discarded errors/futures.
 - Unbound SQL interpolation or unchecked SQL safety assertions.
+- Two rustls crypto providers in one binary, for example SQLx `tls-rustls-ring-webpki` together with reqwest `rustls` (aws-lc-rs). rustls panics when a certificate verifier is built without an explicit provider, so `sslmode=verify-ca` or `verify-full` stops the process. Check `cargo tree -i ring` and `cargo tree -i aws-lc-rs` after a TLS feature change.
 - useEffect for server-data fetching, duplicate global query stores without need, or auth-scoped cache reuse across users/tenants.
 - Host-local timezone arithmetic, invented instants for date-only values, or manual UTC-offset calculations (§10).
 
@@ -569,7 +572,7 @@ explanation. Apply P6 evidence reuse without waiving P9's independent run.
 | P2–P4: types and dependencies | Strict checks, dependency rationale, crate/import boundaries | Manifest edits and ambient effects need review |
 | P3, P5: HTTP contract | Complete-tree drift check; real response tests; executed success/error validation | Annotations do not prove handler behaviour |
 | P5–P6: data meaning | Conversion and property/challenge cases; partial versus atomic failure tests | Preserve missing/null/zero, units, precision, and uncertainty |
-| P5–P7: storage, when used | Migrated-schema metadata check; constraints, competing writes, upgrade, and restore tests | Isolated PostgreSQL required; offline build alone is insufficient |
+| P5–P7: storage, when used | Migrated-schema metadata check; constraints, competing writes, upgrade, and restore tests; recorded production and test server versions | Isolated PostgreSQL of the production major version required; offline build alone is insufficient |
 | P3, P7: security | Named scanner results and auth/privacy checks | Resolve session tuple if accounts are used; scanners do not prove authorization |
 | P5–P7: browser | Critical Playwright journeys, degraded/error states, keyboard and axe | Record unsupported browsers and manual accessibility gaps |
 | P7: release | Before merge: target build and recovery readiness; after release: identity, health, and smoke evidence | Local build is not a verified deployment |
