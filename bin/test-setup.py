@@ -301,6 +301,32 @@ class CopierTests(unittest.TestCase):
         self.assertEqual(role.read_text(), "hand-made role\n")
         self.assertEqual(self.copied(project), {Path("README.md"), Path(".claude/agents/architect.md")})
 
+    def test_nested_repository_is_refused(self):
+        for kind in ("nested", "submodule"):
+            with self.subTest(kind=kind):
+                project = self.project(kind)
+                if kind == "nested":
+                    nested = project / ".claude"
+                    nested.mkdir()
+                    self.git(nested, "init", "-q")
+                else:
+                    module = self.project("module-source")
+                    (module / "agents").mkdir()
+                    (module / "agents/architect.md").write_text("module role\n")
+                    self.commit(module)
+                    self.git(project, "-c", "protocol.file.allow=always", "submodule", "add",
+                             "-q", str(module), ".claude")
+                    self.commit(project)
+                    nested = project / ".claude"
+                role = nested / "agents/architect.md"
+                role.parent.mkdir(exist_ok=True)
+                role.write_text("local edit\n")
+                before = self.copied(project)
+                result = self.run_copier(project, expect=1)
+                self.assertIn("nested Git repository: .claude", result.stderr)
+                self.assertEqual(role.read_text(), "local edit\n")
+                self.assertEqual(self.copied(project), before)
+
     def test_ignored_file_pattern_warns(self):
         project = self.project()
         (project / ".gitignore").write_text("*.toml\n")

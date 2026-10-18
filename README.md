@@ -154,7 +154,9 @@ Other rules apply:
   first, or use `--force` to overwrite it.
 - It refuses to write through a symlinked directory, for example a `.claude`
   link to your home directory.
-- It stops when `git status` fails. It does not guess the state of a file.
+- It stops when `git status` fails for a file that it would overwrite.
+- It refuses to write into a submodule or a nested Git repository. The
+  project commit does not contain files in such a directory.
 - It warns when Git ignores a copied file. Cloud checkouts do not receive
   ignored files.
 

@@ -149,6 +149,12 @@ check_path() {
       echo "error: refusing to write through a symlink: ${current#"$TARGET"/}" >&2
       exit 1
     fi
+    # A submodule or nested repository hides changes from git status in the
+    # project, and the project commit does not contain its files.
+    if [ -d "$current" ] && [ -e "$current/.git" ]; then
+      echo "error: refusing to write into a nested Git repository: ${current#"$TARGET"/}" >&2
+      exit 1
+    fi
     if [ "$current" = "$TARGET/$relative" ]; then
       if [ -d "$current" ]; then
         echo "error: a directory exists where a file is expected: $relative" >&2
