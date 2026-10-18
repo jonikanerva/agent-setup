@@ -33,16 +33,16 @@
 
 ## 2. Frameworks
 
-| Concern              | Framework / library | Notes                                  |
-| -------------------- | ------------------- | -------------------------------------- |
-| UI / interface layer | `<…>`               |                                        |
-| State / observation  | `<…>`               | `<patterns forbidden in new code>`     |
-| Concurrency          | `<…>`               |                                        |
-| Networking           | `<…>`               |                                        |
-| Persistence          | `<…>`               |                                        |
-| Logging              | `<…>`               | `<the banned debug-output calls>`      |
-| Testing              | `<…>`               |                                        |
-| Formatting / linting | `<…>`               |                                        |
+| Concern              | Framework / library | Notes                              |
+| -------------------- | ------------------- | ---------------------------------- |
+| UI / interface layer | `<…>`               |                                    |
+| State / observation  | `<…>`               | `<patterns forbidden in new code>` |
+| Concurrency          | `<…>`               |                                    |
+| Networking           | `<…>`               |                                    |
+| Persistence          | `<…>`               |                                    |
+| Logging              | `<…>`               | `<the banned debug-output calls>`  |
+| Testing              | `<…>`               |                                    |
+| Formatting / linting | `<…>`               |                                    |
 
 ---
 
@@ -50,13 +50,13 @@
 
 All five variables MUST be defined — every skill and agent dereferences them. Route them through one declared entry point (package scripts, Makefile, …) that is the single source of truth; never invoke the underlying tools directly from commits, CI, or agent scripts.
 
-| Variable      | Command                                                    |
-| ------------- | ---------------------------------------------------------- |
-| `$FORMAT_CMD` | `<…>`                                                      |
-| `$LINT_CMD`   | `<…>`                                                      |
-| `$BUILD_CMD`  | `<…>`                                                      |
-| `$TEST_CMD`   | `<…>`                                                      |
-| `$VERIFY_CMD` | `<one command: format-check → lint/type/security checks → build → required tests>`       |
+| Variable      | Command                                                                            |
+| ------------- | ---------------------------------------------------------------------------------- |
+| `$FORMAT_CMD` | `<…>`                                                                              |
+| `$LINT_CMD`   | `<…>`                                                                              |
+| `$BUILD_CMD`  | `<…>`                                                                              |
+| `$TEST_CMD`   | `<…>`                                                                              |
+| `$VERIFY_CMD` | `<one command: format-check → lint/type/security checks → build → required tests>` |
 
 Name additional checks below. `DOCTRINE.md` P7 requires the dependency freshness check.
 
@@ -86,8 +86,8 @@ Name additional checks below. `DOCTRINE.md` P7 requires the dependency freshness
 
 Prefer supported platform capabilities. Record each added dependency's need, provenance, maintenance, licence, transitive cost, and replacement cost in the PR. Record significant decisions in `docs/adr/`. The lead can approve routine libraries within project authority; new providers, external data transfers, costs, or material lock-in need owner approval.
 
-| Dependency | Version | Why it earns its place | Approver | Date |
-| ---------- | ------- | ---------------------- | -------- | ---- |
+| Dependency | Version | Why it earns its place | Approver | Date  |
+| ---------- | ------- | ---------------------- | -------- | ----- |
 | `<…>`      | `<…>`   | `<…>`                  | `<…>`    | `<…>` |
 
 ---
@@ -131,9 +131,9 @@ Apply P5 according to meaning. Calendar values are not necessarily instants.
 
 ---
 
-## 11. Design guidelines & UX thresholds *(optional — UI-facing projects)*
+## 11. Design guidelines & UX thresholds _(optional — UI-facing projects)_
 
-*Declare the platform's design authority and the documented numeric thresholds `ux-guardian` must exercise at the threshold. Remove this section for projects with no user-facing surface.*
+_Declare the platform's design authority and the documented numeric thresholds `ux-guardian` must exercise at the threshold. Remove this section for projects with no user-facing surface._
 
 - **Design authority:** `<the platform's design guidelines, e.g. Apple HIG, Material Design, WCAG>`
 - **Documented thresholds to exercise at the threshold:** `<component → threshold, e.g. "dialog option count → verified platform limit, source and test case">`
@@ -162,8 +162,8 @@ owner. Record significant design decisions separately in concise `docs/adr/`
 files. Read them when relevant; keep backlog and change history in GitHub.
 
 | Rule / scope | Reason and consequences | Compensating evidence | Responsible lead / reviewer / approval | Expiry or reassessment |
-| --- | --- | --- | --- | --- |
-| _(none)_ | — | — | — | — |
+| ------------ | ----------------------- | --------------------- | -------------------------------------- | ---------------------- |
+| _(none)_     | —                       | —                     | —                                      | —                      |
 
 ---
 
@@ -195,15 +195,15 @@ For §14–15, a release, monitoring, migration, or recovery item may be
 label does not waive these duties as a group. An unsupported tool is a gap,
 not a reason to claim the requirement does not apply.
 
-| Doctrine / applicability | Required evidence | Environment / gap to resolve |
-| --- | --- | --- |
-| P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
-| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Required locally; existing required CI also passes; declare checks that rely on review |
-| P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
-| P3, P7: security and dependencies | `<pinned secret, dependency-vulnerability, and static-security scanners, commands, and scope>` | Local; existing required CI also passes; document unsupported checks and compensating evidence |
-| P5–P7: interfaces and critical journeys | `<integration, contract, UI/accessibility, performance, migration and recovery checks that apply>` | `<local test service, simulator or hardware; existing required CI; pending owner checks>` |
-| P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
-| P8–P9: material changes | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations | Separate reviewer context; no read-all-ADR prerequisite |
+| Doctrine / applicability                | Required evidence                                                                                                                                                    | Environment / gap to resolve                                                                                                    |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| P1, P6: every task                      | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR                                                                 | Lead prepares; independent review for material changes                                                                          |
+| P2–P5: changed code and dependencies    | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale                                                    | Required locally; existing required CI also passes; declare checks that rely on review                                          |
+| P5–P6: changed data boundaries          | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
+| P3, P7: security and dependencies       | `<pinned secret, dependency-vulnerability, and static-security scanners, commands, and scope>`                                                                       | Local; existing required CI also passes; document unsupported checks and compensating evidence                                  |
+| P5–P7: interfaces and critical journeys | `<integration, contract, UI/accessibility, performance, migration and recovery checks that apply>`                                                                   | `<local test service, simulator or hardware; existing required CI; pending owner checks>`                                       |
+| P7: release and recovery                | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15)                             | Target environment; a successful build does not prove release success                                                           |
+| P8–P9: material changes                 | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations                                                      | Separate reviewer context; no read-all-ADR prerequisite                                                                         |
 
 ### Example check configuration
 
@@ -213,17 +213,17 @@ conditions. Record required checks in the §3 entry points; optional example
 tools need the normal dependency assessment. Do not lower an adopted gate
 merely to make a change pass. Existing §13 exception rules still apply.
 
-| Check | Tool | Threshold / acceptance condition | Principle |
-| --- | --- | --- | --- |
-| Formatting | `<formatter check mode>` | `<no differences>` | P3, P8 |
-| Types | `<strict compiler/type checker>` | `<no errors or new warnings; identify untyped boundaries>` | P3 |
-| Lint | `<selected ecosystem rules>` | `<no rule violations>` | P3 |
-| Complexity | `<complexity analyser or explicit review procedure>` | `<justified metric and limit; scope and exclusions>` | P3, P4 |
-| Dead code | `<unused-code analyser>` | `<no unexplained findings; dynamic entry points checked>` | P3, P7 |
-| Dependency directions | `<module visibility/import checker>` | `<no forbidden edges; list unenforced boundaries>` | P4 |
-| Secrets | `<secret scanner and scan scope>` | `<no confirmed exposed secrets>` | P3, P7 |
-| Vulnerabilities | `<resolved-dependency scanner/advisory procedure>` | `<declared risk threshold; all findings triaged>` | P2, P7 |
-| Tests | `<unit/integration/critical-flow tools>` | `<all required cases pass locally; criteria and challenge cases covered>` | P5, P6 |
+| Check                 | Tool                                                 | Threshold / acceptance condition                                          | Principle |
+| --------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------- | --------- |
+| Formatting            | `<formatter check mode>`                             | `<no differences>`                                                        | P3, P8    |
+| Types                 | `<strict compiler/type checker>`                     | `<no errors or new warnings; identify untyped boundaries>`                | P3        |
+| Lint                  | `<selected ecosystem rules>`                         | `<no rule violations>`                                                    | P3        |
+| Complexity            | `<complexity analyser or explicit review procedure>` | `<justified metric and limit; scope and exclusions>`                      | P3, P4    |
+| Dead code             | `<unused-code analyser>`                             | `<no unexplained findings; dynamic entry points checked>`                 | P3, P7    |
+| Dependency directions | `<module visibility/import checker>`                 | `<no forbidden edges; list unenforced boundaries>`                        | P4        |
+| Secrets               | `<secret scanner and scan scope>`                    | `<no confirmed exposed secrets>`                                          | P3, P7    |
+| Vulnerabilities       | `<resolved-dependency scanner/advisory procedure>`   | `<declared risk threshold; all findings triaged>`                         | P2, P7    |
+| Tests                 | `<unit/integration/critical-flow tools>`             | `<all required cases pass locally; criteria and challenge cases covered>` | P5, P6    |
 
 For every unsupported tool or platform, name the enforcement gap and credible
 replacement evidence, such as independent boundary review and targeted

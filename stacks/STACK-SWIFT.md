@@ -37,19 +37,19 @@ authority beyond the adopted project contract.
 
 | Concern             | Framework / library                                                           | Notes                                                                                          |
 | ------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| UI / view layer     | SwiftUI                                                                       | AppKit (macOS) or UIKit (iOS) adapters when needed                                                                |
-| Design language     | Platform system components and materials                    | Do not reimplement chrome by hand                                                              |
+| UI / view layer     | SwiftUI                                                                       | AppKit (macOS) or UIKit (iOS) adapters when needed                                             |
+| Design language     | Platform system components and materials                                      | Do not reimplement chrome by hand                                                              |
 | State / observation | Observation (`@Observable`, `@State`, `@Bindable`, `@Environment`)            | No `ObservableObject` / `@StateObject` / `@ObservedObject` / `@EnvironmentObject` for new code |
 | Concurrency         | async / await, `AsyncSequence`, actors, structured concurrency                |                                                                                                |
-| Navigation          | `NavigationStack`, `NavigationSplitView`, windows and sheets as supported               | No `NavigationView`                                                                            |
+| Navigation          | `NavigationStack`, `NavigationSplitView`, windows and sheets as supported     | No `NavigationView`                                                                            |
 | Networking          | `URLSession` async / await                                                    |                                                                                                |
-| Persistence         | Platform storage selected for the data                                      | UserDefaults for preferences; SwiftData/files when justified                                                  |
+| Persistence         | Platform storage selected for the data                                        | UserDefaults for preferences; SwiftData/files when justified                                   |
 | Ephemeral cache     | `NSCache` wrapped in an actor                                                 |                                                                                                |
 | Localization        | String Catalogs (`.xcstrings`) + `LocalizedStringResource`                    | No `.strings`                                                                                  |
 | System integration  | WidgetKit, TipKit; ActivityKit where supported                                | If the product needs them                                                                      |
-| Haptics             | Platform haptics; `UIImpactFeedbackGenerator` on iOS                                    | If the product needs them                                                                      |
+| Haptics             | Platform haptics; `UIImpactFeedbackGenerator` on iOS                          | If the product needs them                                                                      |
 | Logging             | `os.Logger` per subsystem / category; `OSSignposter` for hot paths            | No `print()` in shipped code                                                                   |
-| Telemetry           | MetricKit where supported                                                     | Declare availability and collection/retention needs                                                                       |
+| Telemetry           | MetricKit where supported                                                     | Declare availability and collection/retention needs                                            |
 | Testing             | Swift Testing (`@Test`, `@Suite`, `#expect`); XCTest / XCUI for end-to-end UI |                                                                                                |
 | Formatting          | `swift-format` with repo `.swift-format`                                      | No SwiftLint                                                                                   |
 | Build               | Xcode 26+, Swift 6 language mode, complete strict concurrency                 |                                                                                                |
@@ -58,12 +58,12 @@ authority beyond the adopted project contract.
 
 ## 3. Build & verify commands
 
-| Variable      | Command                                     |
-| ------------- | ------------------------------------------- |
-| `$FORMAT_CMD` | `make format`                               |
-| `$LINT_CMD`   | `make lint`                                 |
-| `$BUILD_CMD`  | `make build`                                |
-| `$TEST_CMD`   | `make test`                                 |
+| Variable      | Command                                                                                |
+| ------------- | -------------------------------------------------------------------------------------- |
+| `$FORMAT_CMD` | `make format`                                                                          |
+| `$LINT_CMD`   | `make lint`                                                                            |
+| `$BUILD_CMD`  | `make build`                                                                           |
+| `$TEST_CMD`   | `make test`                                                                            |
 | `$VERIFY_CMD` | `make test-all` (format-check → lint/build → required unit/UI tests → security checks) |
 
 Implement these targets in the adopting project's `Makefile`; this profile does not supply one. Set schemes and destinations for all supported targets. `$VERIFY_CMD` runs all applicable §14 checks. Run required tests and verification locally. Existing required CI must also pass. Record hardware gaps; missing required local evidence blocks merge. Invoke the build tools through these targets.
@@ -180,8 +180,8 @@ owner. Record significant design decisions separately in concise `docs/adr/`
 files. Read them when relevant; keep backlog and change history in GitHub.
 
 | Rule / scope | Reason and consequences | Compensating evidence | Responsible lead / reviewer / approval | Expiry or reassessment |
-| --- | --- | --- | --- | --- |
-| _(none)_ | — | — | — | — |
+| ------------ | ----------------------- | --------------------- | -------------------------------------- | ---------------------- |
+| _(none)_     | —                       | —                     | —                                      | —                      |
 
 ---
 
@@ -213,15 +213,15 @@ For §14–15, a release, monitoring, migration, or recovery item may be
 label does not waive these duties as a group. An unsupported tool is a gap,
 not a reason to claim the requirement does not apply.
 
-| Doctrine / applicability | Required evidence | Environment / gap to resolve |
-| --- | --- | --- |
-| P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
-| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Required locally; existing required CI also passes; declare checks that rely on review |
-| P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
-| P3, P7: security and dependencies | Gitleaks, dependency vulnerability review/scan for `Package.resolved` when present, applicable static-security analysis, entitlement and privacy-manifest checks | Wire supported pinned tools into `make test-all`; record scanner coverage gaps and independent security review |
-| P5–P7: app journeys | Swift Testing, required XCUI flows/accessibility audits, migration/recovery and cancellation tests for each supported platform | macOS runner and declared simulators; hardware only for behaviour that these cannot verify, with exact device/OS results |
-| P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
-| P8–P9: material changes | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations | Separate reviewer context; no read-all-ADR prerequisite |
+| Doctrine / applicability             | Required evidence                                                                                                                                                    | Environment / gap to resolve                                                                                                    |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| P1, P6: every task                   | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR                                                                 | Lead prepares; independent review for material changes                                                                          |
+| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale                                                    | Required locally; existing required CI also passes; declare checks that rely on review                                          |
+| P5–P6: changed data boundaries       | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
+| P3, P7: security and dependencies    | Gitleaks, dependency vulnerability review/scan for `Package.resolved` when present, applicable static-security analysis, entitlement and privacy-manifest checks     | Wire supported pinned tools into `make test-all`; record scanner coverage gaps and independent security review                  |
+| P5–P7: app journeys                  | Swift Testing, required XCUI flows/accessibility audits, migration/recovery and cancellation tests for each supported platform                                       | macOS runner and declared simulators; hardware only for behaviour that these cannot verify, with exact device/OS results        |
+| P7: release and recovery             | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15)                             | Target environment; a successful build does not prove release success                                                           |
+| P8–P9: material changes              | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations                                                      | Separate reviewer context; no read-all-ADR prerequisite                                                                         |
 
 ### Example check configuration
 
@@ -231,17 +231,17 @@ conditions. Record required checks in the §3 entry points; optional example
 tools need the normal dependency assessment. Do not lower an adopted gate
 merely to make a change pass. Existing §13 exception rules still apply.
 
-| Check | Tool | Threshold / acceptance condition | Principle |
-| --- | --- | --- | --- |
-| Formatting | [swift-format lint --strict](https://github.com/swiftlang/swift-format#linting) | No format diagnostics | P3, P8 |
-| Types and concurrency | Swift compiler through Xcode build targets | No errors or new warnings with §1 strict settings | P3, P5 |
-| Lint | swift-format rules in the project configuration | No violations of selected style rules | P3 |
-| Complexity | [Lizard](https://github.com/terryyin/lizard) if selected | Example: function cyclomatic complexity ≤ 10; review parser gaps | P3, P4 |
-| Dead code | [Periphery](https://github.com/peripheryapp/periphery) if selected | No unexplained unused-code findings across supported configurations | P3, P7 |
-| Dependency directions | Swift module visibility, target graph and import review | No forbidden target/import edges; internal rules need explicit review or a project check | P4 |
-| Secrets | Gitleaks over declared source/history scope | No confirmed exposed secrets | P3, P7 |
-| Vulnerabilities | Package.resolved inventory, upstream advisories and a compatible scanner if available | All packages assessed; no findings that violate declared security acceptance | P2, P7 |
-| Tests | Swift Testing and required XCTest/XCUI plans | All required cases pass locally on declared macOS/simulator/device targets | P5, P6 |
+| Check                 | Tool                                                                                  | Threshold / acceptance condition                                                         | Principle |
+| --------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | --------- |
+| Formatting            | [swift-format lint --strict](https://github.com/swiftlang/swift-format#linting)       | No format diagnostics                                                                    | P3, P8    |
+| Types and concurrency | Swift compiler through Xcode build targets                                            | No errors or new warnings with §1 strict settings                                        | P3, P5    |
+| Lint                  | swift-format rules in the project configuration                                       | No violations of selected style rules                                                    | P3        |
+| Complexity            | [Lizard](https://github.com/terryyin/lizard) if selected                              | Example: function cyclomatic complexity ≤ 10; review parser gaps                         | P3, P4    |
+| Dead code             | [Periphery](https://github.com/peripheryapp/periphery) if selected                    | No unexplained unused-code findings across supported configurations                      | P3, P7    |
+| Dependency directions | Swift module visibility, target graph and import review                               | No forbidden target/import edges; internal rules need explicit review or a project check | P4        |
+| Secrets               | Gitleaks over declared source/history scope                                           | No confirmed exposed secrets                                                             | P3, P7    |
+| Vulnerabilities       | Package.resolved inventory, upstream advisories and a compatible scanner if available | All packages assessed; no findings that violate declared security acceptance             | P2, P7    |
+| Tests                 | Swift Testing and required XCTest/XCUI plans                                          | All required cases pass locally on declared macOS/simulator/device targets               | P5, P6    |
 
 Periphery can miss dynamic or Objective-C references and synthesized usage.
 Validate findings against entry points and supported build configurations.

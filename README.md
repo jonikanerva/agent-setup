@@ -111,6 +111,7 @@ bin/link-global.sh
 
 Select one host with `--host claude` or `--host codex`.
 The command links:
+
 - Claude roles to `~/.claude/agents/` and skills to `~/.claude/skills/`.
 - Codex roles to `~/.codex/agents/` and skills to `~/.agents/skills/`.
 
@@ -134,6 +135,7 @@ files. Then commit them. Run the command in the project directory:
 You can also give the project directory as an argument. Select one host with
 `--host claude` or `--host codex`. The command copies the same set that the
 linker links, to the same relative paths in the project:
+
 - Claude roles to `.claude/agents/` and skills to `.claude/skills/`.
 - Codex roles to `.codex/agents/` and skills to `.agents/skills/`.
 
@@ -228,14 +230,14 @@ settings as part of a delivery task.
 
 ## Stack profiles
 
-| Profile | Intended use |
-| --- | --- |
-| `STACK-TS.md` | TypeScript web application and backend |
-| `STACK-RUST.md` | Rust backend and TypeScript SPA; optional PostgreSQL persistence |
-| `STACK-EFFECT.md` | Effect-based stateless web application |
-| `STACK-SWIFT.md` | Native iOS and macOS applications |
-| `STACK-PY.md` | Home Assistant custom integrations |
-| `STACK-TEMPLATE.md` | A project without a matching example |
+| Profile             | Intended use                                                     |
+| ------------------- | ---------------------------------------------------------------- |
+| `STACK-TS.md`       | TypeScript web application and backend                           |
+| `STACK-RUST.md`     | Rust backend and TypeScript SPA; optional PostgreSQL persistence |
+| `STACK-EFFECT.md`   | Effect-based stateless web application                           |
+| `STACK-SWIFT.md`    | Native iOS and macOS applications                                |
+| `STACK-PY.md`       | Home Assistant custom integrations                               |
+| `STACK-TEMPLATE.md` | A project without a matching example                             |
 
 Profiles are starting points, not universal product restrictions. Review
 versions and fit at adoption. Concrete technology belongs only in `STACK.md`.

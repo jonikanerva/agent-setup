@@ -56,12 +56,12 @@ authority beyond the adopted project contract.
 
 ## 3. Build & verify commands
 
-| Variable      | Command                                             |
-| ------------- | --------------------------------------------------- |
-| `$FORMAT_CMD` | `pnpm format`                                       |
-| `$LINT_CMD`   | `pnpm lint`                                         |
-| `$BUILD_CMD`  | `pnpm build`                                        |
-| `$TEST_CMD`   | `pnpm test`                                         |
+| Variable      | Command                                                                             |
+| ------------- | ----------------------------------------------------------------------------------- |
+| `$FORMAT_CMD` | `pnpm format`                                                                       |
+| `$LINT_CMD`   | `pnpm lint`                                                                         |
+| `$BUILD_CMD`  | `pnpm build`                                                                        |
+| `$TEST_CMD`   | `pnpm test`                                                                         |
 | `$VERIFY_CMD` | `pnpm test-all` (format-check → type/lint/security checks → build → required tests) |
 
 Implement these scripts in the adopting project; this profile does not supply `package.json`. Bootstrap with `mise install` (pinned Node/pnpm versions). The `package.json` scripts are the single source of truth. Never invoke `eslint`, `tsc`, `vitest`, or `vite` directly from commits, CI, or agent scripts.
@@ -188,8 +188,8 @@ owner. Record significant design decisions separately in concise `docs/adr/`
 files. Read them when relevant; keep backlog and change history in GitHub.
 
 | Rule / scope | Reason and consequences | Compensating evidence | Responsible lead / reviewer / approval | Expiry or reassessment |
-| --- | --- | --- | --- | --- |
-| _(none)_ | — | — | — | — |
+| ------------ | ----------------------- | --------------------- | -------------------------------------- | ---------------------- |
+| _(none)_     | —                       | —                     | —                                      | —                      |
 
 ---
 
@@ -221,15 +221,15 @@ For §14–15, a release, monitoring, migration, or recovery item may be
 label does not waive these duties as a group. An unsupported tool is a gap,
 not a reason to claim the requirement does not apply.
 
-| Doctrine / applicability | Required evidence | Environment / gap to resolve |
-| --- | --- | --- |
-| P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
-| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Required locally; existing required CI also passes; declare checks that rely on review |
-| P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
-| P3, P7: security and dependencies | Gitleaks for changed files/history; locked-dependency vulnerability scan; supported static-security rules | Wire pinned tools into `pnpm test-all`; name scanner/rules and uncovered surfaces on adoption |
-| P5–P7: API and web journeys | Vitest integration/contract tests; Playwright for critical flows, keyboard and supported accessibility checks; migration/recovery tests when storage changes | Local with representative browser/service; existing required CI also passes; record hardware or external-service gaps |
-| P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
-| P8–P9: material changes | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations | Separate reviewer context; no read-all-ADR prerequisite |
+| Doctrine / applicability             | Required evidence                                                                                                                                                    | Environment / gap to resolve                                                                                                    |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| P1, P6: every task                   | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR                                                                 | Lead prepares; independent review for material changes                                                                          |
+| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale                                                    | Required locally; existing required CI also passes; declare checks that rely on review                                          |
+| P5–P6: changed data boundaries       | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
+| P3, P7: security and dependencies    | Gitleaks for changed files/history; locked-dependency vulnerability scan; supported static-security rules                                                            | Wire pinned tools into `pnpm test-all`; name scanner/rules and uncovered surfaces on adoption                                   |
+| P5–P7: API and web journeys          | Vitest integration/contract tests; Playwright for critical flows, keyboard and supported accessibility checks; migration/recovery tests when storage changes         | Local with representative browser/service; existing required CI also passes; record hardware or external-service gaps           |
+| P7: release and recovery             | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15)                             | Target environment; a successful build does not prove release success                                                           |
+| P8–P9: material changes              | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations                                                      | Separate reviewer context; no read-all-ADR prerequisite                                                                         |
 
 ### Example check configuration
 
@@ -239,17 +239,17 @@ conditions. Record required checks in the §3 entry points; optional example
 tools need the normal dependency assessment. Do not lower an adopted gate
 merely to make a change pass. Existing §13 exception rules still apply.
 
-| Check | Tool | Threshold / acceptance condition | Principle |
-| --- | --- | --- | --- |
-| Formatting | Prettier check mode | No format differences | P3, P8 |
-| Types | TypeScript compiler with §1 strict flags | No type errors or new warnings | P3 |
-| Lint | ESLint with typescript-eslint | No violations of selected rules | P3 |
-| Complexity | [ESLint complexity](https://eslint.org/docs/latest/rules/complexity) | Example: cyclomatic complexity ≤ 10 per function | P3, P4 |
-| Dead code | typescript-eslint unused checks; [Knip](https://knip.dev/) if selected | No unexplained unused symbols, exports, files, or dependencies | P3, P7 |
-| Dependency directions | [ESLint restricted imports](https://eslint.org/docs/latest/rules/no-restricted-imports) | No forbidden edges between API, web, and shared packages | P4 |
-| Secrets | Gitleaks over declared source/history scope | No confirmed exposed secrets | P3, P7 |
-| Vulnerabilities | [pnpm audit](https://pnpm.io/cli/audit) | Example: no unresolved high/critical advisories; triage all findings | P2, P7 |
-| Tests | Vitest; Playwright for required user journeys | All required cases pass locally; challenge material assumptions and transformations | P5, P6 |
+| Check                 | Tool                                                                                    | Threshold / acceptance condition                                                    | Principle |
+| --------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | --------- |
+| Formatting            | Prettier check mode                                                                     | No format differences                                                               | P3, P8    |
+| Types                 | TypeScript compiler with §1 strict flags                                                | No type errors or new warnings                                                      | P3        |
+| Lint                  | ESLint with typescript-eslint                                                           | No violations of selected rules                                                     | P3        |
+| Complexity            | [ESLint complexity](https://eslint.org/docs/latest/rules/complexity)                    | Example: cyclomatic complexity ≤ 10 per function                                    | P3, P4    |
+| Dead code             | typescript-eslint unused checks; [Knip](https://knip.dev/) if selected                  | No unexplained unused symbols, exports, files, or dependencies                      | P3, P7    |
+| Dependency directions | [ESLint restricted imports](https://eslint.org/docs/latest/rules/no-restricted-imports) | No forbidden edges between API, web, and shared packages                            | P4        |
+| Secrets               | Gitleaks over declared source/history scope                                             | No confirmed exposed secrets                                                        | P3, P7    |
+| Vulnerabilities       | [pnpm audit](https://pnpm.io/cli/audit)                                                 | Example: no unresolved high/critical advisories; triage all findings                | P2, P7    |
+| Tests                 | Vitest; Playwright for required user journeys                                           | All required cases pass locally; challenge material assumptions and transformations | P5, P6    |
 
 Knip needs correct entry points. Restricted-import rules do not cover all
 dynamic loading. Record these gaps; inspect affected loading paths and test

@@ -54,9 +54,9 @@ from this definition and the request before implementation.>
 Cover on-device and server storage. State what must never be collected or sent.
 DOCTRINE.md and STACK.md apply this posture to the implementation.>
 
-| Data or capability | Purpose | Storage or recipient | Retention or expiry |
-| --- | --- | --- | --- |
-| <Data or permission> | <Requirement> | <Location or provider> | <Rule> |
+| Data or capability   | Purpose       | Storage or recipient   | Retention or expiry |
+| -------------------- | ------------- | ---------------------- | ------------------- |
+| <Data or permission> | <Requirement> | <Location or provider> | <Rule>              |
 
 - Forbidden data flows: <List>.
 - Telemetry and diagnostics: <None, or exactly what, why, and where>.

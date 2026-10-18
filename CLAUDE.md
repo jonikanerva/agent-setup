@@ -74,6 +74,7 @@ instead of an application VISION.md or STACK.md.
 ## Verification
 
 Before committing:
+
 1. Run bin/check-setup.sh (Bash and Python 3.11+).
 2. Run python3 bin/test-setup.py. It exercises both hosts in temporary
    AGENT_SETUP_HOME directories and checks malformed artifacts.

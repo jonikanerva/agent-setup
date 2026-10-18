@@ -94,7 +94,7 @@ repo/
 | Frontend UI            | React 19 + React DOM                    | Function components only                                               |
 | Frontend build         | Vite                                    | SPA build and dev server                                               |
 | Routing                | TanStack Router                         | Type-safe SPA routing                                                  |
-| SSR escape hatch       | TanStack Start                          | Conditional only; justify in an ADR (see §2.3)                      |
+| SSR escape hatch       | TanStack Start                          | Conditional only; justify in an ADR (see §2.3)                         |
 | Client cache           | TanStack Query                          | Query cache, background refetch, controlled technical persistence      |
 | Styling                | Tailwind CSS v4 via `@tailwindcss/vite` | Utility-first styling with Vite integration                            |
 | Unit/integration tests | Vitest                                  | Pure functions, Effects, Layers, API handlers                          |
@@ -109,6 +109,7 @@ repo/
 
 **Errors are values.** No `throw` in domain logic. Expected failures are tagged errors in the Effect error channel; defects remain defects — do not convert programmer errors into business errors. The shared taxonomy is deliberately small; add a new error type only when the existing ones cannot describe the failure:
 
+<!-- prettier-ignore -->
 ```ts
 type ApiError =
   | ScopeError
@@ -122,6 +123,7 @@ type ApiError =
 
 Every API-facing error MUST provide this descriptor. Error mappings are centralized and tested; public error shapes are part of the API contract; `InternalDefect` maps to a generic public message; `safeMessage` MUST NOT contain PII, raw upstream payloads, secrets, identifiers, or stack traces:
 
+<!-- prettier-ignore -->
 ```ts
 type ErrorDescriptor = {
   readonly _tag: string;
@@ -155,6 +157,7 @@ material transformations with P6 challenge cases beyond supplied examples.
 
 React components SHOULD render typed view models, not raw TanStack Query state:
 
+<!-- prettier-ignore -->
 ```ts
 type RemoteView<A, E> =
   | { readonly _tag: "AwaitingFirstData" }
@@ -179,13 +182,13 @@ Parts of the Effect platform ecosystem move faster than the core `effect` packag
 
 ### 2.5 Testing policy
 
-| Test type         | Tool                           | Required for                                                                 |
-| ----------------- | ------------------------------ | ---------------------------------------------------------------------------- |
-| Unit              | Vitest                         | Pure functions, view-model mapping, simple use cases                         |
-| Integration       | Vitest + Effect Layers         | HttpApi handlers, adapters, cache behaviour                                  |
-| Property-based    | fast-check                     | Invariants, schema narrowing, transformations, status mapping                |
-| Contract          | Vitest snapshots or equivalent | OpenAPI output, public DTOs, public error shapes                             |
-| Browser smoke/e2e | Playwright                     | Route rendering, loading/error/offline/degraded states, critical user paths  |
+| Test type         | Tool                           | Required for                                                                |
+| ----------------- | ------------------------------ | --------------------------------------------------------------------------- |
+| Unit              | Vitest                         | Pure functions, view-model mapping, simple use cases                        |
+| Integration       | Vitest + Effect Layers         | HttpApi handlers, adapters, cache behaviour                                 |
+| Property-based    | fast-check                     | Invariants, schema narrowing, transformations, status mapping               |
+| Contract          | Vitest snapshots or equivalent | OpenAPI output, public DTOs, public error shapes                            |
+| Browser smoke/e2e | Playwright                     | Route rendering, loading/error/offline/degraded states, critical user paths |
 
 Property-based tests are required for schema-narrowing rules, scope filtering, cache TTL and key behaviour, error/status mapping, invariant-preserving transformations, route/search-parameter parsing, and any logic where examples alone are likely to miss edge cases. Time-dependent behaviour (TTL, retries, timeouts, refresh windows) MUST be verified deterministically with Effect `TestClock` — no wall-clock waits or arbitrary sleeps.
 
@@ -195,12 +198,12 @@ Property-based tests are required for schema-narrowing rules, scope filtering, c
 
 Bootstrap the environment with `mise install` (provisions the pinned Node/pnpm versions — §1) before running any command below. The `package.json` scripts are the single source of truth. Do not invoke `tsc`, `eslint`, `vitest`, `playwright`, or `vite` directly from commits, CI, or agent scripts unless a script delegates to them.
 
-| Variable | Command |
-| --- | --- |
+| Variable      | Command       |
+| ------------- | ------------- |
 | `$FORMAT_CMD` | `pnpm format` |
-| `$LINT_CMD` | `pnpm lint` |
-| `$BUILD_CMD` | `pnpm build` |
-| `$TEST_CMD` | `pnpm test` |
+| `$LINT_CMD`   | `pnpm lint`   |
+| `$BUILD_CMD`  | `pnpm build`  |
+| `$TEST_CMD`   | `pnpm test`   |
 | `$VERIFY_CMD` | `pnpm verify` |
 
 Implement these script semantics in the adopting project:
@@ -351,8 +354,8 @@ owner. Record significant design decisions separately in concise `docs/adr/`
 files. Read them when relevant; keep backlog and change history in GitHub.
 
 | Rule / scope | Reason and consequences | Compensating evidence | Responsible lead / reviewer / approval | Expiry or reassessment |
-| --- | --- | --- | --- | --- |
-| _(none)_ | — | — | — | — |
+| ------------ | ----------------------- | --------------------- | -------------------------------------- | ---------------------- |
+| _(none)_     | —                       | —                     | —                                      | —                      |
 
 ---
 
@@ -384,15 +387,15 @@ For §14–15, a release, monitoring, migration, or recovery item may be
 label does not waive these duties as a group. An unsupported tool is a gap,
 not a reason to claim the requirement does not apply.
 
-| Doctrine / applicability | Required evidence | Environment / gap to resolve |
-| --- | --- | --- |
-| P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
-| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Required locally; existing required CI also passes; declare checks that rely on review |
-| P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
-| P3, P7: security and dependencies | Gitleaks for changed files/history; locked-dependency vulnerability scan; supported static-security rules | Wire pinned tools into `pnpm verify`; name scanner/rules and uncovered surfaces on adoption |
-| P4–P6: schemas, API and SPA | Import-boundary lint, applicable §2.5 unit/property/contract tests, Playwright critical flows and supported accessibility checks | Full local `pnpm verify`, including browser dependencies; `verify:quick` is insufficient |
-| P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
-| P8–P9: material changes | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations | Separate reviewer context; no read-all-ADR prerequisite |
+| Doctrine / applicability             | Required evidence                                                                                                                                                    | Environment / gap to resolve                                                                                                    |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| P1, P6: every task                   | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR                                                                 | Lead prepares; independent review for material changes                                                                          |
+| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale                                                    | Required locally; existing required CI also passes; declare checks that rely on review                                          |
+| P5–P6: changed data boundaries       | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
+| P3, P7: security and dependencies    | Gitleaks for changed files/history; locked-dependency vulnerability scan; supported static-security rules                                                            | Wire pinned tools into `pnpm verify`; name scanner/rules and uncovered surfaces on adoption                                     |
+| P4–P6: schemas, API and SPA          | Import-boundary lint, applicable §2.5 unit/property/contract tests, Playwright critical flows and supported accessibility checks                                     | Full local `pnpm verify`, including browser dependencies; `verify:quick` is insufficient                                        |
+| P7: release and recovery             | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15)                             | Target environment; a successful build does not prove release success                                                           |
+| P8–P9: material changes              | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations                                                      | Separate reviewer context; no read-all-ADR prerequisite                                                                         |
 
 ### Example check configuration
 
@@ -402,17 +405,17 @@ conditions. Record required checks in the §3 entry points; optional example
 tools need the normal dependency assessment. Do not lower an adopted gate
 merely to make a change pass. Existing §13 exception rules still apply.
 
-| Check | Tool | Threshold / acceptance condition | Principle |
-| --- | --- | --- | --- |
-| Formatting | Prettier check mode | No format differences | P3, P8 |
-| Types | TypeScript compiler with §1 strict flags | No type errors or new warnings | P3 |
-| Lint | ESLint with typescript-eslint | No unsafe types or violations of selected Effect boundary rules | P3, P5 |
-| Complexity | [ESLint complexity](https://eslint.org/docs/latest/rules/complexity) | Example: cyclomatic complexity ≤ 10 per function | P3, P4 |
-| Dead code | typescript-eslint unused checks; [Knip](https://knip.dev/) if selected | No unexplained unused symbols, exports, files, or dependencies | P3, P7 |
-| Dependency directions | [ESLint restricted imports](https://eslint.org/docs/latest/rules/no-restricted-imports) | No forbidden §0 package imports | P4 |
-| Secrets | Gitleaks over declared source/history scope | No confirmed exposed secrets | P3, P7 |
-| Vulnerabilities | [pnpm audit](https://pnpm.io/cli/audit) | Example: no unresolved high/critical advisories; triage all findings | P2, P7 |
-| Tests | Vitest, fast-check, Effect TestClock, Playwright | All required §2.5 cases pass locally; include schema meaning, containment, contract and critical-flow cases | P5, P6 |
+| Check                 | Tool                                                                                    | Threshold / acceptance condition                                                                            | Principle |
+| --------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------- |
+| Formatting            | Prettier check mode                                                                     | No format differences                                                                                       | P3, P8    |
+| Types                 | TypeScript compiler with §1 strict flags                                                | No type errors or new warnings                                                                              | P3        |
+| Lint                  | ESLint with typescript-eslint                                                           | No unsafe types or violations of selected Effect boundary rules                                             | P3, P5    |
+| Complexity            | [ESLint complexity](https://eslint.org/docs/latest/rules/complexity)                    | Example: cyclomatic complexity ≤ 10 per function                                                            | P3, P4    |
+| Dead code             | typescript-eslint unused checks; [Knip](https://knip.dev/) if selected                  | No unexplained unused symbols, exports, files, or dependencies                                              | P3, P7    |
+| Dependency directions | [ESLint restricted imports](https://eslint.org/docs/latest/rules/no-restricted-imports) | No forbidden §0 package imports                                                                             | P4        |
+| Secrets               | Gitleaks over declared source/history scope                                             | No confirmed exposed secrets                                                                                | P3, P7    |
+| Vulnerabilities       | [pnpm audit](https://pnpm.io/cli/audit)                                                 | Example: no unresolved high/critical advisories; triage all findings                                        | P2, P7    |
+| Tests                 | Vitest, fast-check, Effect TestClock, Playwright                                        | All required §2.5 cases pass locally; include schema meaning, containment, contract and critical-flow cases | P5, P6    |
 
 Knip needs the runtime and generated-client entry points. Restricted-import
 rules do not cover every dynamic import or service wiring error. Record the
