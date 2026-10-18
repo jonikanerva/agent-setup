@@ -138,14 +138,14 @@ done
 
 # Check every destination before the first write. A symlinked directory, for
 # example .claude -> ~/.claude, can lead outside the project; refuse it.
-# Only the owning entry itself can be a symlink, because it is replaced.
+# Only the owning entry or the file itself can be a symlink; it is replaced.
 check_path() {
   local relative="$1" entry="$2" current="$TARGET" part
   local IFS=/
   for part in $relative; do
     current="$current/$part"
     if [ -L "$current" ]; then
-      [ "$current" = "$TARGET/$entry" ] && return 0
+      [ "$current" = "$TARGET/$entry" ] || [ "$current" = "$TARGET/$relative" ] && return 0
       echo "error: refusing to write through a symlink: ${current#"$TARGET"/}" >&2
       exit 1
     fi
@@ -162,19 +162,23 @@ check_path() {
 }
 
 # Do not overwrite content that Git cannot restore without --force: a file
-# with uncommitted changes, or an untracked or ignored file.
+# with uncommitted changes, or an untracked or ignored file. If git status
+# fails, stop: an unknown state must not allow an overwrite.
 blocked=()
 i=0
 while [ "$i" -lt "${#FILE_DSTS[@]}" ]; do
   relative="${FILE_DSTS[$i]}"
   check_path "$relative" "${ENTRIES[$i]}"
   dst="$TARGET/$relative"
-  # A symlinked entry is replaced, and its target does not change.
-  if [ ! -L "$TARGET/${ENTRIES[$i]}" ] && [ -f "$dst" ] && ! cmp -s "${FILE_SRCS[$i]}" "$dst" &&
-     [ -n "$(git -C "$TARGET" status --porcelain --ignored --untracked-files=all -- "$relative")" ]; then
-    blocked+=("$relative")
-  fi
   i=$((i + 1))
+  # A symlink is replaced, and its target does not change.
+  [ ! -L "$TARGET/${ENTRIES[$((i - 1))]}" ] && [ ! -L "$dst" ] && [ -f "$dst" ] || continue
+  cmp -s "${FILE_SRCS[$((i - 1))]}" "$dst" && continue
+  state="$(git -C "$TARGET" status --porcelain --ignored --untracked-files=all -- "$relative")" || {
+    echo "error: git status failed in $TARGET; no files were changed" >&2
+    exit 1
+  }
+  [ -z "$state" ] || blocked+=("$relative")
 done
 if [ "${#blocked[@]}" -gt 0 ] && [ "$FORCE" -eq 0 ]; then
   echo "error: Git cannot restore these files (uncommitted, untracked, or ignored)." >&2
@@ -194,6 +198,7 @@ while [ "$i" -lt "${#FILE_DSTS[@]}" ]; do
   i=$((i + 1))
   # Remove a symlink first so that cp never writes through it.
   [ -L "$entry" ] && rm "$entry"
+  [ -L "$dst" ] && rm "$dst"
   mkdir -p "$(dirname "$dst")"
   if [ -f "$dst" ] && cmp -s "$src" "$dst"; then
     unchanged=$((unchanged + 1))
@@ -216,10 +221,18 @@ for dest_dir in "${DEST_DIRS[@]}"; do
     done
     [ "$owned" -eq 1 ] || echo "kept (not from agent-setup): $relative"
   done
-  if git -C "$TARGET" check-ignore -q "$dest_dir/" 2>/dev/null; then
-    echo "warning: Git ignores $dest_dir; cloud checkouts do not receive it"
-  fi
 done
+
+# Warn about ignored copies. Cloud checkouts do not receive ignored files.
+# check-ignore exits 0 when it finds ignored paths, 1 when it finds none.
+status=0
+ignored="$(git -C "$TARGET" check-ignore -- "${FILE_DSTS[@]}")" || status=$?
+if [ "$status" -eq 0 ]; then
+  echo "warning: Git ignores these copied files; cloud checkouts do not receive them:"
+  printf '%s\n' "$ignored" | sed 's/^/  /'
+elif [ "$status" -ne 1 ]; then
+  echo "warning: git check-ignore failed; check ignored files yourself"
+fi
 
 source_rev="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 if [ -n "$(git -C "$REPO_ROOT" status --porcelain -- template 2>/dev/null)" ]; then

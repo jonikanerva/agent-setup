@@ -154,8 +154,9 @@ Other rules apply:
   first, or use `--force` to overwrite it.
 - It refuses to write through a symlinked directory, for example a `.claude`
   link to your home directory.
-- It warns when Git ignores a copied directory. Cloud checkouts do not
-  receive ignored files.
+- It stops when `git status` fails. It does not guess the state of a file.
+- It warns when Git ignores a copied file. Cloud checkouts do not receive
+  ignored files.
 
 The command does not copy settings or project contracts.
 

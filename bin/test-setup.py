@@ -290,6 +290,26 @@ class CopierTests(unittest.TestCase):
                 # An uncommitted copy with the current content does not block a new run.
                 self.run_copier(project)
 
+    def test_git_status_failure_stops_before_writes(self):
+        project = self.project()
+        role = project / ".claude/agents/architect.md"
+        role.parent.mkdir(parents=True)
+        role.write_text("hand-made role\n")
+        (project / ".git/index").write_bytes(b"corrupt index")
+        result = self.run_copier(project, expect=1)
+        self.assertIn("git status failed", result.stderr)
+        self.assertEqual(role.read_text(), "hand-made role\n")
+        self.assertEqual(self.copied(project), {Path("README.md"), Path(".claude/agents/architect.md")})
+
+    def test_ignored_file_pattern_warns(self):
+        project = self.project()
+        (project / ".gitignore").write_text("*.toml\n")
+        self.commit(project)
+        result = self.run_copier(project)
+        self.assertIn("Git ignores these copied files", result.stdout)
+        self.assertIn("  .codex/agents/lead-dev.toml", result.stdout)
+        self.assertNotIn(".claude/agents/lead-dev.md", result.stdout.split("Git ignores", 1)[1])
+
     def test_symlinks_are_replaced_without_writing_through(self):
         project = self.project()
         outside_file = self.base / "outside.md"
@@ -303,9 +323,14 @@ class CopierTests(unittest.TestCase):
         skill.parent.mkdir(parents=True)
         role.symlink_to(outside_file)
         skill.symlink_to(outside_skill, target_is_directory=True)
+        skill_file = project / ".claude/skills/implement/SKILL.md"
+        skill_file.parent.mkdir(parents=True)
+        skill_file.symlink_to(outside_file)
         self.run_copier(project)
         self.assertFalse(role.is_symlink())
         self.assertFalse(skill.is_symlink())
+        self.assertFalse(skill_file.is_symlink())
+        self.assertEqual(skill_file.read_bytes(), (ROOT / "template/.claude/skills/implement/SKILL.md").read_bytes())
         self.assertEqual(role.read_bytes(), (ROOT / "template/.claude/agents/architect.md").read_bytes())
         self.assertEqual(outside_file.read_text(), "outside\n")
         self.assertEqual([path.name for path in outside_skill.iterdir()], ["SKILL.md"])
