@@ -88,7 +88,7 @@ template/
   .agents/skills/       # Codex workflows
   .github/pull_request_template.md
 stacks/                # Concrete example profiles
-bin/                   # Linking and validation; no artifact generation
+bin/                   # Linking, copying, and validation; no artifact generation
 ```
 
 ## Requirements
@@ -119,6 +119,35 @@ It does not install user settings or project contracts. The optional
 `template/.claude/settings.json` contains reference permissions and hooks;
 merge needed controls into existing settings yourself. Native permissions
 and repository protections still apply. A policy document cannot bypass them.
+
+## Copy roles and workflows into a project
+
+Some agents cannot read your home directory, for example an agent that works
+in a cloud checkout. Such an agent does not see the global links. For these
+projects, copy the roles and workflows into the project repository as real
+files. Then commit them. Run the command in the project directory:
+
+```sh
+/path/to/agent-setup/bin/copy-project.sh
+```
+
+You can also give the project directory as an argument. Select one host with
+`--host claude` or `--host codex`. The command copies the same set that the
+linker links, to the same relative paths in the project:
+- Claude roles to `.claude/agents/` and skills to `.claude/skills/`.
+- Codex roles to `.codex/agents/` and skills to `.agents/skills/`.
+
+The command lists each file that it will create or overwrite. Then it asks
+for confirmation. Files that are already up to date are not listed. Use
+`--yes` to skip the question. You are responsible for local changes: an
+overwritten file loses its local content.
+
+To update the copies, pull this repository and run the command again.
+The command does not delete files. Remove a retired role or skill yourself.
+It replaces a symlink at a copied path with a real file and does not change
+the symlink target. It does not copy settings or project contracts, and it
+does not commit. The output shows the agent-setup commit for your commit
+message.
 
 ## Configure a project
 
@@ -190,6 +219,9 @@ Pruning removes only dead links whose target ownership can be established
 inside this repository. It retains links with unresolvable parent paths and
 links that escape through parent traversal or a symlinked directory.
 
+Copied roles and workflows do not update automatically. Run
+`bin/copy-project.sh` again in the project and commit the changes.
+
 Copied project contracts do not update automatically. To update a project,
 review the changes and copy the updated contracts. Do not silently copy files or change live user
 settings as part of a delivery task.
@@ -238,7 +270,8 @@ A profile file name must match `STACK-<NAME>.md`. A profile must contain
 sections 0–15 and one row for each of the five commands. The profile table
 in this README must list exactly the files in `stacks/`. The regression
 suite tests malformed artifacts and isolated linking for both hosts,
-including safe pruning.
+including safe pruning. It also tests project copying in temporary
+directories.
 Tests use a temporary `AGENT_SETUP_HOME`; they do not alter live links.
 
 Inspect the diff and keep task-specific evaluation inputs and results in the

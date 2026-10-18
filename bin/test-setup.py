@@ -171,6 +171,127 @@ class LinkerTests(unittest.TestCase):
         self.assertTrue(unknown.is_symlink())
 
 
+def source_files(host):
+    """Map each copied file path in a project to its source file."""
+    result = {}
+    for relative, source in destinations(host).items():
+        if source.is_dir():
+            for path in source.rglob("*"):
+                if path.is_file() and not path.name.startswith("."):
+                    result[relative / path.relative_to(source)] = path
+        else:
+            result[relative] = source
+    return result
+
+
+class CopierTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="agent-setup-copy-")
+        self.addCleanup(self.temp.cleanup)
+        self.base = Path(self.temp.name)
+
+    def project(self, name="project"):
+        project = self.base / name
+        project.mkdir()
+        (project / "README.md").write_text("project\n")
+        return project
+
+    def run_copier(self, *args, answer=None, cwd=None, expect=0):
+        command = ["bash", str(ROOT / "bin/copy-project.sh"), *map(str, args)]
+        result = subprocess.run(command, input=answer, cwd=cwd, capture_output=True,
+                                text=True, timeout=20)
+        self.assertEqual(result.returncode, expect, result.stderr + result.stdout)
+        return result
+
+    def files(self, project):
+        return {path.relative_to(project) for path in project.rglob("*") if path.is_file()}
+
+    def test_both_hosts_selection_and_idempotence(self):
+        for host in ("all", "claude", "codex"):
+            with self.subTest(host=host):
+                project = self.project(host)
+                expected = source_files(host)
+                self.run_copier("--host", host, "--yes", project)
+                self.assertEqual(self.files(project), set(expected) | {Path("README.md")})
+                for relative, source in expected.items():
+                    path = project / relative
+                    self.assertFalse(path.is_symlink(), str(path))
+                    self.assertEqual(path.read_bytes(), source.read_bytes())
+                second = self.run_copier("--host", host, project)
+                self.assertIn(f"Nothing to copy: {len(expected)} files are up to date", second.stdout)
+
+    def test_confirmation_lists_files_and_controls_the_copy(self):
+        project = self.project()
+        role = project / ".claude/agents/architect.md"
+        role.parent.mkdir(parents=True)
+        role.write_text("local role\n")
+        own_role = project / ".claude/agents/project-own.md"
+        own_role.write_text("keep role\n")
+        for answer in ("n\n", "", "maybe\n"):
+            with self.subTest(answer=answer):
+                result = self.run_copier(project, answer=answer, expect=1)
+                self.assertIn("overwrite: .claude/agents/architect.md", result.stdout)
+                self.assertIn("new:       .codex/agents/lead-dev.toml", result.stdout)
+                self.assertIn("Cancelled", result.stdout)
+                self.assertEqual(self.files(project), {Path("README.md"), role.relative_to(project),
+                                                       own_role.relative_to(project)})
+                self.assertEqual(role.read_text(), "local role\n")
+        result = self.run_copier(project, answer="y\n")
+        self.assertIn(f"Done: {len(source_files('all'))} files copied", result.stdout)
+        self.assertEqual(role.read_bytes(), (ROOT / "template/.claude/agents/architect.md").read_bytes())
+        self.assertEqual(own_role.read_text(), "keep role\n")
+
+    def test_only_changed_files_are_listed(self):
+        project = self.project()
+        self.run_copier("--yes", project)
+        role = project / ".codex/agents/lead-dev.toml"
+        role.write_text("old version\n")
+        extra = project / ".claude/skills/implement/notes.md"
+        extra.write_text("keep skill file\n")
+        result = self.run_copier("--yes", project)
+        listed = [line for line in result.stdout.splitlines() if line.startswith(("new:", "overwrite:"))]
+        self.assertEqual(listed, ["overwrite: .codex/agents/lead-dev.toml"])
+        self.assertEqual(role.read_bytes(), (ROOT / "template/.codex/agents/lead-dev.toml").read_bytes())
+        self.assertEqual(extra.read_text(), "keep skill file\n")
+
+    def test_default_target_is_current_directory(self):
+        project = self.project()
+        self.run_copier("--yes", cwd=project)
+        self.assertEqual(self.files(project), set(source_files("all")) | {Path("README.md")})
+
+    def test_symlinks_are_replaced_without_writing_through(self):
+        project = self.project()
+        outside_file = self.base / "outside.md"
+        outside_file.write_text("outside\n")
+        outside_skill = self.base / "outside-skill"
+        outside_skill.mkdir()
+        (outside_skill / "SKILL.md").write_text("outside skill\n")
+        role = project / ".claude/agents/architect.md"
+        skill = project / ".agents/skills/codereview"
+        skill_file = project / ".claude/skills/implement/SKILL.md"
+        for path in (role, skill, skill_file):
+            path.parent.mkdir(parents=True, exist_ok=True)
+        role.symlink_to(outside_file)
+        skill.symlink_to(outside_skill, target_is_directory=True)
+        skill_file.symlink_to(outside_file)
+        self.run_copier("--yes", project)
+        for path in (role, skill, skill_file):
+            self.assertFalse(path.is_symlink(), str(path))
+        self.assertEqual(role.read_bytes(), (ROOT / "template/.claude/agents/architect.md").read_bytes())
+        self.assertEqual(skill_file.read_bytes(), (ROOT / "template/.claude/skills/implement/SKILL.md").read_bytes())
+        self.assertEqual(outside_file.read_text(), "outside\n")
+        self.assertEqual([path.name for path in outside_skill.iterdir()], ["SKILL.md"])
+        self.assertEqual((outside_skill / "SKILL.md").read_text(), "outside skill\n")
+
+    def test_invalid_arguments_fail(self):
+        project = self.project()
+        for args in ((self.base / "missing",), (ROOT,), ("--host", "other", project),
+                     (project, project), ("--unknown",)):
+            with self.subTest(args=args):
+                self.run_copier("--yes", *args, expect=2)
+        self.assertEqual(self.files(project), {Path("README.md")})
+
+
 class FormatTests(unittest.TestCase):
     def test_repository_fixtures_reject_invalid_artifacts(self):
         with tempfile.TemporaryDirectory(prefix="agent-setup-format-") as temporary:
