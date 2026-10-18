@@ -74,24 +74,24 @@ repo/
 
 ## 2. Frameworks
 
-| Concern                | Framework / library                                                              | Notes                                                                                     |
-| ---------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Platform               | Home Assistant Core (integration APIs)                                           | Follow the Integration Quality Scale; do not fight core conventions                       |
-| Concurrency            | `asyncio` — `async`/`await`, `async_add_executor_job` for unavoidable blocking   | Never block the event loop; no bare threads                                               |
-| Polling / data seam    | `DataUpdateCoordinator[T]`                                                        | The single place that fetches + owns typed data; do not roll your own polling loop        |
-| Entities               | `CoordinatorEntity` subclasses per platform                                      | Thin; render coordinator data; expose `available`                                         |
-| Config / options       | Config flow (`ConfigFlow`, `SchemaConfigFlowHandler` where it fits)              | UI-based setup required; no YAML-only config for new integrations                         |
-| Boundary validation    | `voluptuous` (HA's built-in) for config/service schemas                          | Validate every user input and service call payload before use                             |
-| HTTP client            | `aiohttp` via `homeassistant.helpers.aiohttp_client.async_get_clientsession(hass)` | Use the **shared** session; never create your own; no blocking `requests`               |
-| Upstream API wrapper   | A dedicated async PyPI library (yours or third-party), pinned in `requirements`   | HA prefers the protocol/device logic to live in a separate published package              |
-| Persistence            | Config entry data/options; `homeassistant.helpers.storage.Store`; `RestoreEntity` | Minimal; see §5                                                                            |
-| Logging                | stdlib `logging` — `_LOGGER = logging.getLogger(__name__)`                        | No `print()`; structured, level-appropriate                                               |
-| Diagnostics            | `homeassistant.components.diagnostics` + `async_redact_data`                     | Redact secrets/PII from downloadable diagnostics                                          |
-| Testing                | `pytest` + `pytest-homeassistant-custom-component` + `pytest-asyncio`             | Async tests, mock HA, snapshot with `syrupy`                                              |
-| Time in tests          | `freezegun` / HA's `async_fire_time_changed`                                      | Deterministic — no wall-clock sleeps                                                       |
-| Lint + format          | `ruff` (lint **and** format)                                                      | HA core's own choice; replaces black/isort/flake8/pylint                                  |
-| Type checker           | `mypy --strict`                                                                   | The compiler-as-reviewer analog                                                           |
-| Manifest / repo checks | `hassfest` + HACS validation | Declare supported local execution; existing required CI checks also pass |
+| Concern                | Framework / library                                                                | Notes                                                                              |
+| ---------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Platform               | Home Assistant Core (integration APIs)                                             | Follow the Integration Quality Scale; do not fight core conventions                |
+| Concurrency            | `asyncio` — `async`/`await`, `async_add_executor_job` for unavoidable blocking     | Never block the event loop; no bare threads                                        |
+| Polling / data seam    | `DataUpdateCoordinator[T]`                                                         | The single place that fetches + owns typed data; do not roll your own polling loop |
+| Entities               | `CoordinatorEntity` subclasses per platform                                        | Thin; render coordinator data; expose `available`                                  |
+| Config / options       | Config flow (`ConfigFlow`, `SchemaConfigFlowHandler` where it fits)                | UI-based setup required; no YAML-only config for new integrations                  |
+| Boundary validation    | `voluptuous` (HA's built-in) for config/service schemas                            | Validate every user input and service call payload before use                      |
+| HTTP client            | `aiohttp` via `homeassistant.helpers.aiohttp_client.async_get_clientsession(hass)` | Use the **shared** session; never create your own; no blocking `requests`          |
+| Upstream API wrapper   | A dedicated async PyPI library (yours or third-party), pinned in `requirements`    | HA prefers the protocol/device logic to live in a separate published package       |
+| Persistence            | Config entry data/options; `homeassistant.helpers.storage.Store`; `RestoreEntity`  | Minimal; see §5                                                                    |
+| Logging                | stdlib `logging` — `_LOGGER = logging.getLogger(__name__)`                         | No `print()`; structured, level-appropriate                                        |
+| Diagnostics            | `homeassistant.components.diagnostics` + `async_redact_data`                       | Redact secrets/PII from downloadable diagnostics                                   |
+| Testing                | `pytest` + `pytest-homeassistant-custom-component` + `pytest-asyncio`              | Async tests, mock HA, snapshot with `syrupy`                                       |
+| Time in tests          | `freezegun` / HA's `async_fire_time_changed`                                       | Deterministic — no wall-clock sleeps                                               |
+| Lint + format          | `ruff` (lint **and** format)                                                       | HA core's own choice; replaces black/isort/flake8/pylint                           |
+| Type checker           | `mypy --strict`                                                                    | The compiler-as-reviewer analog                                                    |
+| Manifest / repo checks | `hassfest` + HACS validation                                                       | Declare supported local execution; existing required CI checks also pass           |
 
 ---
 
@@ -99,12 +99,12 @@ repo/
 
 Bootstrap the environment with `mise install` (provisions the pinned tools/runtime) before running any command below. `pyproject.toml` (via `uv`) is the single source of truth for tool configuration. Never invoke `ruff`, `mypy`, or `pytest` with ad-hoc flags from commits, CI, or agent scripts — go through the declared commands below so local and CI behaviour cannot drift.
 
-| Variable      | Command                                                                       |
-| ------------- | ----------------------------------------------------------------------------- |
-| `$FORMAT_CMD` | `uv run ruff format .`                                                         |
-| `$LINT_CMD`   | `uv run ruff check . && uv run mypy custom_components`                         |
+| Variable      | Command                                                                                     |
+| ------------- | ------------------------------------------------------------------------------------------- |
+| `$FORMAT_CMD` | `uv run ruff format .`                                                                      |
+| `$LINT_CMD`   | `uv run ruff check . && uv run mypy custom_components`                                      |
 | `$BUILD_CMD`  | `uv run python -m compileall -q custom_components` (syntax gate — there is no compile step) |
-| `$TEST_CMD`   | `uv run pytest`                                                                |
+| `$TEST_CMD`   | `uv run pytest`                                                                             |
 | `$VERIFY_CMD` | `mise run verify` (format-check → lint/type checks → syntax gate → tests → security checks) |
 
 > Python has no build artifact, so `$BUILD_CMD` maps to a **bytecode-compile syntax gate** over the integration package. Implement the local `verify` mise task with required tests and §14 checks. Define a supported local runner or container for applicable `hassfest` and HACS validation. If a required validator cannot run locally, record the gap and obtain an owner decision before acceptance; do not silently substitute hosted CI. Existing required CI jobs must also pass. This profile does not supply the task or validators.
@@ -142,24 +142,24 @@ Prefer Home Assistant capabilities. Assess each added library's necessity, prove
 
 **Runtime (`manifest.json → requirements`):**
 
-| Dependency                | Pinning | Why it earns its place                                            | Approver  | Date       |
-| ------------------------- | ------- | ---------------------------------------------------------------- | --------- | ---------- |
-| `<upstream-client-lib>`   | `==x.y.z` | The async client for the target device/service (prefer your own published lib) | (project) | (fill in)  |
+| Dependency              | Pinning   | Why it earns its place                                                         | Approver  | Date      |
+| ----------------------- | --------- | ------------------------------------------------------------------------------ | --------- | --------- |
+| `<upstream-client-lib>` | `==x.y.z` | The async client for the target device/service (prefer your own published lib) | (project) | (fill in) |
 
 > `aiohttp`, `voluptuous`, and the HA helper APIs ship **with Home Assistant** — do not add them to `requirements`; depend on the versions HA provides.
 
 **Development only (`pyproject.toml` dev group, `uv`):**
 
-| Dependency                             | Version                 | Why it earns its place                          |
-| -------------------------------------- | ----------------------- | ----------------------------------------------- |
-| `homeassistant`                        | matches targeted core   | Type stubs + test harness against real core     |
-| `pytest`                               | stable, explicit semver | Test runner                                     |
-| `pytest-homeassistant-custom-component`| matches targeted core   | The standard custom-component test fixtures     |
-| `pytest-asyncio`                       | stable, explicit semver | Async test support                              |
-| `ruff`                                 | stable, explicit semver | Lint + format (HA core's choice)                |
-| `mypy`                                 | stable, explicit semver | Strict type checking                            |
-| `syrupy`                               | stable, explicit semver | Snapshot tests for diagnostics/entity states    |
-| `freezegun`                            | stable, explicit semver | Deterministic time in tests                     |
+| Dependency                              | Version                 | Why it earns its place                       |
+| --------------------------------------- | ----------------------- | -------------------------------------------- |
+| `homeassistant`                         | matches targeted core   | Type stubs + test harness against real core  |
+| `pytest`                                | stable, explicit semver | Test runner                                  |
+| `pytest-homeassistant-custom-component` | matches targeted core   | The standard custom-component test fixtures  |
+| `pytest-asyncio`                        | stable, explicit semver | Async test support                           |
+| `ruff`                                  | stable, explicit semver | Lint + format (HA core's choice)             |
+| `mypy`                                  | stable, explicit semver | Strict type checking                         |
+| `syrupy`                                | stable, explicit semver | Snapshot tests for diagnostics/entity states |
+| `freezegun`                             | stable, explicit semver | Deterministic time in tests                  |
 
 New runtime entries require a `STACK.md` PR (or ADR) with rationale, owner, approver, and date — and a `hassfest`-clean manifest.
 
@@ -190,15 +190,16 @@ New runtime entries require a `STACK.md` PR (or ADR) with rationale, owner, appr
 - **Logger:** one module-level `_LOGGER = logging.getLogger(__name__)` per module. Levels are meaningful: `debug` for developer detail, `info` sparingly (not per-poll), `warning`/`error` for actionable conditions. Never log inside a tight per-update path at `info`.
 - **Typed error taxonomy → HA behaviour.** Every failure mode maps to exactly one HA outcome (this is the ecosystem's version of "errors are values with an explicit descriptor"):
 
-  | Failure                          | Raise                        | HA behaviour                                  |
-  | -------------------------------- | ---------------------------- | --------------------------------------------- |
-  | Device/service offline at setup  | `ConfigEntryNotReady`        | Retry setup with backoff                      |
-  | Bad/expired credentials          | `ConfigEntryAuthFailed`      | Start the reauth flow                         |
-  | Unrecoverable config error       | `ConfigEntryError`           | Mark entry failed, surface to user            |
-  | Coordinator fetch failed         | `UpdateFailed`               | Entities go `unavailable`, logged once        |
-  | User-facing action failed        | `HomeAssistantError`         | Error shown in UI/service response            |
+  | Failure                         | Raise                   | HA behaviour                           |
+  | ------------------------------- | ----------------------- | -------------------------------------- |
+  | Device/service offline at setup | `ConfigEntryNotReady`   | Retry setup with backoff               |
+  | Bad/expired credentials         | `ConfigEntryAuthFailed` | Start the reauth flow                  |
+  | Unrecoverable config error      | `ConfigEntryError`      | Mark entry failed, surface to user     |
+  | Coordinator fetch failed        | `UpdateFailed`          | Entities go `unavailable`, logged once |
+  | User-facing action failed       | `HomeAssistantError`    | Error shown in UI/service response     |
 
   Define the integration's own exceptions in one place and translate the upstream library's exceptions into this taxonomy at `api.py` — never let a raw upstream exception escape into HA.
+
 - **PII redaction:** downloadable diagnostics MUST route through `async_redact_data` with an explicit `TO_REDACT` set (tokens, coordinates, emails, device identifiers). Default to redacting unknown-sensitive fields rather than exposing them.
 - **Crash/telemetry reporting:** none. Home Assistant owns error reporting; do not add third-party analytics or crash reporters.
 
@@ -249,8 +250,8 @@ owner. Record significant design decisions separately in concise `docs/adr/`
 files. Read them when relevant; keep backlog and change history in GitHub.
 
 | Rule / scope | Reason and consequences | Compensating evidence | Responsible lead / reviewer / approval | Expiry or reassessment |
-| --- | --- | --- | --- | --- |
-| _(none)_ | — | — | — | — |
+| ------------ | ----------------------- | --------------------- | -------------------------------------- | ---------------------- |
+| _(none)_     | —                       | —                     | —                                      | —                      |
 
 ---
 
@@ -282,15 +283,15 @@ For §14–15, a release, monitoring, migration, or recovery item may be
 label does not waive these duties as a group. An unsupported tool is a gap,
 not a reason to claim the requirement does not apply.
 
-| Doctrine / applicability | Required evidence | Environment / gap to resolve |
-| --- | --- | --- |
-| P1, P6: every task | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR | Lead prepares; independent review for material changes |
-| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale | Required locally; existing required CI also passes; declare checks that rely on review |
-| P5–P6: changed data boundaries | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy |
-| P3, P7: security and dependencies | Gitleaks; vulnerability scans covering `uv.lock` and resolved runtime requirements; Ruff security rules plus applicable static-security analysis | Wire pinned tools into `mise run verify`; name scanners/rules and unsupported surfaces on adoption |
-| P5–P7: HA integration | Setup/unload/reload, config and reauth flows, unavailable states, diagnostics redaction, migration/recovery tests; hassfest and HACS validation | Local pytest and applicable validators against declared HA versions; existing required CI also passes; record device-only evidence |
-| P7: release and recovery | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15) | Target environment; a successful build does not prove release success |
-| P8–P9: material changes | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations | Separate reviewer context; no read-all-ADR prerequisite |
+| Doctrine / applicability             | Required evidence                                                                                                                                                    | Environment / gap to resolve                                                                                                       |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| P1, P6: every task                   | Acceptance criteria, material failure cases, assumptions, and their check mapping in the issue or PR                                                                 | Lead prepares; independent review for material changes                                                                             |
+| P2–P5: changed code and dependencies | Strict types, format/lint, module-boundary checks, boundary validation, deterministic tests, dependency rationale                                                    | Required locally; existing required CI also passes; declare checks that rely on review                                             |
+| P5–P6: changed data boundaries       | Meaning-preserving normalisation; declared independent-item or atomic failure containment; tests for transformations, mixed valid/invalid items, and atomic failures | Preserve decision-relevant distinctions, precision, and uncertainty; test containment per boundary, not a universal skip policy    |
+| P3, P7: security and dependencies    | Gitleaks; vulnerability scans covering `uv.lock` and resolved runtime requirements; Ruff security rules plus applicable static-security analysis                     | Wire pinned tools into `mise run verify`; name scanners/rules and unsupported surfaces on adoption                                 |
+| P5–P7: HA integration                | Setup/unload/reload, config and reauth flows, unavailable states, diagnostics redaction, migration/recovery tests; hassfest and HACS validation                      | Local pytest and applicable validators against declared HA versions; existing required CI also passes; record device-only evidence |
+| P7: release and recovery             | Before merge: release readiness and migration/recovery evidence. After release: deployed version and required health/smoke results (§15)                             | Target environment; a successful build does not prove release success                                                              |
+| P8–P9: material changes              | Current setup instructions, significant ADRs, independent review of the integrated result, explicit limitations                                                      | Separate reviewer context; no read-all-ADR prerequisite                                                                            |
 
 ### Example check configuration
 
@@ -300,17 +301,17 @@ conditions. Record required checks in the §3 entry points; optional example
 tools need the normal dependency assessment. Do not lower an adopted gate
 merely to make a change pass. Existing §13 exception rules still apply.
 
-| Check | Tool | Threshold / acceptance condition | Principle |
-| --- | --- | --- | --- |
-| Formatting | Ruff format check | No format differences | P3, P8 |
-| Types | mypy with §1 strict settings | No type errors or new warnings | P3 |
-| Lint | Ruff, including selected security rules | No violations of selected rules | P3, P7 |
-| Complexity | [Ruff C901](https://docs.astral.sh/ruff/settings/#lint_mccabe_max-complexity) | Example: McCabe complexity ≤ 10 per function | P3, P4 |
-| Dead code | Ruff F401/F841; [Vulture](https://github.com/jendrikseipp/vulture) if selected | No unexplained unused-code findings; retain verified HA callbacks | P3, P7 |
-| Dependency directions | [Import Linter](https://import-linter.readthedocs.io/en/stable/contract_types/) if selected | No forbidden model/API/platform import edges | P4 |
-| Secrets | Gitleaks over declared source/history scope | No confirmed exposed secrets | P3, P7 |
-| Vulnerabilities | [pip-audit](https://github.com/pypa/pip-audit) on resolved dev and runtime environments | All findings triaged; none violate the project's declared security acceptance | P2, P7 |
-| Tests | pytest with HA fixtures; local manifest/repository validators | Required lifecycle, config, redaction, data and failure cases pass for declared HA versions | P5, P6 |
+| Check                 | Tool                                                                                        | Threshold / acceptance condition                                                            | Principle |
+| --------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------- |
+| Formatting            | Ruff format check                                                                           | No format differences                                                                       | P3, P8    |
+| Types                 | mypy with §1 strict settings                                                                | No type errors or new warnings                                                              | P3        |
+| Lint                  | Ruff, including selected security rules                                                     | No violations of selected rules                                                             | P3, P7    |
+| Complexity            | [Ruff C901](https://docs.astral.sh/ruff/settings/#lint_mccabe_max-complexity)               | Example: McCabe complexity ≤ 10 per function                                                | P3, P4    |
+| Dead code             | Ruff F401/F841; [Vulture](https://github.com/jendrikseipp/vulture) if selected              | No unexplained unused-code findings; retain verified HA callbacks                           | P3, P7    |
+| Dependency directions | [Import Linter](https://import-linter.readthedocs.io/en/stable/contract_types/) if selected | No forbidden model/API/platform import edges                                                | P4        |
+| Secrets               | Gitleaks over declared source/history scope                                                 | No confirmed exposed secrets                                                                | P3, P7    |
+| Vulnerabilities       | [pip-audit](https://github.com/pypa/pip-audit) on resolved dev and runtime environments     | All findings triaged; none violate the project's declared security acceptance               | P2, P7    |
+| Tests                 | pytest with HA fixtures; local manifest/repository validators                               | Required lifecycle, config, redaction, data and failure cases pass for declared HA versions | P5, P6    |
 
 Ruff's unused checks do not find every dead declaration. Dynamic HA discovery
 can confuse dead-code and import analysis. Review registered entry points and

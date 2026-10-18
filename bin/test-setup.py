@@ -4,6 +4,7 @@
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -307,7 +308,7 @@ class FormatTests(unittest.TestCase):
                 ("template/.agents/skills/implement/SKILL.md", lambda text: text.replace("name: implement", "name: wrong", 1), "name mismatch"),
                 ("stacks/STACK-TEMPLATE.md", lambda text: text.replace("`$TEST_CMD`", "`$MISSING_CMD`"), "TEST_CMD"),
                 ("stacks/STACK-TS.md", lambda text: text.replace("## 15. ", "## ", 1), "sections 0-15"),
-                ("README.md", lambda text: text.replace("| `STACK-TS.md` |", "| `STACK-NONE.md` |", 1), "profile table mismatch"),
+                ("README.md", lambda text: re.sub(r"\| `STACK-TS\.md` +\|", "| `STACK-NONE.md` |", text, count=1), "profile table mismatch"),
             )
             for relative, change, error in mutations:
                 with self.subTest(relative=relative):

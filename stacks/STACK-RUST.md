@@ -160,23 +160,23 @@ set; pinning its package version alone does not prove reproducible tool builds.
 
 ## 2. Frameworks
 
-| Concern | Technology | Role |
-| --- | --- | --- |
-| HTTP | Axum, Tower, tower-http | Routing, extraction, request limits, tracing, and static files |
-| Concurrency | Tokio | Async I/O and owned tasks; explicit shutdown policy |
-| Domain errors | Result, enums, thiserror | Meaningful expected failures |
-| Wire representation | Serde and serde_json | Validated transport boundaries |
-| HTTP contract | utoipa and utoipa-axum | OpenAPI 3.1 tied to registered routes |
-| Client generation | Hey API with Zod | SDK, types, and executed runtime validators |
-| Time | Jiff | Instant, civil, zoned, elapsed, and calendar values |
-| Persistence, if needed | PostgreSQL, SQLx, jiff-sqlx | Explicit SQL, constraints, transactions, and time adapters |
-| Outbound HTTP, if needed | reqwest | Shared configured client with bounded work |
-| Logging | tracing and tracing-subscriber | Structured events and async spans |
-| UI and build | React, React DOM, Vite | SPA without a second production runtime |
-| Routing and server state | TanStack Router and Query | URL state and query cache ownership |
-| Styling | CSS; Tailwind optional | Product-specific styling choice |
-| Tests | nextest, Cargo doctests, proptest, Vitest, Playwright/axe | Behaviour, contracts, and critical journeys |
-| Formatting and lint | rustfmt, Clippy, Prettier, Oxlint, tsc | Named checks through mise |
+| Concern                  | Technology                                                | Role                                                           |
+| ------------------------ | --------------------------------------------------------- | -------------------------------------------------------------- |
+| HTTP                     | Axum, Tower, tower-http                                   | Routing, extraction, request limits, tracing, and static files |
+| Concurrency              | Tokio                                                     | Async I/O and owned tasks; explicit shutdown policy            |
+| Domain errors            | Result, enums, thiserror                                  | Meaningful expected failures                                   |
+| Wire representation      | Serde and serde_json                                      | Validated transport boundaries                                 |
+| HTTP contract            | utoipa and utoipa-axum                                    | OpenAPI 3.1 tied to registered routes                          |
+| Client generation        | Hey API with Zod                                          | SDK, types, and executed runtime validators                    |
+| Time                     | Jiff                                                      | Instant, civil, zoned, elapsed, and calendar values            |
+| Persistence, if needed   | PostgreSQL, SQLx, jiff-sqlx                               | Explicit SQL, constraints, transactions, and time adapters     |
+| Outbound HTTP, if needed | reqwest                                                   | Shared configured client with bounded work                     |
+| Logging                  | tracing and tracing-subscriber                            | Structured events and async spans                              |
+| UI and build             | React, React DOM, Vite                                    | SPA without a second production runtime                        |
+| Routing and server state | TanStack Router and Query                                 | URL state and query cache ownership                            |
+| Styling                  | CSS; Tailwind optional                                    | Product-specific styling choice                                |
+| Tests                    | nextest, Cargo doctests, proptest, Vitest, Playwright/axe | Behaviour, contracts, and critical journeys                    |
+| Formatting and lint      | rustfmt, Clippy, Prettier, Oxlint, tsc                    | Named checks through mise                                      |
 
 ### 2.1 API contract and generation
 
@@ -234,13 +234,13 @@ before other code sees it.
 
 ### 2.4 Frontend state
 
-| State | Owner |
-| --- | --- |
-| Server data and client cache | TanStack Query |
+| State                                     | Owner                           |
+| ----------------------------------------- | ------------------------------- |
+| Server data and client cache              | TanStack Query                  |
 | Shareable filters, search, and pagination | Router and validated URL values |
-| Local interaction state | React |
-| Incomplete input | Form state |
-| Durable business data | Backend and selected storage |
+| Local interaction state                   | React                           |
+| Incomplete input                          | Form state                      |
+| Durable business data                     | Backend and selected storage    |
 
 Set stale times, refetch triggers, retries, and cache lifetimes explicitly.
 Scope query keys/data to authorization context. Remove or isolate cached data
@@ -277,12 +277,12 @@ Mise tasks are the single source of truth. Implement them in the adopting
 project; this profile ships no application scripts. Commits, agent workflows,
 and any CI invoke these entry points rather than separate tool pipelines.
 
-| Variable | Command |
-| --- | --- |
+| Variable      | Command           |
+| ------------- | ----------------- |
 | `$FORMAT_CMD` | `mise run format` |
-| `$LINT_CMD` | `mise run lint` |
-| `$BUILD_CMD` | `mise run build` |
-| `$TEST_CMD` | `mise run test` |
+| `$LINT_CMD`   | `mise run lint`   |
+| `$BUILD_CMD`  | `mise run build`  |
+| `$TEST_CMD`   | `mise run test`   |
 | `$VERIFY_CMD` | `mise run verify` |
 
 - **format:** rustfmt and Prettier in write mode.
@@ -316,13 +316,13 @@ Do not raise an adopted budget only to fit a poor implementation result.
 The illustration column shows an order of magnitude for a typical interactive
 web application. It is not a gate, a promise, or a measured result.
 
-| Budget | Required adoption value and measurement conditions | Illustration (not a gate) |
-| --- | --- | --- |
-| API latency and errors | Per-route class p50/p99 and error-rate limit; workload, concurrency, data volume, and upstream inclusion | p50 10 ms, p99 50 ms per simple route, excluding upstream calls |
-| Startup | Startup-to-ready limit; target hardware and cold/warm conditions | < 1 s to ready, excluding migrations |
-| Memory and resource saturation | Resident-memory limit, database pool, queue, and concurrency ceilings under declared load | < 256 MB resident for the server container |
-| Release size | Image/binary and initial compressed JS/CSS budgets where they affect product fitness | Image < 100 MB compressed; initial JS < 200 KB and CSS < 50 KB gzipped |
-| Web experience | LCP, INP, and CLS targets with devices, network, sample conditions, and measurement method | At the 75th percentile: LCP ≤ 2.5 s, INP ≤ 200 ms, CLS ≤ 0.1 |
+| Budget                         | Required adoption value and measurement conditions                                                       | Illustration (not a gate)                                              |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| API latency and errors         | Per-route class p50/p99 and error-rate limit; workload, concurrency, data volume, and upstream inclusion | p50 10 ms, p99 50 ms per simple route, excluding upstream calls        |
+| Startup                        | Startup-to-ready limit; target hardware and cold/warm conditions                                         | < 1 s to ready, excluding migrations                                   |
+| Memory and resource saturation | Resident-memory limit, database pool, queue, and concurrency ceilings under declared load                | < 256 MB resident for the server container                             |
+| Release size                   | Image/binary and initial compressed JS/CSS budgets where they affect product fitness                     | Image < 100 MB compressed; initial JS < 200 KB and CSS < 50 KB gzipped |
+| Web experience                 | LCP, INP, and CLS targets with devices, network, sample conditions, and measurement method               | At the 75th percentile: LCP ≤ 2.5 s, INP ≤ 200 ms, CLS ≤ 0.1           |
 
 Distinguish field percentile evidence from laboratory approximations. New
 analytics collection needs the normal privacy and authority assessment.
@@ -363,27 +363,27 @@ cost. Significant durable choices need short ADRs in the adopting project.
 Routine libraries remain delegated choices; providers, external data transfers,
 added cost, and material lock-in follow the doctrine's escalation rules.
 
-| Dependency | Baseline line | Why it earns its place | Approver | Date |
-| --- | --- | --- | --- | --- |
-| axum / tokio | 0.8 / 1 | HTTP and async runtime | (default) | (template) |
-| tower / tower-http | 0.5 / 0.7 | Service middleware and static-file delivery | (default) | (template) |
-| serde / serde_json / thiserror | 1 / 1 / 2 | Wire types and typed errors | (default) | (template) |
-| jiff | 0.2 | Semantic time types | (default) | (template) |
-| utoipa / utoipa-axum | 6 / 0.3 | OpenAPI routes and schemas | (default) | (template) |
-| tracing / tracing-subscriber | 0.1 / 0.3 | Structured backend diagnostics | (default) | (template) |
-| sqlx / jiff-sqlx, conditional | 0.9 / 0.2 | Durable data and Jiff database wrappers; TLS feature `tls-rustls-aws-lc-rs` (§5) | (default) | (template) |
-| uuid / rust_decimal, conditional | 1 / 1 | Typed identities and exact decimal quantities | (default) | (template) |
-| reqwest, conditional | 0.13 | External HTTP calls; feature `rustls` (aws-lc-rs provider) | (default) | (template) |
-| @hey-api/openapi-ts | 0.99, pin exact release | Local client and validator generation | (default) | (template) |
-| zod | 4 | Executed browser boundary validation | (default) | (template) |
-| react / react-dom / vite | 19 / 19 / 8 | SPA and build | (default) | (template) |
-| @tanstack/react-router / @tanstack/react-query | 1 / 5 | Routing and server-state cache | (default) | (template) |
-| typescript / oxlint / oxlint-tsgolint | 7 / pin exact / pin exact | Native compiler and type-aware linting (§1) | (default) | (template) |
-| typescript, API-client generator only | 6, pin exact | Compiler API for the generator until it supports TypeScript 7 (§2.1) | (default) | (template) |
-| prettier / vitest | 3 / 5 | Format and frontend unit tests | (default) | (template) |
-| @playwright/test / @axe-core/playwright | 1 / 4 | Browser journeys and accessibility checks | (default) | (template) |
-| proptest, dev | 1 | Targeted invariant tests | (default) | (template) |
-| tailwindcss, optional | 4 | Styling when selected by the product | (default) | (template) |
+| Dependency                                     | Baseline line             | Why it earns its place                                                           | Approver  | Date       |
+| ---------------------------------------------- | ------------------------- | -------------------------------------------------------------------------------- | --------- | ---------- |
+| axum / tokio                                   | 0.8 / 1                   | HTTP and async runtime                                                           | (default) | (template) |
+| tower / tower-http                             | 0.5 / 0.7                 | Service middleware and static-file delivery                                      | (default) | (template) |
+| serde / serde_json / thiserror                 | 1 / 1 / 2                 | Wire types and typed errors                                                      | (default) | (template) |
+| jiff                                           | 0.2                       | Semantic time types                                                              | (default) | (template) |
+| utoipa / utoipa-axum                           | 6 / 0.3                   | OpenAPI routes and schemas                                                       | (default) | (template) |
+| tracing / tracing-subscriber                   | 0.1 / 0.3                 | Structured backend diagnostics                                                   | (default) | (template) |
+| sqlx / jiff-sqlx, conditional                  | 0.9 / 0.2                 | Durable data and Jiff database wrappers; TLS feature `tls-rustls-aws-lc-rs` (§5) | (default) | (template) |
+| uuid / rust_decimal, conditional               | 1 / 1                     | Typed identities and exact decimal quantities                                    | (default) | (template) |
+| reqwest, conditional                           | 0.13                      | External HTTP calls; feature `rustls` (aws-lc-rs provider)                       | (default) | (template) |
+| @hey-api/openapi-ts                            | 0.99, pin exact release   | Local client and validator generation                                            | (default) | (template) |
+| zod                                            | 4                         | Executed browser boundary validation                                             | (default) | (template) |
+| react / react-dom / vite                       | 19 / 19 / 8               | SPA and build                                                                    | (default) | (template) |
+| @tanstack/react-router / @tanstack/react-query | 1 / 5                     | Routing and server-state cache                                                   | (default) | (template) |
+| typescript / oxlint / oxlint-tsgolint          | 7 / pin exact / pin exact | Native compiler and type-aware linting (§1)                                      | (default) | (template) |
+| typescript, API-client generator only          | 6, pin exact              | Compiler API for the generator until it supports TypeScript 7 (§2.1)             | (default) | (template) |
+| prettier / vitest                              | 3 / 5                     | Format and frontend unit tests                                                   | (default) | (template) |
+| @playwright/test / @axe-core/playwright        | 1 / 4                     | Browser journeys and accessibility checks                                        | (default) | (template) |
+| proptest, dev                                  | 1                         | Targeted invariant tests                                                         | (default) | (template) |
+| tailwindcss, optional                          | 4                         | Styling when selected by the product                                             | (default) | (template) |
 
 Jiff SQLx values use adapter wrapper types; configure query type overrides
 or annotations deliberately and test their round trips. Utoipa's `jiff_0_2`,
@@ -539,8 +539,8 @@ project; do not require an ADR for every ordinary default. Backlog and history
 remain in GitHub.
 
 | Rule / scope | Reason and consequences | Compensating evidence | Responsible lead / reviewer / approval | Expiry or reassessment |
-| --- | --- | --- | --- | --- |
-| (none) | | | | |
+| ------------ | ----------------------- | --------------------- | -------------------------------------- | ---------------------- |
+| (none)       |                         |                       |                                        |                        |
 
 ---
 
@@ -568,32 +568,32 @@ assumption is not proof of that assumption. Regression tests should detect the
 original failure. Investigate flakes rather than treating a rerun as an
 explanation. Apply P6 evidence reuse without waiving P9's independent run.
 
-| Doctrine / applicability | Required evidence | Environment / gap |
-| --- | --- | --- |
-| P1, P6: each task | Criteria, failures, assumptions, and check mapping | Lead records; independent review for material changes |
-| P2–P4: types and dependencies | Strict checks, dependency rationale, crate/import boundaries | Manifest edits and ambient effects need review |
-| P3, P5: HTTP contract | Complete-tree drift check; real response tests; executed success/error validation | Annotations do not prove handler behaviour |
-| P5–P6: data meaning | Conversion and property/challenge cases; partial versus atomic failure tests | Preserve missing/null/zero, units, precision, and uncertainty |
-| P5–P7: storage, when used | Migrated-schema metadata check; constraints, competing writes, upgrade, and restore tests; recorded production and test server versions | Isolated PostgreSQL of the production major version required; offline build alone is insufficient |
-| P3, P7: security | Named scanner results and auth/privacy checks | Resolve session tuple if accounts are used; scanners do not prove authorization |
-| P5–P7: browser | Critical Playwright journeys, degraded/error states, keyboard and axe | Record unsupported browsers and manual accessibility gaps |
-| P7: release | Before merge: target build and recovery readiness; after release: identity, health, and smoke evidence | Local build is not a verified deployment |
-| P8–P9: material changes | Current docs, significant decisions, independent integrated verification | Separate reviewer context; exact tested revisions |
+| Doctrine / applicability      | Required evidence                                                                                                                       | Environment / gap                                                                                 |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| P1, P6: each task             | Criteria, failures, assumptions, and check mapping                                                                                      | Lead records; independent review for material changes                                             |
+| P2–P4: types and dependencies | Strict checks, dependency rationale, crate/import boundaries                                                                            | Manifest edits and ambient effects need review                                                    |
+| P3, P5: HTTP contract         | Complete-tree drift check; real response tests; executed success/error validation                                                       | Annotations do not prove handler behaviour                                                        |
+| P5–P6: data meaning           | Conversion and property/challenge cases; partial versus atomic failure tests                                                            | Preserve missing/null/zero, units, precision, and uncertainty                                     |
+| P5–P7: storage, when used     | Migrated-schema metadata check; constraints, competing writes, upgrade, and restore tests; recorded production and test server versions | Isolated PostgreSQL of the production major version required; offline build alone is insufficient |
+| P3, P7: security              | Named scanner results and auth/privacy checks                                                                                           | Resolve session tuple if accounts are used; scanners do not prove authorization                   |
+| P5–P7: browser                | Critical Playwright journeys, degraded/error states, keyboard and axe                                                                   | Record unsupported browsers and manual accessibility gaps                                         |
+| P7: release                   | Before merge: target build and recovery readiness; after release: identity, health, and smoke evidence                                  | Local build is not a verified deployment                                                          |
+| P8–P9: material changes       | Current docs, significant decisions, independent integrated verification                                                                | Separate reviewer context; exact tested revisions                                                 |
 
 ### Check configuration
 
-| Check | Tool | Acceptance condition |
-| --- | --- | --- |
-| Format | rustfmt and Prettier check modes | No formatting differences |
-| Types/lint | Clippy, tsc, type-aware Oxlint | No errors or unreviewed warnings under §1 |
-| Dead dependencies | cargo-shear SHOULD; rustc unused checks; Knip optional | No unexplained findings; configure generated/dynamic entry points |
-| Boundaries | Cargo declarations, Clippy disallowed methods where practical, Oxlint restricted imports | No forbidden edges; review declared gaps |
-| Contracts | Scratch export/generation and actual HTTP/client tests | No unexplained drift or invalid data accepted |
-| SQL metadata | SQLx prepare check with declared targets/features | Matches the migrated isolated schema |
-| Secrets | Gitleaks with redacted output and declared source/history scope | No confirmed exposed secrets |
-| Rust dependencies | cargo-deny advisories, licences, bans, sources | Triage findings; enforce declared allowlists and reviewed exceptions |
-| JS dependencies | pnpm audit | Triage all findings; no unresolved high/critical findings without a valid exception |
-| Behaviour | nextest, doctests, SQLx tests, Vitest, Playwright | All required cases pass; expected outcomes have independent support |
+| Check             | Tool                                                                                     | Acceptance condition                                                                |
+| ----------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Format            | rustfmt and Prettier check modes                                                         | No formatting differences                                                           |
+| Types/lint        | Clippy, tsc, type-aware Oxlint                                                           | No errors or unreviewed warnings under §1                                           |
+| Dead dependencies | cargo-shear SHOULD; rustc unused checks; Knip optional                                   | No unexplained findings; configure generated/dynamic entry points                   |
+| Boundaries        | Cargo declarations, Clippy disallowed methods where practical, Oxlint restricted imports | No forbidden edges; review declared gaps                                            |
+| Contracts         | Scratch export/generation and actual HTTP/client tests                                   | No unexplained drift or invalid data accepted                                       |
+| SQL metadata      | SQLx prepare check with declared targets/features                                        | Matches the migrated isolated schema                                                |
+| Secrets           | Gitleaks with redacted output and declared source/history scope                          | No confirmed exposed secrets                                                        |
+| Rust dependencies | cargo-deny advisories, licences, bans, sources                                           | Triage findings; enforce declared allowlists and reviewed exceptions                |
+| JS dependencies   | pnpm audit                                                                               | Triage all findings; no unresolved high/critical findings without a valid exception |
+| Behaviour         | nextest, doctests, SQLx tests, Vitest, Playwright                                        | All required cases pass; expected outcomes have independent support                 |
 
 Pin scanner tools and configuration. Record advisory freshness and unsupported
 surfaces. External audit endpoints may receive dependency metadata; assess the
