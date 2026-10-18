@@ -25,6 +25,11 @@ Never replace a real user file or directory. Replace only symlinks. Prune only
 dead links whose target ownership is established inside this repository.
 Use AGENT_SETUP_HOME in temporary tests; never test against live user paths.
 
+bin/copy-project.sh copies the same roles and skills into a project Git
+repository as real files. The owner reviews and commits them. The copier
+overwrites only the same-named copied paths, never deletes, and refuses
+uncommitted changes without --force. Test it only in temporary repositories.
+
 ## Cross-host policy
 
 Maintain the same authority and evidence rules in both host trees. Keep native
