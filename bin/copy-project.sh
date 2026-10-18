@@ -8,7 +8,7 @@
 #   bin/copy-project.sh                        # copy both hosts into the current repository
 #   bin/copy-project.sh /path/to/project       # copy into another repository
 #   bin/copy-project.sh --host claude          # copy Claude only
-#   bin/copy-project.sh --force                # also overwrite uncommitted changes
+#   bin/copy-project.sh --force                # also overwrite files Git cannot restore
 
 set -euo pipefail
 
@@ -113,79 +113,95 @@ if [ "$HOST" = codex ] || [ "$HOST" = all ]; then
   add_entries "$REPO_ROOT/template/.agents/skills" "*/" ".agents/skills" dir
 fi
 
-# Do not overwrite uncommitted work in a destination without --force.
-# Untracked files are not checked: an earlier, uncommitted copy is untracked.
-if [ "$FORCE" -eq 0 ]; then
-  dirty="$(git -C "$TARGET" status --porcelain --untracked-files=no -- "${DESTS[@]}")"
-  if [ -n "$dirty" ]; then
-    echo "error: uncommitted changes in copied paths; commit them or use --force:" >&2
-    echo "$dirty" >&2
-    exit 1
-  fi
-fi
-
-copied=0
-unchanged=0
-
-# Create a directory inside the target. Check every component before mkdir:
-# a symlinked component, for example .claude -> ~/.claude, can lead outside
-# the project. Refuse it instead of writing through it.
-safe_dir() {
-  local relative="$1" current="$TARGET" part
-  local IFS=/
-  for part in $relative; do
-    current="$current/$part"
-    if [ -L "$current" ]; then
-      echo "error: refusing to write through a symlink: ${current#"$TARGET"/}" >&2
-      exit 1
-    fi
-    if [ -e "$current" ] && [ ! -d "$current" ]; then
-      echo "error: a file exists where a directory is expected: ${current#"$TARGET"/}" >&2
-      exit 1
-    fi
-  done
-  mkdir -p "$TARGET/$relative"
-}
-
-# Copy one file. Remove a symlink first so that cp never writes through it.
-copy_file() {
-  local src="$1" relative="$2" dst="$TARGET/$2"
-  safe_dir "$(dirname "$relative")"
-  if [ -L "$dst" ]; then
-    rm "$dst"
-  elif [ -d "$dst" ]; then
-    echo "error: a directory exists where a file is expected: $relative" >&2
-    exit 1
-  elif [ -f "$dst" ] && cmp -s "$src" "$dst"; then
-    unchanged=$((unchanged + 1))
-    return
-  fi
-  cp "$src" "$dst"
-  echo "copied: $relative"
-  copied=$((copied + 1))
-}
-
+# Expand skills into files. ENTRIES holds the role file or skill directory
+# that owns each file. A symlink at that entry path is replaced.
+FILE_SRCS=()
+FILE_DSTS=()
+ENTRIES=()
 i=0
 while [ "$i" -lt "${#SOURCES[@]}" ]; do
   src="${SOURCES[$i]}"
   relative="${DESTS[$i]}"
   i=$((i + 1))
   if [ -f "$src" ]; then
-    copy_file "$src" "$relative"
+    FILE_SRCS+=("$src")
+    FILE_DSTS+=("$relative")
+    ENTRIES+=("$relative")
     continue
   fi
-  # Copy a skill file by file. Extra files in the destination skill survive.
-  # Check the parent first so that a symlink is removed only inside the target.
-  safe_dir "$(dirname "$relative")"
-  if [ -L "$TARGET/$relative" ]; then
-    rm "$TARGET/$relative"
-  elif [ -e "$TARGET/$relative" ] && [ ! -d "$TARGET/$relative" ]; then
-    echo "error: a file exists where a directory is expected: $relative" >&2
-    exit 1
-  fi
   while IFS= read -r file; do
-    copy_file "$src/$file" "$relative/$file"
+    FILE_SRCS+=("$src/$file")
+    FILE_DSTS+=("$relative/$file")
+    ENTRIES+=("$relative")
   done < <(cd "$src" && find . -type f ! -name '.*' | sed 's|^\./||' | sort)
+done
+
+# Check every destination before the first write. A symlinked directory, for
+# example .claude -> ~/.claude, can lead outside the project; refuse it.
+# Only the owning entry itself can be a symlink, because it is replaced.
+check_path() {
+  local relative="$1" entry="$2" current="$TARGET" part
+  local IFS=/
+  for part in $relative; do
+    current="$current/$part"
+    if [ -L "$current" ]; then
+      [ "$current" = "$TARGET/$entry" ] && return 0
+      echo "error: refusing to write through a symlink: ${current#"$TARGET"/}" >&2
+      exit 1
+    fi
+    if [ "$current" = "$TARGET/$relative" ]; then
+      if [ -d "$current" ]; then
+        echo "error: a directory exists where a file is expected: $relative" >&2
+        exit 1
+      fi
+    elif [ -e "$current" ] && [ ! -d "$current" ]; then
+      echo "error: a file exists where a directory is expected: ${current#"$TARGET"/}" >&2
+      exit 1
+    fi
+  done
+}
+
+# Do not overwrite content that Git cannot restore without --force: a file
+# with uncommitted changes, or an untracked or ignored file.
+blocked=()
+i=0
+while [ "$i" -lt "${#FILE_DSTS[@]}" ]; do
+  relative="${FILE_DSTS[$i]}"
+  check_path "$relative" "${ENTRIES[$i]}"
+  dst="$TARGET/$relative"
+  # A symlinked entry is replaced, and its target does not change.
+  if [ ! -L "$TARGET/${ENTRIES[$i]}" ] && [ -f "$dst" ] && ! cmp -s "${FILE_SRCS[$i]}" "$dst" &&
+     [ -n "$(git -C "$TARGET" status --porcelain --ignored --untracked-files=all -- "$relative")" ]; then
+    blocked+=("$relative")
+  fi
+  i=$((i + 1))
+done
+if [ "${#blocked[@]}" -gt 0 ] && [ "$FORCE" -eq 0 ]; then
+  echo "error: Git cannot restore these files (uncommitted, untracked, or ignored)." >&2
+  echo "Commit them, or use --force to overwrite them:" >&2
+  printf '  %s\n' "${blocked[@]}" >&2
+  exit 1
+fi
+
+copied=0
+unchanged=0
+i=0
+while [ "$i" -lt "${#FILE_DSTS[@]}" ]; do
+  src="${FILE_SRCS[$i]}"
+  relative="${FILE_DSTS[$i]}"
+  entry="$TARGET/${ENTRIES[$i]}"
+  dst="$TARGET/$relative"
+  i=$((i + 1))
+  # Remove a symlink first so that cp never writes through it.
+  [ -L "$entry" ] && rm "$entry"
+  mkdir -p "$(dirname "$dst")"
+  if [ -f "$dst" ] && cmp -s "$src" "$dst"; then
+    unchanged=$((unchanged + 1))
+    continue
+  fi
+  cp "$src" "$dst"
+  echo "copied: $relative"
+  copied=$((copied + 1))
 done
 
 # Report entries that this copy does not own. The script never deletes them.

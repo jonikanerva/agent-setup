@@ -148,8 +148,10 @@ Other rules apply:
 - It never deletes a file. It lists other entries in the copied directories
   as `kept`. Remove a retired role or skill yourself.
 - It keeps extra files in a copied skill directory.
-- It stops when a copied path has uncommitted changes. Commit the changes
-  first, or use `--force` to overwrite them.
+- It checks all copied paths before it writes anything.
+- It stops when Git cannot restore a file that it would overwrite: a file
+  with uncommitted changes, or an untracked or ignored file. Commit the file
+  first, or use `--force` to overwrite it.
 - It refuses to write through a symlinked directory, for example a `.claude`
   link to your home directory.
 - It warns when Git ignores a copied directory. Cloud checkouts do not

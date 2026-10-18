@@ -266,10 +266,29 @@ class CopierTests(unittest.TestCase):
         role = project / ".codex/agents/lead-dev.toml"
         role.write_text("local edit\n")
         result = self.run_copier(project, expect=1)
-        self.assertIn("uncommitted changes", result.stderr)
+        self.assertIn("Git cannot restore", result.stderr)
         self.assertEqual(role.read_text(), "local edit\n")
         self.run_copier("--force", project)
         self.assertEqual(role.read_bytes(), (ROOT / "template/.codex/agents/lead-dev.toml").read_bytes())
+
+    def test_untracked_and_ignored_changes_require_force(self):
+        for ignored in (False, True):
+            with self.subTest(ignored=ignored):
+                project = self.project(f"untracked-{ignored}")
+                if ignored:
+                    (project / ".gitignore").write_text(".claude/\n")
+                    self.commit(project)
+                role = project / ".claude/agents/architect.md"
+                role.parent.mkdir(parents=True)
+                role.write_text("hand-made role\n")
+                result = self.run_copier(project, expect=1)
+                self.assertIn(".claude/agents/architect.md", result.stderr)
+                self.assertEqual(role.read_text(), "hand-made role\n")
+                self.assertFalse((project / ".claude/skills").exists())
+                self.run_copier("--force", project)
+                self.assertEqual(role.read_bytes(), (ROOT / "template/.claude/agents/architect.md").read_bytes())
+                # An uncommitted copy with the current content does not block a new run.
+                self.run_copier(project)
 
     def test_symlinks_are_replaced_without_writing_through(self):
         project = self.project()
@@ -304,6 +323,8 @@ class CopierTests(unittest.TestCase):
                 link.symlink_to(outside, target_is_directory=True)
                 result = self.run_copier(project, expect=1)
                 self.assertIn("refusing to write through a symlink", result.stderr)
+                # The check runs before the first write, also for other hosts.
+                self.assertEqual(self.copied(project), {Path("README.md")})
                 self.assertEqual([path.name for path in outside.iterdir()], ["codereview"])
                 self.assertTrue((outside / "codereview").is_symlink())
 

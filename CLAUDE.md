@@ -27,8 +27,9 @@ Use AGENT_SETUP_HOME in temporary tests; never test against live user paths.
 
 bin/copy-project.sh copies the same roles and skills into a project Git
 repository as real files. The owner reviews and commits them. The copier
-overwrites only the same-named copied paths, never deletes, and refuses
-uncommitted changes without --force. Test it only in temporary repositories.
+overwrites only the same-named copied paths and never deletes. Without
+--force, it refuses to overwrite a file that Git cannot restore. Test it only
+in temporary repositories.
 
 ## Cross-host policy
 
