@@ -125,7 +125,7 @@ and repository protections still apply. A policy document cannot bypass them.
 Some agents cannot read your home directory, for example an agent that works
 in a cloud checkout. Such an agent does not see the global links. For these
 projects, copy the roles and workflows into the project repository as real
-files. Then commit them. Run the command in the project repository:
+files. Then commit them. Run the command in the project directory:
 
 ```sh
 /path/to/agent-setup/bin/copy-project.sh
@@ -137,30 +137,17 @@ linker links, to the same relative paths in the project:
 - Claude roles to `.claude/agents/` and skills to `.claude/skills/`.
 - Codex roles to `.codex/agents/` and skills to `.agents/skills/`.
 
-The target must be the top level of a Git repository. The command does not
-stage or commit anything. Review the result with `git diff` and commit it.
-The output shows the agent-setup commit. Put it in the commit message.
+The command lists each file that it will create or overwrite. Then it asks
+for confirmation. Files that are already up to date are not listed. Use
+`--yes` to skip the question. You are responsible for local changes: an
+overwritten file loses its local content.
 
 To update the copies, pull this repository and run the command again.
-The command overwrites each copied role file and skill file with the new
-version. It also replaces a symlink at a copied path with a real file.
-Other rules apply:
-- It never deletes a file. It lists other entries in the copied directories
-  as `kept`. Remove a retired role or skill yourself.
-- It keeps extra files in a copied skill directory.
-- It checks all copied paths before it writes anything.
-- It stops when Git cannot restore a file that it would overwrite: a file
-  with uncommitted changes, or an untracked or ignored file. Commit the file
-  first, or use `--force` to overwrite it.
-- It refuses to write through a symlinked directory, for example a `.claude`
-  link to your home directory.
-- It stops when `git status` fails for a file that it would overwrite.
-- It refuses to write into a submodule or a nested Git repository. The
-  project commit does not contain files in such a directory.
-- It warns when Git ignores a copied file. Cloud checkouts do not receive
-  ignored files.
-
-The command does not copy settings or project contracts.
+The command does not delete files. Remove a retired role or skill yourself.
+It replaces a symlink at a copied path with a real file and does not change
+the symlink target. It does not copy settings or project contracts, and it
+does not commit. The output shows the agent-setup commit for your commit
+message.
 
 ## Configure a project
 
@@ -283,8 +270,8 @@ A profile file name must match `STACK-<NAME>.md`. A profile must contain
 sections 0–15 and one row for each of the five commands. The profile table
 in this README must list exactly the files in `stacks/`. The regression
 suite tests malformed artifacts and isolated linking for both hosts,
-including safe pruning. It also tests project copying in temporary Git
-repositories.
+including safe pruning. It also tests project copying in temporary
+directories.
 Tests use a temporary `AGENT_SETUP_HOME`; they do not alter live links.
 
 Inspect the diff and keep task-specific evaluation inputs and results in the

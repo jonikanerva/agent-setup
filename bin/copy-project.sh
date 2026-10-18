@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 #
 # copy-project.sh — copy this repo's static Claude and Codex roles and skills
-# into a project repository as real files. Use it when agents cannot read
-# the user-level links, for example in a cloud checkout. Commit the result.
+# into a project directory as real files. Use it when agents cannot read the
+# user-level links, for example in a cloud checkout. Commit the result.
 #
 # Usage:
-#   bin/copy-project.sh                        # copy both hosts into the current repository
-#   bin/copy-project.sh /path/to/project       # copy into another repository
+#   bin/copy-project.sh                        # copy both hosts into the current directory
+#   bin/copy-project.sh /path/to/project       # copy into another directory
 #   bin/copy-project.sh --host claude          # copy Claude only
-#   bin/copy-project.sh --force                # also overwrite files Git cannot restore
+#   bin/copy-project.sh --yes                  # do not ask for confirmation
 
 set -euo pipefail
 
@@ -16,11 +16,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 
 HOST="all"
-FORCE=0
-TARGET=""
+YES=0
+TARGET="."
+target_set=0
 
 usage() {
-  sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 while [ "$#" -gt 0 ]; do
@@ -30,8 +31,8 @@ while [ "$#" -gt 0 ]; do
       HOST="$2"
       shift 2
       ;;
-    --force)
-      FORCE=1
+    -y|--yes)
+      YES=1
       shift
       ;;
     -h|--help)
@@ -44,8 +45,9 @@ while [ "$#" -gt 0 ]; do
       exit 2
       ;;
     *)
-      [ -z "$TARGET" ] || { echo "error: only one project directory is allowed" >&2; exit 2; }
+      [ "$target_set" -eq 0 ] || { echo "error: only one project directory is allowed" >&2; exit 2; }
       TARGET="$1"
+      target_set=1
       shift
       ;;
   esac
@@ -59,193 +61,89 @@ case "$HOST" in
     ;;
 esac
 
-# The target must be the top level of a Git work tree. Copied files are then
-# visible in git status, and the owner reviews and commits them.
-if [ -z "$TARGET" ]; then
-  TARGET="$(git rev-parse --show-toplevel 2>/dev/null)" || {
-    echo "error: the current directory is not in a Git repository; give a project directory" >&2
-    exit 2
-  }
-fi
 [ -d "$TARGET" ] || { echo "error: project directory does not exist: $TARGET" >&2; exit 2; }
 TARGET="$(cd -P "$TARGET" && pwd -P)"
-toplevel="$(git -C "$TARGET" rev-parse --show-toplevel 2>/dev/null)" || {
-  echo "error: not a Git repository: $TARGET" >&2
-  exit 2
-}
-toplevel="$(cd -P "$toplevel" && pwd -P)"
-[ "$toplevel" = "$TARGET" ] || {
-  echo "error: give the repository top level ($toplevel), not a subdirectory" >&2
-  exit 2
-}
-[ "$TARGET" != "$REPO_ROOT" ] || {
-  echo "error: the target is the agent-setup repository itself" >&2
-  exit 2
-}
+[ "$TARGET" != "$REPO_ROOT" ] || { echo "error: the target is the agent-setup repository itself" >&2; exit 2; }
 
-# Collect source -> destination pairs. The set is the same set that
-# link-global.sh links: roles as files and skills as directories.
-SOURCES=()
-DESTS=()
-DEST_DIRS=()
+# Collect source -> destination file pairs. The set is the same set that
+# link-global.sh links: role files and the files in each skill directory.
+# ENTRIES holds the role file or skill directory that owns each file.
+SRCS=()
+DSTS=()
+ENTRIES=()
 
-add_entries() {
-  local src_dir="$1" pattern="$2" dest_dir="$3" kind="$4" entry
-  DEST_DIRS+=("$dest_dir")
+add_files() {
+  local src_dir="$1" pattern="$2" dest_dir="$3" entry name file
   for entry in "$src_dir"/$pattern; do
-    if [ "$kind" = file ]; then
-      [ -f "$entry" ] || continue
-    else
-      [ -d "$entry" ] || continue
-      entry="${entry%/}"
+    entry="${entry%/}"
+    name="$dest_dir/$(basename "$entry")"
+    if [ -f "$entry" ]; then
+      SRCS+=("$entry")
+      DSTS+=("$name")
+      ENTRIES+=("$name")
+    elif [ -d "$entry" ]; then
+      while IFS= read -r file; do
+        SRCS+=("$entry/$file")
+        DSTS+=("$name/$file")
+        ENTRIES+=("$name")
+      done < <(cd "$entry" && find . -type f ! -name '.*' | sed 's|^\./||' | sort)
     fi
-    SOURCES+=("$entry")
-    DESTS+=("$dest_dir/$(basename "$entry")")
   done
 }
 
 if [ "$HOST" = claude ] || [ "$HOST" = all ]; then
-  add_entries "$REPO_ROOT/template/.claude/agents" "*.md" ".claude/agents" file
-  add_entries "$REPO_ROOT/template/.claude/skills" "*/" ".claude/skills" dir
+  add_files "$REPO_ROOT/template/.claude/agents" "*.md" ".claude/agents"
+  add_files "$REPO_ROOT/template/.claude/skills" "*/" ".claude/skills"
 fi
 if [ "$HOST" = codex ] || [ "$HOST" = all ]; then
-  add_entries "$REPO_ROOT/template/.codex/agents" "*.toml" ".codex/agents" file
-  add_entries "$REPO_ROOT/template/.agents/skills" "*/" ".agents/skills" dir
+  add_files "$REPO_ROOT/template/.codex/agents" "*.toml" ".codex/agents"
+  add_files "$REPO_ROOT/template/.agents/skills" "*/" ".agents/skills"
 fi
 
-# Expand skills into files. ENTRIES holds the role file or skill directory
-# that owns each file. A symlink at that entry path is replaced.
-FILE_SRCS=()
-FILE_DSTS=()
-ENTRIES=()
+# Show what will change. A symlink is replaced with a real file, so its
+# target does not change. Files with the same content are not copied.
+CHANGED=()
 i=0
-while [ "$i" -lt "${#SOURCES[@]}" ]; do
-  src="${SOURCES[$i]}"
-  relative="${DESTS[$i]}"
-  i=$((i + 1))
-  if [ -f "$src" ]; then
-    FILE_SRCS+=("$src")
-    FILE_DSTS+=("$relative")
-    ENTRIES+=("$relative")
-    continue
+while [ "$i" -lt "${#DSTS[@]}" ]; do
+  dst="$TARGET/${DSTS[$i]}"
+  if [ -L "$TARGET/${ENTRIES[$i]}" ] || [ -L "$dst" ] || [ ! -e "$dst" ]; then
+    echo "new:       ${DSTS[$i]}"
+    CHANGED+=("$i")
+  elif ! cmp -s "${SRCS[$i]}" "$dst"; then
+    echo "overwrite: ${DSTS[$i]}"
+    CHANGED+=("$i")
   fi
-  while IFS= read -r file; do
-    FILE_SRCS+=("$src/$file")
-    FILE_DSTS+=("$relative/$file")
-    ENTRIES+=("$relative")
-  done < <(cd "$src" && find . -type f ! -name '.*' | sed 's|^\./||' | sort)
-done
-
-# Check every destination before the first write. A symlinked directory, for
-# example .claude -> ~/.claude, can lead outside the project; refuse it.
-# Only the owning entry or the file itself can be a symlink; it is replaced.
-check_path() {
-  local relative="$1" entry="$2" current="$TARGET" part
-  local IFS=/
-  for part in $relative; do
-    current="$current/$part"
-    if [ -L "$current" ]; then
-      [ "$current" = "$TARGET/$entry" ] || [ "$current" = "$TARGET/$relative" ] && return 0
-      echo "error: refusing to write through a symlink: ${current#"$TARGET"/}" >&2
-      exit 1
-    fi
-    # A submodule or nested repository hides changes from git status in the
-    # project, and the project commit does not contain its files.
-    if [ -d "$current" ] && [ -e "$current/.git" ]; then
-      echo "error: refusing to write into a nested Git repository: ${current#"$TARGET"/}" >&2
-      exit 1
-    fi
-    if [ "$current" = "$TARGET/$relative" ]; then
-      if [ -d "$current" ]; then
-        echo "error: a directory exists where a file is expected: $relative" >&2
-        exit 1
-      fi
-    elif [ -e "$current" ] && [ ! -d "$current" ]; then
-      echo "error: a file exists where a directory is expected: ${current#"$TARGET"/}" >&2
-      exit 1
-    fi
-  done
-}
-
-# Do not overwrite content that Git cannot restore without --force: a file
-# with uncommitted changes, or an untracked or ignored file. If git status
-# fails, stop: an unknown state must not allow an overwrite.
-blocked=()
-i=0
-while [ "$i" -lt "${#FILE_DSTS[@]}" ]; do
-  relative="${FILE_DSTS[$i]}"
-  check_path "$relative" "${ENTRIES[$i]}"
-  dst="$TARGET/$relative"
   i=$((i + 1))
-  # A symlink is replaced, and its target does not change.
-  [ ! -L "$TARGET/${ENTRIES[$((i - 1))]}" ] && [ ! -L "$dst" ] && [ -f "$dst" ] || continue
-  cmp -s "${FILE_SRCS[$((i - 1))]}" "$dst" && continue
-  state="$(git -C "$TARGET" status --porcelain --ignored --untracked-files=all -- "$relative")" || {
-    echo "error: git status failed in $TARGET; no files were changed" >&2
-    exit 1
-  }
-  [ -z "$state" ] || blocked+=("$relative")
-done
-if [ "${#blocked[@]}" -gt 0 ] && [ "$FORCE" -eq 0 ]; then
-  echo "error: Git cannot restore these files (uncommitted, untracked, or ignored)." >&2
-  echo "Commit them, or use --force to overwrite them:" >&2
-  printf '  %s\n' "${blocked[@]}" >&2
-  exit 1
-fi
-
-copied=0
-unchanged=0
-i=0
-while [ "$i" -lt "${#FILE_DSTS[@]}" ]; do
-  src="${FILE_SRCS[$i]}"
-  relative="${FILE_DSTS[$i]}"
-  entry="$TARGET/${ENTRIES[$i]}"
-  dst="$TARGET/$relative"
-  i=$((i + 1))
-  # Remove a symlink first so that cp never writes through it.
-  [ -L "$entry" ] && rm "$entry"
-  [ -L "$dst" ] && rm "$dst"
-  mkdir -p "$(dirname "$dst")"
-  if [ -f "$dst" ] && cmp -s "$src" "$dst"; then
-    unchanged=$((unchanged + 1))
-    continue
-  fi
-  cp "$src" "$dst"
-  echo "copied: $relative"
-  copied=$((copied + 1))
 done
 
-# Report entries that this copy does not own. The script never deletes them.
-for dest_dir in "${DEST_DIRS[@]}"; do
-  [ -d "$TARGET/$dest_dir" ] || continue
-  for entry in "$TARGET/$dest_dir"/*; do
-    [ -e "$entry" ] || [ -L "$entry" ] || continue
-    relative="$dest_dir/$(basename "$entry")"
-    owned=0
-    for dest in "${DESTS[@]}"; do
-      [ "$dest" = "$relative" ] && owned=1 && break
-    done
-    [ "$owned" -eq 1 ] || echo "kept (not from agent-setup): $relative"
-  done
-done
-
-# Warn about ignored copies. Cloud checkouts do not receive ignored files.
-# check-ignore exits 0 when it finds ignored paths, 1 when it finds none.
-status=0
-ignored="$(git -C "$TARGET" check-ignore -- "${FILE_DSTS[@]}")" || status=$?
-if [ "$status" -eq 0 ]; then
-  echo "warning: Git ignores these copied files; cloud checkouts do not receive them:"
-  printf '%s\n' "$ignored" | sed 's/^/  /'
-elif [ "$status" -ne 1 ]; then
-  echo "warning: git check-ignore failed; check ignored files yourself"
-fi
-
-source_rev="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
-if [ -n "$(git -C "$REPO_ROOT" status --porcelain -- template 2>/dev/null)" ]; then
-  source_rev="$source_rev (with uncommitted template changes)"
+unchanged=$(( ${#DSTS[@]} - ${#CHANGED[@]} ))
+if [ "${#CHANGED[@]}" -eq 0 ]; then
+  echo "Nothing to copy: $unchanged files are up to date in $TARGET."
+  exit 0
 fi
 
 echo
-echo "Done: $copied copied, $unchanged unchanged."
-echo "Source: agent-setup $source_rev"
-echo "Review the changes with git status and git diff, then commit them in $TARGET."
+echo "This copies ${#CHANGED[@]} files into $TARGET ($unchanged up to date)."
+echo "An overwritten file loses its local content."
+if [ "$YES" -eq 0 ]; then
+  printf 'Continue? [y/N] '
+  read -r answer || answer=""
+  case "$answer" in
+    y|Y|yes|YES) ;;
+    *) echo "Cancelled. No files were changed."; exit 1 ;;
+  esac
+fi
+
+for i in "${CHANGED[@]}"; do
+  entry="$TARGET/${ENTRIES[$i]}"
+  dst="$TARGET/${DSTS[$i]}"
+  # Remove a symlink first so that cp never writes through it.
+  [ ! -L "$entry" ] || rm "$entry"
+  [ ! -L "$dst" ] || rm "$dst"
+  mkdir -p "$(dirname "$dst")"
+  cp "${SRCS[$i]}" "$dst"
+done
+
+source_rev="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+echo "Done: ${#CHANGED[@]} files copied from agent-setup $source_rev."
+echo "Review the changes and commit them in the project."
