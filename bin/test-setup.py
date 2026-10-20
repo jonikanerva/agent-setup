@@ -20,18 +20,24 @@ CHECK = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECK)
 
 
-def destinations(host):
+def global_skills():
+    return [path for path in (ROOT / "global/skills").iterdir() if path.is_dir()]
+
+
+def destinations(host, include_global=True):
+    """Map each linked path to its source. Only the linker uses global skills."""
     result = {}
+    shared = global_skills() if include_global else []
     if host in ("all", "claude"):
         for path in (ROOT / "template/.claude/agents").glob("*.md"):
             result[Path(".claude/agents") / path.name] = path
-        for path in (ROOT / "template/.claude/skills").iterdir():
+        for path in [*(ROOT / "template/.claude/skills").iterdir(), *shared]:
             if path.is_dir():
                 result[Path(".claude/skills") / path.name] = path
     if host in ("all", "codex"):
         for path in (ROOT / "template/.codex/agents").glob("*.toml"):
             result[Path(".codex/agents") / path.name] = path
-        for path in (ROOT / "template/.agents/skills").iterdir():
+        for path in [*(ROOT / "template/.agents/skills").iterdir(), *shared]:
             if path.is_dir():
                 result[Path(".agents/skills") / path.name] = path
     return result
@@ -73,6 +79,17 @@ class LinkerTests(unittest.TestCase):
                     self.assertFalse((destination / ".agents").exists())
                 if host == "codex":
                     self.assertFalse((destination / ".claude").exists())
+
+    def test_global_skills_link_to_one_source_for_both_hosts(self):
+        destination = self.base / "global"
+        self.run_linker(destination)
+        skills = global_skills()
+        self.assertIn("plan-together", [path.name for path in skills])
+        for source in skills:
+            for directory in (".claude/skills", ".agents/skills"):
+                link = destination / directory / source.name
+                self.assertTrue(link.is_symlink(), str(link))
+                self.assertEqual(link.resolve(), source.resolve())
 
     def test_real_files_directories_and_settings_survive(self):
         destination = self.base / "existing"
@@ -175,7 +192,7 @@ class LinkerTests(unittest.TestCase):
 def source_files(host):
     """Map each copied file path in a project to its source file."""
     result = {}
-    for relative, source in destinations(host).items():
+    for relative, source in destinations(host, include_global=False).items():
         if source.is_dir():
             for path in source.rglob("*"):
                 if path.is_file() and not path.name.startswith("."):
@@ -220,6 +237,13 @@ class CopierTests(unittest.TestCase):
                     self.assertEqual(path.read_bytes(), source.read_bytes())
                 second = self.run_copier("--host", host, project)
                 self.assertIn(f"Nothing to copy: {len(expected)} files are up to date", second.stdout)
+
+    def test_global_skills_are_never_copied(self):
+        project = self.project()
+        result = self.run_copier("--yes", project)
+        for source in global_skills():
+            self.assertNotIn(source.name, result.stdout)
+            self.assertEqual(list(project.rglob(source.name)), [])
 
     def test_confirmation_lists_files_and_controls_the_copy(self):
         project = self.project()
@@ -297,7 +321,7 @@ class FormatTests(unittest.TestCase):
     def test_repository_fixtures_reject_invalid_artifacts(self):
         with tempfile.TemporaryDirectory(prefix="agent-setup-format-") as temporary:
             root = Path(temporary)
-            for directory in ("template", "stacks", "bin"):
+            for directory in ("template", "global", "stacks", "bin"):
                 shutil.copytree(ROOT / directory, root / directory)
             for filename in ("README.md", "AGENTS.md", "CLAUDE.md"):
                 shutil.copyfile(ROOT / filename, root / filename)
@@ -306,6 +330,8 @@ class FormatTests(unittest.TestCase):
                 ("template/.codex/agents/architect.toml", lambda text: text + '\nname = "duplicate"\n', "Cannot overwrite"),
                 ("template/.claude/settings.json", lambda text: text + "{", "Extra data"),
                 ("template/.agents/skills/implement/SKILL.md", lambda text: text.replace("name: implement", "name: wrong", 1), "name mismatch"),
+                ("global/skills/plan-together/SKILL.md", lambda text: text.replace("name: plan-together", "name: wrong", 1), "name mismatch"),
+                ("global/skills/plan-together/SKILL.md", lambda text: text.replace("\n---\n", "\ncontext: fork\n---\n", 1), "unknown metadata fields"),
                 ("stacks/STACK-TEMPLATE.md", lambda text: text.replace("`$TEST_CMD`", "`$MISSING_CMD`"), "TEST_CMD"),
                 ("stacks/STACK-TS.md", lambda text: text.replace("## 15. ", "## ", 1), "sections 0-15"),
                 ("README.md", lambda text: re.sub(r"\| `STACK-TS\.md` +\|", "| `STACK-NONE.md` |", text, count=1), "profile table mismatch"),
@@ -325,6 +351,7 @@ class FormatTests(unittest.TestCase):
                 ("template/.codex/agents/unexpected.toml", False, "role set mismatch"),
                 ("template/.claude/skills/unexpected", True, "skill set mismatch"),
                 ("template/.agents/skills/unexpected", True, "skill set mismatch"),
+                ("global/skills/unexpected", True, "skill set mismatch"),
                 ("template/.claude/agents/unexpected.md", True, "role set mismatch"),
                 ("template/.codex/agents/unexpected.toml", True, "role set mismatch"),
                 ("stacks/stack-unexpected.md", False, "profile names must match"),
@@ -346,7 +373,14 @@ class FormatTests(unittest.TestCase):
                         else:
                             path.unlink()
             CHECK.validate(root)
-            for relative in ("template/DOCTRINE.md",):
+            original = CHECK.GLOBAL_SKILLS
+            try:
+                CHECK.GLOBAL_SKILLS = ("implement",)
+                with self.assertRaisesRegex(ValueError, "collide with template skills"):
+                    CHECK.validate(root)
+            finally:
+                CHECK.GLOBAL_SKILLS = original
+            for relative in ("template/DOCTRINE.md", "global/skills/plan-together/SKILL.md"):
                 with self.subTest(missing=relative):
                     path = root / relative
                     original = path.read_text()

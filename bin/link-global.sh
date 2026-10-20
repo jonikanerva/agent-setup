@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
 # link-global.sh — symlink this repo's static Claude and Codex roles and skills
-# into the user-level discovery locations. The repository remains the single
-# source of truth for these global files.
+# into the user-level discovery locations. Shared user-only skills in global/
+# are linked for both hosts. The repository remains the single source of truth.
 #
 # Usage:
 #   bin/link-global.sh                         # link both hosts
@@ -15,6 +15,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DEST_HOME="${AGENT_SETUP_HOME:-$HOME}"
+# Host-neutral skills for both hosts. copy-project.sh never copies them.
+GLOBAL_SKILLS="$REPO_ROOT/global/skills"
 
 HOST="all"
 PRUNE=0
@@ -112,7 +114,7 @@ link_claude() {
     link_one "$file" "$dest/agents/$(basename "$file")"
   done
 
-  for dir in "$src"/skills/*/; do
+  for dir in "$src"/skills/*/ "$GLOBAL_SKILLS"/*/; do
     [ -d "$dir" ] || continue
     link_one "${dir%/}" "$dest/skills/$(basename "$dir")"
   done
@@ -136,7 +138,7 @@ link_codex() {
     link_one "$file" "$codex_dest/agents/$(basename "$file")"
   done
 
-  for dir in "$skill_src"/*/; do
+  for dir in "$skill_src"/*/ "$GLOBAL_SKILLS"/*/; do
     [ -d "$dir" ] || continue
     link_one "${dir%/}" "$skill_dest/$(basename "$dir")"
   done
