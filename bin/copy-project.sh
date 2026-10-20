@@ -65,8 +65,9 @@ esac
 TARGET="$(cd -P "$TARGET" && pwd -P)"
 [ "$TARGET" != "$REPO_ROOT" ] || { echo "error: the target is the agent-setup repository itself" >&2; exit 2; }
 
-# Collect source -> destination file pairs. The set is the same set that
-# link-global.sh links: role files and the files in each skill directory.
+# Collect source -> destination file pairs: the template role files and the
+# files in each template skill directory. link-global.sh also links the shared
+# user-only skills in global/. This script never copies them into a project.
 # ENTRIES holds the role file or skill directory that owns each file.
 SRCS=()
 DSTS=()

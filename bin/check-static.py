@@ -5,6 +5,10 @@ Stack profiles must use the STACK-<NAME>.md file name, contain sections 0-15
 in order, and define the five command rows. The README profile table must
 list exactly the profiles in stacks/.
 
+Shared user-only skills in global/skills/ serve both hosts. Their names must
+not collide with the template skills, and their metadata must stay
+host-neutral.
+
 Frontmatter uses a small YAML subset: flat string/boolean fields, quoted
 strings, and indented folded/literal strings. Reject unsupported syntax.
 """
@@ -24,6 +28,7 @@ import tomllib
 ROOT = Path(__file__).resolve().parent.parent
 ROLES = ("architect", "devils-advocate", "lead-dev", "qa-enforcer", "ux-guardian")
 SKILLS = ("project-manager", "implement", "codereview")
+GLOBAL_SKILLS = ("plan-together",)
 COMMANDS = ("FORMAT_CMD", "LINT_CMD", "BUILD_CMD", "TEST_CMD", "VERIFY_CMD")
 
 
@@ -174,9 +179,12 @@ def validate(root):
         require(actual == expected,
                 f"{relative}: role set mismatch; missing={sorted(expected - actual)}, "
                 f"unexpected={sorted(actual - expected)}")
-    for host in (".claude", ".agents"):
-        relative = f"template/{host}/skills"
-        expected = set(SKILLS)
+    # The linker links template skills and global skills into the same user
+    # directories. A shared name would silently replace a template skill link.
+    require(not set(SKILLS) & set(GLOBAL_SKILLS), "global skill names collide with template skills")
+    for relative, names in (("template/.claude/skills", SKILLS), ("template/.agents/skills", SKILLS),
+                            ("global/skills", GLOBAL_SKILLS)):
+        expected = set(names)
         actual = {path.name for path in (root / relative).glob("*")
                   if path.is_dir() and not path.name.startswith(".")}
         require(actual == expected,
@@ -213,6 +221,10 @@ def validate(root):
                 require(host == ".claude" and (agent == "general-purpose" or
                         (root / f"template/.claude/agents/{agent}.md").is_file()),
                         f"{relative}: missing agent definition {agent}")
+    # One file serves both hosts, so allow only fields that both hosts read.
+    for skill in GLOBAL_SKILLS:
+        relative = f"global/skills/{skill}/SKILL.md"
+        metadata(read(root, relative), relative, skill, {"name", "description"})
     # A misnamed file in stacks/ would skip every profile check below.
     for path in sorted((root / "stacks").iterdir()):
         if path.name.startswith("."):

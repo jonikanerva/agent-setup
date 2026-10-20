@@ -15,6 +15,7 @@ changes use lightweight file checks and GitHub PRs; no local ADR is required.
 - [CLAUDE.md](template/CLAUDE.md) and [AGENTS.md](template/AGENTS.md) define
   host coordination, authority adoption, and Git practice.
 - Five optional specialist roles and three workflows support delivery.
+- Shared skills in `global/skills/` are for your home directory only.
 
 The primary agent is the lead and owns the complete result. It can implement
 directly or delegate. It chooses specialists by risk and uncertainty.
@@ -87,6 +88,7 @@ template/
   .codex/agents/        # Codex specialists
   .agents/skills/       # Codex workflows
   .github/pull_request_template.md
+global/skills/         # Shared user-only skills; linked, never copied
 stacks/                # Concrete example profiles
 bin/                   # Linking, copying, and validation; no artifact generation
 ```
@@ -114,6 +116,14 @@ The command links:
 
 - Claude roles to `~/.claude/agents/` and skills to `~/.claude/skills/`.
 - Codex roles to `~/.codex/agents/` and skills to `~/.agents/skills/`.
+- Shared skills in `global/skills/` to `~/.claude/skills/` and
+  `~/.agents/skills/`. Both links point to the same source directory.
+
+A shared skill is user-only. One file serves both hosts, so its instructions
+must be host-neutral. Its metadata contains only `name` and `description`.
+The `plan-together` skill lets a running Claude Code session and a running
+Codex session agree on one plan. The two sessions exchange files in a shared
+local directory.
 
 The linker replaces only symlinks. It preserves real files and directories.
 It does not install user settings or project contracts. The optional
@@ -133,11 +143,14 @@ files. Then commit them. Run the command in the project directory:
 ```
 
 You can also give the project directory as an argument. Select one host with
-`--host claude` or `--host codex`. The command copies the same set that the
-linker links, to the same relative paths in the project:
+`--host claude` or `--host codex`. The command copies the template roles and
+skills that the linker links, to the same relative paths in the project:
 
 - Claude roles to `.claude/agents/` and skills to `.claude/skills/`.
 - Codex roles to `.codex/agents/` and skills to `.agents/skills/`.
+
+The command never copies the shared skills in `global/skills/`. The shared
+skills stay in your home directory only.
 
 The command lists each file that it will create or overwrite. Then it asks
 for confirmation. Files that are already up to date are not listed. Use
@@ -270,10 +283,11 @@ The static check parses emitted TOML and JSON, checks metadata and structural
 references, and validates shell syntax. It also checks each stack profile.
 A profile file name must match `STACK-<NAME>.md`. A profile must contain
 sections 0–15 and one row for each of the five commands. The profile table
-in this README must list exactly the files in `stacks/`. The regression
+in this README must list exactly the files in `stacks/`. A shared skill
+name must not match a template skill name. The regression
 suite tests malformed artifacts and isolated linking for both hosts,
 including safe pruning. It also tests project copying in temporary
-directories.
+directories and checks that shared skills are never copied.
 Tests use a temporary `AGENT_SETUP_HOME`; they do not alter live links.
 
 Inspect the diff and keep task-specific evaluation inputs and results in the

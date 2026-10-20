@@ -21,6 +21,10 @@ bin/link-global.sh links static role and skill files to user discovery paths.
 Each target project separately adopts DOCTRINE.md, VISION.md, STACK.md, and its
 selected CLAUDE.md or AGENTS.md. Copied contracts never update implicitly.
 
+global/skills/ holds shared user-only skills. bin/link-global.sh links each
+one to both hosts. bin/copy-project.sh never copies them into a project. One
+file serves both hosts, so keep these skills host-neutral.
+
 Never replace a real user file or directory. Replace only symlinks. Prune only
 dead links whose target ownership is established inside this repository.
 Use AGENT_SETUP_HOME in temporary tests; never test against live user paths.
