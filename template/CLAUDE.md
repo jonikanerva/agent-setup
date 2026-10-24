@@ -123,6 +123,14 @@ principles: short sentences, active voice, and consistent domain terms. Keep
 technical vocabulary intact. Chat with the owner in Finnish unless their
 explicit language instruction says otherwise.
 
+Run resource-heavy local commands at the lowest scheduling priority. These
+commands include builds, compilation, test suites, and other CPU-, memory-, or
+I/O-intensive work. The operating system and the owner's interactive work must
+always keep priority, also when several agents run at the same time. On macOS,
+prefix the command with `taskpolicy -b`. This command also lowers I/O priority.
+On other POSIX systems, prefix the command with `nice -n 19`. Child processes
+inherit the priority. Never raise the priority of agent work.
+
 Use the host's sandbox and approval controls. When enabled, branch protections
 are the external merge gate. Otherwise, the gate is this contract's acceptance
 conditions, including the reviewer's own verification when independent review
