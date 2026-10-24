@@ -126,10 +126,11 @@ explicit language instruction says otherwise.
 Run resource-heavy local commands at the lowest scheduling priority. These
 commands include builds, compilation, test suites, and other CPU-, memory-, or
 I/O-intensive work. The operating system and the owner's interactive work must
-always keep priority, also when several agents run at the same time. On macOS,
-prefix the command with `taskpolicy -b`. This command also lowers I/O priority.
-On other POSIX systems, prefix the command with `nice -n 19`. Child processes
-inherit the priority. Never raise the priority of agent work.
+always keep priority, also when several agents run at the same time. Prefix
+the command with `nice -n 19` on all POSIX systems, including macOS. Child
+processes inherit the priority. Do not use `taskpolicy -b` on macOS. On Apple
+silicon, it confines work to efficiency cores, also when performance cores are
+idle. Never raise the priority of agent work.
 
 Use the host's sandbox and approval controls. When enabled, branch protections
 are the external merge gate. Otherwise, the gate is this contract's acceptance
