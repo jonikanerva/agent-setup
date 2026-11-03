@@ -187,9 +187,15 @@ once before an authorised batch, run the dependency freshness check in
 `STACK.md` on the current `main`. Deliver due updates first in a dedicated
 `chore/deps-<topic>` PR. That PR follows the full acceptance and release path.
 Merge it before the task branch starts. A dependency update task is itself
-that deps PR; it does not start another one. Apply security fixes first.
-Updates within declared version constraints are lead decisions. A new major
-version gets its own PR with compatibility evidence and the required
+that deps PR; it does not start another one. Run the vulnerability check in
+`STACK.md` at the same points. The vulnerability check covers every pinned
+surface: dependencies, toolchains, runtimes, container images, and
+infrastructure. It reads version-matched advisory databases that also list
+known malicious package versions. News feeds and other free text are not check
+input. Apply security fixes first. A known exploited vulnerability or a
+malicious package version in a pinned component makes its fix due before other
+work. Updates within declared version constraints are lead decisions. A new
+major version gets its own PR with compatibility evidence and the required
 migration. That PR blocks the task only when the task depends on it. Start it
 when the work is bounded. Otherwise report it as a follow-up with a reason and
 a reassessment condition. Keep each infrastructure component on the same major
@@ -201,7 +207,7 @@ step. When an update fails verification and the fix is not bounded, keep the
 current pin, record the reason and a reassessment condition in the deps PR,
 and continue the task. Do not adopt prereleases without a reviewed exception.
 Respect the declared minimum release age except for security fixes. An
-unavailable freshness check is a recorded gap, not a pass.
+unavailable freshness or vulnerability check is a recorded gap, not a pass.
 
 Define release, monitoring, diagnosis, update, and recovery procedures in
 `STACK.md`. Verify relevant migration and compatibility paths. Keep `main`
@@ -215,8 +221,8 @@ work, remove obsolete code and dependencies. A delivery request authorises the
 dependency updates above. Product feature removal and other new maintenance
 tasks remain subject to scope and owner authority.
 
-**Evidence:** Reproducible setup, a current dependency freshness result, and
-applicable release and recovery results.
+**Evidence:** Reproducible setup, current dependency freshness and
+vulnerability results, and applicable release and recovery results.
 
 ## P8. Preserve decisions and learn
 

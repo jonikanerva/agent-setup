@@ -68,6 +68,8 @@ Implement these scripts in the adopting project; this profile does not supply `p
 
 **Dependency freshness check:** `pnpm outdated --recursive` and `mise outdated --bump`. The first command lists newer package releases. The second command lists newer Node, pnpm, and other mise tool releases outside the current pins. Also compare each infrastructure version in §15 with its latest stable release.
 
+**Vulnerability check:** `pnpm audit` and `osv-scanner scan source -r .` for the lockfile and mise tools. `osv-scanner scan image <image>` for each container image. Compare each runtime and infrastructure version in §15 with its vendor security advisories. Record each surface without scanner coverage.
+
 ---
 
 ## 4. Performance budgets

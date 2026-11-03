@@ -305,6 +305,8 @@ isolation before creating, migrating, or dropping any database.
 
 **Dependency freshness check:** `cargo update --dry-run --verbose`, `pnpm outdated --recursive`, and `mise outdated --bump`. `cargo update` stays within SemVer-compatible versions, so also compare each direct crate requirement with its latest crates.io release. Compare `rust-toolchain.toml` with the latest stable Rust release. Compare each infrastructure version in §15, for example the database server, the container base image, and the source builder, with its latest stable release.
 
+**Vulnerability check:** `cargo deny check advisories`, `pnpm audit`, and `osv-scanner scan source -r .` for the lockfiles. `osv-scanner scan image <image>` for each container image. Compare the Rust toolchain and each infrastructure version in §15 with its vendor security advisories. Record each surface without scanner coverage.
+
 ---
 
 ## 4. Performance budgets

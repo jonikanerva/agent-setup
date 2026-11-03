@@ -24,8 +24,8 @@ Confirm the repository, checkout, remote, available verification, and task
 authority. Protect other contributors' work; use a separate worktree when
 requested or needed. Do not reset or stash unrelated changes.
 
-Run the `STACK.md` dependency freshness check on the current `main` under
-`DOCTRINE.md` P7 before task work starts. Deliver due updates first in a
+Run the `STACK.md` dependency freshness and vulnerability checks on the
+current `main` under `DOCTRINE.md` P7 before task work starts. Deliver due updates first in a
 dedicated `chore/deps-<topic>` PR through the normal implementation, review,
 and merge path. A dependency update task does not start another deps PR. Give
 each new major version, including an infrastructure component, its own PR when
