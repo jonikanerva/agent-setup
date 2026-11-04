@@ -70,6 +70,8 @@ Implement these targets in the adopting project's `Makefile`; this profile does 
 
 **Dependency freshness check:** `swift package update --dry-run` for a Swift package. For packages that the Xcode project manages, compare each `Package.resolved` pin with the latest upstream release. Compare the pinned Xcode release and SDKs with the latest stable Xcode release. Also compare each infrastructure version in §15 with its latest stable release.
 
+**Vulnerability check:** Match each `Package.resolved` pin against version-matched advisory databases, with a compatible scanner where one exists. Compare the pinned Xcode release, SDKs, and each infrastructure version in §15 with vendor security advisories. Record each surface without scanner coverage.
+
 ---
 
 ## 4. Performance budgets

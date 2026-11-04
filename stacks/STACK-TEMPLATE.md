@@ -58,9 +58,10 @@ All five variables MUST be defined — every skill and agent dereferences them. 
 | `$TEST_CMD`   | `<…>`                                                                              |
 | `$VERIFY_CMD` | `<one command: format-check → lint/type/security checks → build → required tests>` |
 
-Name additional checks below. `DOCTRINE.md` P7 requires the dependency freshness check.
+Name additional checks below. `DOCTRINE.md` P7 requires the dependency freshness and vulnerability checks.
 
 - **Dependency freshness check:** `<read-only command or procedure that lists newer stable releases for every pinned runtime, toolchain, infrastructure component, and dependency surface>`
+- **Vulnerability check:** `<read-only commands that match every pinned dependency, toolchain, runtime, container image, and infrastructure version against version-matched advisory databases, including known malicious package versions; name each uncovered surface>`
 
 ---
 

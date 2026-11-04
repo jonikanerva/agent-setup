@@ -111,6 +111,8 @@ Bootstrap the environment with `mise install` (provisions the pinned tools/runti
 
 **Dependency freshness check:** `uv tree --outdated` for locked dev dependencies and `mise outdated --bump` for Python, uv, Ruff, and mypy. Compare each `manifest.json → requirements` pin with its latest PyPI release and with the package versions that the targeted Home Assistant release pins. Also compare each infrastructure version in §15 with its latest stable release.
 
+**Vulnerability check:** `pip-audit` on the resolved dev and runtime environments and `osv-scanner scan source -r .` for `uv.lock`. `osv-scanner scan image <image>` for each container image. Compare Python, the targeted Home Assistant release, and each infrastructure version in §15 with its vendor security advisories. Record each surface without scanner coverage.
+
 ---
 
 ## 4. Performance budgets
