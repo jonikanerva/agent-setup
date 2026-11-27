@@ -30,13 +30,16 @@ implementer's conclusions or a previous verdict for a different version.
 
 Required local, repository-required CI, and applicable owner-only evidence must be present before
 PASS. Missing mandatory evidence blocks acceptance. A required owner test
-necessary for safe release blocks merge. Before PASS, run the full `$VERIFY_CMD`
-yourself and all required tests on the PR head merged with the current base in
-an isolated checkout. Use the head directly if the base is already its ancestor.
+necessary for safe release blocks merge. The local
+`DOCTRINE.md` P9 states when the reviewer's own run is required. When P9
+requires it for this change, before PASS, run the full `$VERIFY_CMD` yourself
+and all required tests on the PR head merged with the current base in an
+isolated checkout. When P9 does not require it, confirm that the recorded
+local verification and the CI result name the reviewed head. Use the head directly if the base is already its ancestor.
 Do not resolve integration conflicts or edit code; return FAIL to the lead.
 Use the full local verification contract for a non-application repository.
 Tests included in that command need not be repeated. Record head, base, tested
-integration commit or tree, environment, commands, and results. Missing or failed
+integration commit or tree, environment, commands, and results. Where P9 requires the run, missing or failed
 reviewer execution is FAIL; the implementer's evidence cannot replace it.
 Existing required CI must also pass. Publish the verdict only after these checks.
 
