@@ -25,7 +25,7 @@ authority. Protect other contributors' work; use a separate worktree when
 requested or needed. Do not reset or stash unrelated changes.
 
 Run the `STACK.md` dependency freshness and vulnerability checks on the
-current `main` under `DOCTRINE.md` P7 before task work starts. Deliver due updates first in a
+current `main` at the points that the local `DOCTRINE.md` P7 states. Deliver due updates first in a
 dedicated `chore/deps-<topic>` PR through the normal implementation, review,
 and merge path. A dependency update task does not start another deps PR. Give
 each new major version, including an infrastructure component, its own PR when
@@ -110,8 +110,9 @@ Before accepting, confirm:
 - Required tests and `$VERIFY_CMD` ran locally for the version to be merged
   and current integration base. Failed or missing mandatory local results block
   merge. Existing required CI must also pass, per the local contract.
-- When independent review is required, the reviewer ran the full verification
-  and required tests on the integrated head/base in an isolated checkout.
+- When the local `DOCTRINE.md` P9 requires the reviewer's own run, the
+  reviewer ran the full verification and required tests on the integrated
+  head/base in an isolated checkout.
 - Changed requirements, checks, and exceptions received independent scrutiny.
 - Any required owner test is complete. Pending safe-release tests block merge.
 - The agreed scope is delivered and limitations are visible.

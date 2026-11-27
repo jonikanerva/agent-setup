@@ -76,8 +76,11 @@ bug. If missing evidence is required for safe acceptance, it blocks acceptance.
 Otherwise identify the uncertainty without inventing a finding.
 
 Check that required evidence names the reviewed version and environment.
-Before PASS, run the full `$VERIFY_CMD` yourself and all required tests in an
-isolated checkout of the PR head merged with the current integration base.
+The local `DOCTRINE.md` P9 states when the reviewer's own run is required.
+When P9 requires it for this change, before PASS, run the full `$VERIFY_CMD`
+yourself and all required tests in an isolated checkout of the PR head merged
+with the current integration base. When P9 does not require it, confirm that
+the recorded local verification and the CI result name the reviewed head.
 If the base is already an ancestor of the head, the head is that integration
 result. Otherwise prepare an automatic synthetic integration snapshot. Do not
 resolve conflicts or fix product code as the reviewer; return FAIL to the lead.
@@ -85,9 +88,9 @@ Use the repository's full verification contract when it has no application
 `$VERIFY_CMD`. Tests included in that command need not be run twice.
 
 Record the PR head, base, tested integration commit or tree identifier,
-environment, commands, and observed results. An implementer report or CI
-result cannot replace this independent local run. A failed or missing reviewer
-run is FAIL. Existing required CI must also pass, per the local contract.
+environment, commands, and observed results. Where P9 requires
+this run, an implementer report or CI result cannot replace it, and a failed
+or missing reviewer run is FAIL. Existing required CI must also pass, per the local contract.
 Check retained procedures or scripts, safe inputs or reconstruction, expected
 outcomes and sources, and material results. Unrepeatable claims are limitations,
 not passed required checks. In agent trials, distinguish repeatable procedures
