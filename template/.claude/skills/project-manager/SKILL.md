@@ -115,9 +115,15 @@ Before accepting, confirm:
   result is present and passing, or covered by an approved exception.
 - Required tests and `$VERIFY_CMD` ran locally for the version to be merged
   and current integration base, by the party that the local `DOCTRINE.md` P6
-  and P9 name; by default, the implementer. When that party is the lead, run
-  them yourself before merge. Failed or missing mandatory local results block
-  merge. Existing required CI must also pass, per the local contract.
+  and P9 name for that run in place of the implementer. When they name no
+  such party, the implementer ran them, in addition to any reviewer run that
+  P9 requires. When that party is the lead, run them yourself before merge.
+  Failed or missing mandatory local results block merge. Existing required
+  CI must also pass, per the local contract.
+- When the head or the integration base changed after the full run, the
+  party that ran it ran the affected checks again, as the local
+  `DOCTRINE.md` states. By default, a changed head or base needs new
+  evidence and review.
 - When the local `DOCTRINE.md` P9 requires the reviewer's own run, the
   reviewer ran the full verification and required tests on the integrated
   head/base in an isolated checkout.
@@ -134,7 +140,9 @@ Recheck authority immediately before merge. If the owner reserved review or
 merge, return a ready PR and stop. When no escalation or task restriction
 applies, merge the accepted PR with a merge commit. Never push to `main`,
 bypass protections, or use an administrative override. If the base or head
-changes, revalidate affected integration and review before merging.
+changes, revalidate the affected integration and, where the local
+`DOCTRINE.md` requires it, the review before merging. By default, the review
+is required.
 
 Follow the release procedure in `STACK.md`. A merge-triggered deployment is a
 release. Verify its version, status, and required post-release checks. Follow

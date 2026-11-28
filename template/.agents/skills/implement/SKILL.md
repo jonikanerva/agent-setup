@@ -75,10 +75,14 @@ uses `--force-with-lease`; it invalidates old review evidence.
 The local `DOCTRINE.md` P6 and P9, the local contract, and `STACK.md` state
 which checks you run before review and who runs the full `$VERIFY_CMD` for the
 version to be merged. Run the checks that they assign to you on the clean
-committed tree before the final push. When they do not state the implementer's
-checks, the default is: run the required tests and `$VERIFY_CMD` yourself on
-that tree, and cover the version to be merged and the current integration
-base. Missing or failed required local checks block merge.
+committed tree before the final push. Unless the local doctrine assigns the
+full `$VERIFY_CMD` of the version to be merged to a named party other than
+you, in place of your run, run the required tests and `$VERIFY_CMD` yourself
+on that tree, and cover the version to be merged and the current integration
+base. A reviewer's own run that the doctrine requires in addition does not
+release you from this run. A general rule such as "run relevant fast checks
+during development" does not release you either. Missing or failed required
+local checks block merge.
 Record the head SHA, integration base, environment, command, result, and
 evidence location. Do not rerun valid unchanged checks without a reason.
 Retain procedures or scripts, safe inputs or reconstruction instructions, and

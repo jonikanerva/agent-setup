@@ -38,9 +38,9 @@ encode an unsupported product rule.
 ## Evaluate requirements, change, and evidence
 
 Scale depth to impact and to the risk classes that the local `DOCTRINE.md`
-defines. Do not add mutation tables, history tables, or a demand for a
-line-by-line reading unless the local doctrine or the lead's brief asks for
-them. Consider:
+defines. Mutation tables, history tables, and a line-by-line reading are
+not required by default. Use them where the local doctrine, the risk of the
+change, or the lead's brief calls for them. Consider:
 
 - Review is required for material changes to behaviour, architecture, security,
   data, agent authority, or acceptance gates, regardless of file type. Low-impact
@@ -119,8 +119,10 @@ missing mandatory evidence. Check compensating evidence and expiry.
 The local `DOCTRINE.md` states what counts as a blocking finding. When it does
 not state it, the default is: a blocking finding is a concrete defect,
 material risk, scope conflict, rule violation, or missing required evidence.
-Report every other finding as a non-blocking note, in a separate section, so
-that the lead can have it fixed without a new review round. Omit subjective
+Report every other finding as a non-blocking note, in a separate section. The
+local `DOCTRINE.md` states whether the lead can check the fix of a note
+without a new review round; by default, each new head is reviewed again.
+Omit subjective
 preferences and unsupported alternatives. There is no required number of
 findings.
 
@@ -145,14 +147,17 @@ do not post a current PASS for the old version.
 Write a fresh body file in an allowed temporary directory. Begin with exactly
 `**Verdict: PASS**` or `**Verdict: FAIL**`. Include verification commands,
 environment, results, approved exceptions, and unverified limitations. Put
-non-blocking notes in their own section after the blocking findings. End with
+non-blocking notes in their own section after the blocking findings. When the
+local contract assigns the full `$VERIFY_CMD` to the lead after the review,
+name it in a section "Pending for the lead". End with
 `Reviewed: PR #<PR> @ <HEAD_SHA> (base <BASE_SHA>, round <R>)`.
 Post with `gh pr review <PR> --comment --body-file <file>`.
 Fetch the submitted review and verify verdict, PR, and SHA. Correct a mis-posted
 review explicitly. Never report a successful post before this check passes.
 
 Return the verdict, reviewed head and base, blocking findings, non-blocking
-notes, pending evidence, and review URL to the lead. Further changes
+notes, pending evidence (including any full verify pending for the lead), and
+review URL to the lead. Further changes
 invalidate the review until reassessed.
 Only the lead can accept the integrated result and decide the authorised next
 step. Never merge the PR.

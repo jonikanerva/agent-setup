@@ -47,9 +47,9 @@ Existing required CI must also pass. Publish the verdict only after these checks
 The local `DOCTRINE.md` states what counts as a blocking finding. When it does
 not state it, the default is a concrete defect, material risk, scope conflict,
 rule violation, or missing required evidence. Report other findings as
-non-blocking notes in a separate section. Do not add mutation tables, history
-tables, or a demand for a line-by-line reading unless the local doctrine or
-the lead's brief asks for them.
+non-blocking notes in a separate section. Mutation tables, history tables,
+and a line-by-line reading are not required by default. Use them where the
+local doctrine, the risk of the change, or the lead's brief calls for them.
 
 Bind the review to the PR head and integration base. Return PASS or FAIL with
 evidence, unresolved limitations, and a verified review URL. A PASS does not
