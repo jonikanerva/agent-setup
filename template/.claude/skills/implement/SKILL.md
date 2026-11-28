@@ -74,9 +74,13 @@ Keep secrets out of commits. Use Conventional Commits with a reason and
 Fold incidental fixups before final verification. A feature-branch rewrite
 uses `--force-with-lease`; it invalidates old review evidence.
 
-Run required tests and `$VERIFY_CMD` locally on the clean committed tree before
-the final push. The evidence must cover the version to be merged and current
-integration base. Missing or failed required local checks block merge.
+The local `DOCTRINE.md` P6 and P9, the local contract, and `STACK.md` state
+which checks you run before review and who runs the full `$VERIFY_CMD` for the
+version to be merged. Run the checks that they assign to you on the clean
+committed tree before the final push. When they do not state the implementer's
+checks, the default is: run the required tests and `$VERIFY_CMD` yourself on
+that tree, and cover the version to be merged and the current integration
+base. Missing or failed required local checks block merge.
 Record the head SHA, integration base, environment, command, result, and
 evidence location. Do not rerun valid unchanged checks without a reason.
 Retain procedures or scripts, safe inputs or reconstruction instructions, and
@@ -99,13 +103,17 @@ verification, exceptions, and what remains unverified. Link a fully resolved
 issue with `Closes #<N>`. Do not close an issue for partial delivery.
 
 Existing required CI must also pass, per the local contract. Collect those
-results after push and report pending required checks honestly.
+results after push and report pending required checks honestly. When the
+local contract requires a green CI result before review, wait for it before
+the hand-off.
 A required owner-only safe-release test blocks acceptance until its result is
 present. Do not run checks reserved for the owner unless authorised.
 
 Use body files for multiline PR text. Return the PR URL, head SHA, integration
 base, evidence, remaining checks, and open risks to the lead. Freeze the
 reviewed version while review runs; further changes require new evidence.
+The local `DOCTRINE.md` states which fixes after review the lead checks itself
+and which need a new review round; by default, each new head needs new review.
 Do not grade your own material implementation. For material changes or another
 required review, the lead invokes `/codereview`, which starts the independent
 `qa-enforcer`. For a low-risk change, the lead records why independent review

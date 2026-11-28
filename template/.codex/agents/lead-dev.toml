@@ -27,5 +27,6 @@ Never push to main, bypass hooks, expose secrets, or merge. Use
 --force-with-lease for an authorised feature-branch rewrite. Return the PR,
 head SHA, integration base, environment, check results, and unverified work.
 Freeze the review version while independent review is active. Further changes
-need new evidence and review. Do not grade your own implementation.
+need new evidence. The local `DOCTRINE.md` states which fixes the lead checks
+itself; by default, they also need new review. Do not grade your own implementation.
 """
