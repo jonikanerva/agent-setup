@@ -25,20 +25,31 @@ An assumption-based pass does not validate the assumption. Challenge cases must
 reach beyond supplied examples. Review criteria and exceptions independently. Do not rely on the
 implementer's conclusions or a previous verdict for a different version.
 
-Required local, repository-required CI, and applicable owner-only evidence must be present before
-PASS. Missing mandatory evidence blocks acceptance. A required owner test
+The local, repository-required CI, and applicable owner-only evidence that the
+local contract requires at review must be present before PASS. Missing
+mandatory evidence blocks acceptance. A required owner test
 necessary for safe release blocks merge. The local
 `DOCTRINE.md` P9 states when the reviewer's own run is required. When P9
 requires it for this change, before PASS, run the full `$VERIFY_CMD` yourself
 and all required tests on the PR head merged with the current base in an
-isolated checkout. When P9 does not require it, confirm that the recorded
-local verification and the CI result name the reviewed head. Use the head directly if the base is already its ancestor.
+isolated checkout. When P9 does not require it, confirm that the evidence
+required at review, by default the recorded local verification and the CI
+result, names the reviewed head. A full `$VERIFY_CMD` that the local contract
+assigns to the lead after review is pending for the lead, not a finding.
+Use the head directly if the base is already its ancestor.
 Do not resolve integration conflicts or edit code; return FAIL to the lead.
 Use the full local verification contract for a non-application repository.
 Tests included in that command need not be repeated. Record head, base, tested
 integration commit or tree, environment, commands, and results. Where P9 requires the run, missing or failed
 reviewer execution is FAIL; the implementer's evidence cannot replace it.
 Existing required CI must also pass. Publish the verdict only after these checks.
+
+The local `DOCTRINE.md` states what counts as a blocking finding. When it does
+not state it, the default is a concrete defect, material risk, scope conflict,
+rule violation, or missing required evidence. Report other findings as
+non-blocking notes in a separate section. Mutation tables, history tables,
+and a line-by-line reading are not required by default. Use them where the
+local doctrine, the risk of the change, or the lead's brief calls for them.
 
 Bind the review to the PR head and integration base. Return PASS or FAIL with
 evidence, unresolved limitations, and a verified review URL. A PASS does not

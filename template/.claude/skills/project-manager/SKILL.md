@@ -96,20 +96,34 @@ and exceptions. Do not hand it the implementer's desired verdict. Do not review
 your own material change. If no independent context is available, report the
 missing review and keep acceptance pending.
 
-Send actionable findings to the implementer. After a fix, obtain evidence and
-review for the new head. Repeated failure needs diagnosis or a different
-approach, not endless retries or weaker checks. The lead resolves exceptions
+Send blocking findings and non-blocking notes to the implementer. The local
+`DOCTRINE.md` states which fixes need a new review round and which fixes the
+lead checks itself. By default, obtain evidence and review for each new head.
+The local `DOCTRINE.md` also states how many review rounds are allowed before
+the lead stops and asks the owner. By default, there is no fixed number, and
+repeated failure needs diagnosis or a different approach, not endless retries
+or weaker checks. The lead resolves exceptions
 under `DOCTRINE.md → Exceptions` with independent approval; ask the owner when
 authority or material risk requires it.
 
 Before accepting, confirm:
 
-- The current PR head and integration base match the evidence and review.
+- The current PR head and integration base match the evidence and review, or
+  the head differs only by fixes that the local `DOCTRINE.md` lets the lead
+  check itself, and the lead checked them.
 - Every required local, CI, integration, security, and applicable owner-only
   result is present and passing, or covered by an approved exception.
 - Required tests and `$VERIFY_CMD` ran locally for the version to be merged
-  and current integration base. Failed or missing mandatory local results block
-  merge. Existing required CI must also pass, per the local contract.
+  and current integration base, by the party that the local `DOCTRINE.md` P6
+  and P9 name for that run in place of the implementer. When they name no
+  such party, the implementer ran them, in addition to any reviewer run that
+  P9 requires. When that party is the lead, run them yourself before merge.
+  Failed or missing mandatory local results block merge. Existing required
+  CI must also pass, per the local contract.
+- When the head or the integration base changed after the full run, the
+  party that ran it ran the affected checks again, as the local
+  `DOCTRINE.md` states. By default, a changed head or base needs new
+  evidence and review.
 - When the local `DOCTRINE.md` P9 requires the reviewer's own run, the
   reviewer ran the full verification and required tests on the integrated
   head/base in an isolated checkout.
@@ -126,7 +140,9 @@ Recheck authority immediately before merge. If the owner reserved review or
 merge, return a ready PR and stop. When no escalation or task restriction
 applies, merge the accepted PR with a merge commit. Never push to `main`,
 bypass protections, or use an administrative override. If the base or head
-changes, revalidate affected integration and review before merging.
+changes, revalidate the affected integration and, where the local
+`DOCTRINE.md` requires it, the review before merging. By default, the review
+is required.
 
 Follow the release procedure in `STACK.md`. A merge-triggered deployment is a
 release. Verify its version, status, and required post-release checks. Follow

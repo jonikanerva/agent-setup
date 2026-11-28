@@ -37,7 +37,10 @@ encode an unsupported product rule.
 
 ## Evaluate requirements, change, and evidence
 
-Scale depth to impact. Consider:
+Scale depth to impact and to the risk classes that the local `DOCTRINE.md`
+defines. Mutation tables, history tables, and a line-by-line reading are
+not required by default. Use them where the local doctrine, the risk of the
+change, or the lead's brief calls for them. Consider:
 
 - Review is required for material changes to behaviour, architecture, security,
   data, agent authority, or acceptance gates, regardless of file type. Low-impact
@@ -80,7 +83,10 @@ The local `DOCTRINE.md` P9 states when the reviewer's own run is required.
 When P9 requires it for this change, before PASS, run the full `$VERIFY_CMD`
 yourself and all required tests in an isolated checkout of the PR head merged
 with the current integration base. When P9 does not require it, confirm that
-the recorded local verification and the CI result name the reviewed head.
+the evidence that the local contract requires at review, by default the
+recorded local verification and the CI result, names the reviewed head.
+When the local contract assigns the full `$VERIFY_CMD` to the lead after the
+review, list that run as pending for the lead; it is not a finding.
 If the base is already an ancestor of the head, the head is that integration
 result. Otherwise prepare an automatic synthetic integration snapshot. Do not
 resolve conflicts or fix product code as the reviewer; return FAIL to the lead.
@@ -98,10 +104,11 @@ from guaranteed identical responses and note unavailable run settings.
 Grade merge acceptance against required pre-merge evidence. Post-release
 checks remain pending until deployment; they block a release-success claim,
 not the PR's pre-merge verdict.
-Run additional reviewer checks required by the project. Reuse of other evidence
-must not replace your full integration verification. Required local, CI, and owner-only checks
-must all be satisfied, or have an independently approved exception within
-authority. A pending owner test necessary for safe release blocks merge.
+Run additional reviewer checks required by the project. Where P9 requires your
+own run, reuse of other evidence must not replace it. The local, CI, and
+owner-only checks required at review must all be satisfied, or have an
+independently approved exception within authority. A pending owner test
+necessary for safe release blocks merge.
 
 Review any changes to criteria, checks, and exceptions. The implementer cannot
 approve its own weakening. A narrative justification alone cannot waive
@@ -109,9 +116,15 @@ missing mandatory evidence. Check compensating evidence and expiry.
 
 ## Verdict and posting
 
-A blocking finding is a concrete defect, material risk, scope conflict, rule
-violation, or missing required evidence. Omit subjective preferences and
-unsupported alternatives. There is no required number of findings.
+The local `DOCTRINE.md` states what counts as a blocking finding. When it does
+not state it, the default is: a blocking finding is a concrete defect,
+material risk, scope conflict, rule violation, or missing required evidence.
+Report every other finding as a non-blocking note, in a separate section. The
+local `DOCTRINE.md` states whether the lead can check the fix of a note
+without a new review round; by default, each new head is reviewed again.
+Omit subjective
+preferences and unsupported alternatives. There is no required number of
+findings.
 
 For each finding state location, evidence, impact, the applicable requirement,
 the minimum coherent fix, and how to verify it. Cite an official external
@@ -119,25 +132,32 @@ reference only when the claim depends on it.
 
 Complete the required review checks before publishing the verdict:
 
-- PASS: no blocking findings and all required acceptance evidence is satisfied.
-- FAIL: a defect or missing required evidence blocks acceptance. Distinguish
-  implementation defects from pending evidence so the lead can route the work.
+- PASS: no blocking findings and all evidence required at review is satisfied.
+  Non-blocking notes do not prevent PASS.
+- FAIL: a blocking finding or missing required evidence blocks acceptance.
+  Distinguish implementation defects from pending evidence so the lead can
+  route the work.
 
 A PASS is not owner approval and does not override a reserved review or merge.
 Before posting, refetch the PR head and base. If either changed, report the
-review as stale, reassess the changes, and repeat full integration verification
-for the new head/base pair;
+review as stale, reassess the changes, and repeat the verification that P9
+requires of you for the new head/base pair;
 do not post a current PASS for the old version.
 
 Write a fresh body file in an allowed temporary directory. Begin with exactly
 `**Verdict: PASS**` or `**Verdict: FAIL**`. Include verification commands,
-environment, results, approved exceptions, and unverified limitations. End with
+environment, results, approved exceptions, and unverified limitations. Put
+non-blocking notes in their own section after the blocking findings. When the
+local contract assigns the full `$VERIFY_CMD` to the lead after the review,
+name it in a section "Pending for the lead". End with
 `Reviewed: PR #<PR> @ <HEAD_SHA> (base <BASE_SHA>, round <R>)`.
 Post with `gh pr review <PR> --comment --body-file <file>`.
 Fetch the submitted review and verify verdict, PR, and SHA. Correct a mis-posted
 review explicitly. Never report a successful post before this check passes.
 
-Return the verdict, reviewed head and base, findings or pending evidence, and
-review URL to the lead. Further changes invalidate the review until reassessed.
+Return the verdict, reviewed head and base, blocking findings, non-blocking
+notes, pending evidence (including any full verify pending for the lead), and
+review URL to the lead. Further changes
+invalidate the review until reassessed.
 Only the lead can accept the integrated result and decide the authorised next
 step. Never merge the PR.
